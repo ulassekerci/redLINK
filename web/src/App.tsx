@@ -1,8 +1,10 @@
 import { motion } from 'motion/react'
-import { Gauge } from './components/Gauge/Gauge'
+import { Gauge } from './components/Gauge'
 import { Battery } from './components/Battery'
 import { Mosfet } from './components/Mosfet'
 import { useEffect, useRef, useState } from 'react'
+import { GaugeIcon, SplineIcon, TimerIcon, ZapIcon } from 'lucide-react'
+import { TripMeter } from './components/Trip'
 
 function App() {
   const [testValue, setTestValue] = useState(0)
@@ -16,22 +18,29 @@ function App() {
     })
   }
 
-  useEffect(() => {
-    const int = setInterval(update, 20)
-    return () => {
-      clearInterval(int)
-    }
-  }, [])
+  // useEffect(() => {
+  //   const int = setInterval(update, 20)
+  //   return () => {
+  //     clearInterval(int)
+  //   }
+  // }, [])
 
   return (
     <div className='flex flex-col justify-between h-full'>
       <div className=''></div>
       <div className='flex items-center justify-between'>
-        <Gauge value={testValue} max={60} unit='km/h'>
-          <span className='text-white/80 text-lg font-medium text-center'>120m</span>
+        <Gauge value={testValue} max={60} unit='km/h' left>
+          <span className='text-rose-100/80 text-lg font-medium text-center'>120m</span>
         </Gauge>
-        <Gauge value={testValue * 4} max={250} step={25} unit='watt' outerRing={{ value: testValue, max: 75 }}>
-          <span className='text-white/80 text-lg font-medium text-center'>{testValue} Wh</span>
+        <TripMeter />
+        <Gauge
+          value={testValue * 4}
+          max={250}
+          step={25}
+          unit='watt'
+          //  outerRing={{ value: testValue, max: 75 }}
+        >
+          <span className='text-rose-100/80 text-lg font-medium text-center'>{testValue} Wh</span>
         </Gauge>
       </div>
       <motion.div

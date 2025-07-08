@@ -1,6 +1,6 @@
 export const Battery = ({ voltage, current }: { voltage: number; current: number }) => {
   const percentage = 40 // TODO: percentage calculating logic
-  const batteryColor = percentage > 20 ? 'white' : percentage > 10 ? '#fcc800' : '#e7000b'
+  const batteryColor = percentage > 20 ? '#FFF1F2' : percentage > 10 ? '#fcc800' : '#e7000b'
 
   return (
     <div className='flex justify-center items-center gap-[2px] w-80'>
@@ -13,7 +13,7 @@ export const Battery = ({ voltage, current }: { voltage: number; current: number
         />
       </div>
       <div className='w-1 h-2 bg-white/50 rounded-r-full' />
-      <div className='text-white text-lg font-medium flex gap-3 ml-3 [font-variant-numeric:tabular-nums]'>
+      <div className='text-rose-50/90 text-lg font-medium flex gap-3 ml-3 [font-variant-numeric:tabular-nums]'>
         <span className='w-10 text-right'>{percentage}%</span>
         <span>{voltage.toFixed(1)}V</span>
         <span className='w-9'>{current}A</span>

@@ -8,11 +8,12 @@ interface GaugeProps {
   max: number
   unit: string
   step?: number
+  left?: boolean
   children?: ReactNode
   outerRing?: { value: number; max: number }
 }
 
-export const Gauge = ({ value, max, unit, children, step = 10, outerRing }: GaugeProps) => {
+export const Gauge = ({ value, max, unit, children, step = 10, left, outerRing }: GaugeProps) => {
   const [aston, setAston] = useState(false)
 
   return (
@@ -23,7 +24,7 @@ export const Gauge = ({ value, max, unit, children, step = 10, outerRing }: Gaug
       className='relative w-[420px] h-[420px] cursor-default select-none'
       onClick={() => setAston(!aston)}
     >
-      {(aston || outerRing) && <OuterRing value={outerRing?.value} max={outerRing?.max} />}
+      {outerRing && <OuterRing value={outerRing?.value} max={outerRing?.max} left={left} />}
       <GradientCircle value={value} max={max} />
       {aston && <InnerRing value={value} max={max} />}
       <NumberDisplay value={value} unit={unit} />
@@ -37,8 +38,8 @@ export const Gauge = ({ value, max, unit, children, step = 10, outerRing }: Gaug
 const NumberDisplay = ({ value, unit }: { value: number; unit: string }) => {
   return (
     <div className='flex flex-col absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-      <span className='text-white text-8xl font-bold [font-variant-numeric:tabular-nums]'>{value}</span>
-      <span className='text-white/75 text-lg font-medium text-center'>{unit}</span>
+      <span className='text-rose-50/90 text-8xl font-bold [font-variant-numeric:tabular-nums]'>{value}</span>
+      <span className='text-rose-100/80 text-lg font-medium text-center'>{unit}</span>
     </div>
   )
 }
@@ -63,22 +64,22 @@ const GradientCircle = ({ value, max }: { value: number; max: number }) => {
   )
 }
 
-const OuterRing = ({ value, max }: { value?: number; max?: number }) => {
+const OuterRing = ({ value, max, left }: { value?: number; max?: number; left?: boolean }) => {
   const limitedValue = value && max ? (value > max ? max : value) / 3 : 0
   return (
     <>
       <div
-        className='absolute inset-0 rounded-full scale-[100%]'
+        className='absolute inset-0 rounded-full scale-[100.5%]'
         style={{
           background: `conic-gradient(
               from 0deg,
               rgba(225, 29, 72, 1) 0deg,
-              rgba(225, 29, 72, 1) ${(limitedValue * 270) / (max || 1)}deg,
+              rgba(245, 49, 92, 1) ${(limitedValue * 270) / (max || 1)}deg,
               rgba(159, 18, 57, 0.5) ${(limitedValue * 270) / (max || 1)}deg,
               rgba(159, 18, 57, 0.5) 90deg,
               transparent 90deg
             )`,
-          transform: `rotate(225deg)`,
+          transform: `rotate(${left ? 45 : 225}deg)`,
         }}
       />
       <div className='absolute inset-0 rounded-full bg-slate-950 scale-[98.5%]' />
