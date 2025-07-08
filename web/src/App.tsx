@@ -3,7 +3,6 @@ import { Gauge } from './components/Gauge'
 import { Battery } from './components/Battery'
 import { Mosfet } from './components/Mosfet'
 import { useEffect, useRef, useState } from 'react'
-import { GaugeIcon, SplineIcon, TimerIcon, ZapIcon } from 'lucide-react'
 import { TripMeter } from './components/Trip'
 
 function App() {

@@ -15,7 +15,7 @@ export const GaugeNumbers = ({ value, max, step = 10 }: { value: number; max: nu
             key={n + 'number'}
           >
             <p
-              className={twMerge('inline-block text-white text-xl font-semibold', n % step !== 0 && 'hidden')}
+              className={twMerge('inline-block text-rose-100/90 text-xl font-semibold', n % step !== 0 && 'hidden')}
               style={{
                 transform: `rotate(${135 - (n / max) * 270}deg)`,
               }}
