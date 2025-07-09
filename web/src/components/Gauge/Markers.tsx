@@ -1,5 +1,5 @@
 import { twMerge } from 'tailwind-merge'
-import { range } from '../../utils'
+import { range } from '../../utils/range'
 
 export const GaugeMarkers = ({ max, step = 1 }: { max: number; step?: number }) => {
   return (
