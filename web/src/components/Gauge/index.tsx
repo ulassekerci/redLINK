@@ -1,7 +1,9 @@
-import { useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { GaugeMarkers } from './Markers'
 import { GaugeNumbers } from './Numbers'
 import { motion } from 'motion/react'
+import { useUIStore } from '../../store/uiStore'
+import { OuterRing } from './OuterRing'
 
 interface GaugeProps {
   value: number
@@ -14,7 +16,7 @@ interface GaugeProps {
 }
 
 export const Gauge = ({ value, max, unit, children, step = 10, left, outerRing }: GaugeProps) => {
-  const [aston, setAston] = useState(false)
+  const { aston, toggleAston } = useUIStore()
 
   return (
     <motion.div
@@ -22,13 +24,15 @@ export const Gauge = ({ value, max, unit, children, step = 10, left, outerRing }
       animate={{ scale: 1 }}
       transition={{ type: 'spring', damping: 20, stiffness: 200 }}
       className='relative w-[420px] h-[420px] cursor-default select-none'
-      onClick={() => setAston(!aston)}
+      onClick={() => toggleAston()}
     >
-      {outerRing && <OuterRing value={outerRing?.value} max={outerRing?.max} left={left} />}
+      <OuterRing value={outerRing?.value} max={outerRing?.max} left={left} />
       <GradientCircle value={value} max={max} />
       {aston && <InnerRing value={value} max={max} />}
       <NumberDisplay value={value} unit={unit} />
-      <div className='flex flex-col absolute left-1/2 transform -translate-x-1/2 bottom-10'>{children}</div>
+      <div className='flex flex-col absolute left-1/2 transform -translate-x-1/2 bottom-10 [font-variant-numeric:tabular-nums]'>
+        {children}
+      </div>
       {aston && <GaugeMarkers max={max} step={step / 10} />}
       {aston && <GaugeNumbers value={value} max={max} step={step} />}
     </motion.div>
@@ -60,46 +64,6 @@ const GradientCircle = ({ value, max }: { value: number; max: number }) => {
         }}
       />
       <div className='absolute inset-0 rounded-full bg-gradient-to-tr from-[#12011e] to-[#1e0109] scale-[56%]' />
-    </>
-  )
-}
-
-const OuterRing = ({ value, max, left }: { value?: number; max?: number; left?: boolean }) => {
-  const limitedValue = value && max ? (value > max ? max : value) / 3 : 0
-  return (
-    <>
-      <div
-        className='absolute inset-0 rounded-full scale-[100%]'
-        style={{
-          background: `conic-gradient(
-              from 0deg,
-              rgba(225, 29, 72, 1) 0deg,
-              rgba(245, 49, 92, 1) ${(limitedValue * 270) / (max || 1)}deg,
-              rgba(159, 18, 57, 0.5) ${(limitedValue * 270) / (max || 1)}deg,
-              rgba(159, 18, 57, 0.5) 90deg,
-              transparent 90deg,
-              transparent 95deg,
-              rgba(159, 18, 57, 0.5) 95deg,
-              rgba(159, 18, 57, 0.5) 182deg,
-              transparent 182deg,
-              transparent 198deg,
-              rgba(159, 18, 57, 0.5) 198deg,
-              rgba(159, 18, 57, 0.5) 270deg,
-              transparent 270deg
-            )`,
-          transform: `rotate(${left ? 45 : 225}deg)`,
-        }}
-      />
-      <div className='absolute inset-0 rounded-full bg-slate-950 scale-[97.5%]' />
-      <div className='absolute text-center rotate-[52deg] -inset-3'>
-        <p className='inline-block text-rose-100/60 text-sm font-bold'>T</p>
-      </div>
-      <div className='absolute text-center rotate-[54.5deg] -inset-3'>
-        <p className='inline-block text-rose-100/60 text-sm font-bold'>E</p>
-      </div>
-      <div className='absolute text-center rotate-[57deg] -inset-3'>
-        <p className='inline-block text-rose-100/60 text-sm font-bold'>K</p>
-      </div>
     </>
   )
 }
