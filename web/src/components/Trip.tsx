@@ -4,7 +4,7 @@ import { motion } from 'motion/react'
 
 export const TripMeter = () => {
   return (
-    <div className='flex flex-col items-center text-rose-100/90 text-xl w-[360px]'>
+    <div className='flex flex-col items-center text-xl w-[360px]'>
       <TripRow icon={<SplineIcon />} text='Mesafe' value='122m' order={0} />
       <TripRow icon={<TimerIcon />} text='Süre' value='00:05:44' order={1} />
       <TripRow icon={<GaugeIcon />} text='Ort. Hız' value='12 km/h' order={2} />
@@ -21,7 +21,7 @@ const TripRow = ({ icon, text, value, order }: { icon: ReactNode; text: string; 
       transition={{ delay: order * 0.1 + 1 }}
       className='flex justify-between w-full py-6 border-t first:border-none border-rose-200/20'
     >
-      <div className='flex gap-4 text-rose-100/90'>
+      <div className='flex gap-4 text-rose-50/90'>
         {icon}
         <span>{text}</span>
       </div>

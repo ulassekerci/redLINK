@@ -1,6 +1,6 @@
 export const Battery = ({ voltage, current }: { voltage: number; current: number }) => {
   const percentage = 40 // TODO: percentage calculating logic
-  const batteryColor = percentage > 20 ? '#FFF1F2' : percentage > 10 ? '#fcc800' : '#e7000b'
+  const batteryColor = percentage > 20 ? 'rgba(255,241,242,0.9)' : percentage > 10 ? '#fcc800' : '#e7000b'
 
   return (
     <div className='flex justify-center items-center gap-[2px] w-80'>
