@@ -1,4 +1,4 @@
-import { useUIStore } from '../../store/uiStore'
+import { useUIStore } from '../../store/ui'
 
 export const OuterRing = ({ value, max, left }: { value?: number; max?: number; left?: boolean }) => {
   const limitedValue = value && max ? (value > max ? max : value) / 3 : 0

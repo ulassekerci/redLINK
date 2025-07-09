@@ -2,7 +2,7 @@ import { type ReactNode } from 'react'
 import { GaugeMarkers } from './Markers'
 import { GaugeNumbers } from './Numbers'
 import { motion } from 'motion/react'
-import { useUIStore } from '../../store/uiStore'
+import { useUIStore } from '../../store/ui'
 import { OuterRing } from './OuterRing'
 
 interface GaugeProps {
