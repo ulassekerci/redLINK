@@ -29,16 +29,10 @@ function App() {
       <div className=''></div>
       <div className='flex items-center justify-between'>
         <Gauge value={testValue} max={60} unit='km/h' left>
-          <span className='text-rose-100/80 text-lg font-medium text-center'>120m</span>
+          <span className='text-rose-100/80 text-lg font-medium text-center'>6km</span>
         </Gauge>
         <TripMeter />
-        <Gauge
-          value={testValue * 4}
-          max={250}
-          step={25}
-          unit='watt'
-          //  outerRing={{ value: testValue, max: 75 }}
-        >
+        <Gauge value={testValue * 4} max={300} step={50} unit='watt' outerRing={{ value: testValue, max: 75 }}>
           <span className='text-rose-100/80 text-lg font-medium text-center'>{testValue} Wh</span>
         </Gauge>
       </div>

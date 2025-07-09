@@ -69,7 +69,7 @@ const OuterRing = ({ value, max, left }: { value?: number; max?: number; left?: 
   return (
     <>
       <div
-        className='absolute inset-0 rounded-full scale-[100.5%]'
+        className='absolute inset-0 rounded-full scale-[100%]'
         style={{
           background: `conic-gradient(
               from 0deg,
@@ -77,12 +77,29 @@ const OuterRing = ({ value, max, left }: { value?: number; max?: number; left?: 
               rgba(245, 49, 92, 1) ${(limitedValue * 270) / (max || 1)}deg,
               rgba(159, 18, 57, 0.5) ${(limitedValue * 270) / (max || 1)}deg,
               rgba(159, 18, 57, 0.5) 90deg,
-              transparent 90deg
+              transparent 90deg,
+              transparent 95deg,
+              rgba(159, 18, 57, 0.5) 95deg,
+              rgba(159, 18, 57, 0.5) 182deg,
+              transparent 182deg,
+              transparent 198deg,
+              rgba(159, 18, 57, 0.5) 198deg,
+              rgba(159, 18, 57, 0.5) 270deg,
+              transparent 270deg
             )`,
           transform: `rotate(${left ? 45 : 225}deg)`,
         }}
       />
-      <div className='absolute inset-0 rounded-full bg-slate-950 scale-[98.5%]' />
+      <div className='absolute inset-0 rounded-full bg-slate-950 scale-[97.5%]' />
+      <div className='absolute text-center rotate-[52deg] -inset-3'>
+        <p className='inline-block text-rose-100/60 text-sm font-bold'>T</p>
+      </div>
+      <div className='absolute text-center rotate-[54.5deg] -inset-3'>
+        <p className='inline-block text-rose-100/60 text-sm font-bold'>E</p>
+      </div>
+      <div className='absolute text-center rotate-[57deg] -inset-3'>
+        <p className='inline-block text-rose-100/60 text-sm font-bold'>K</p>
+      </div>
     </>
   )
 }
