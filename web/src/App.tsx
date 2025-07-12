@@ -2,38 +2,23 @@ import { motion } from 'motion/react'
 import { Gauge } from './components/Gauge'
 import { Battery } from './components/Battery'
 import { Mosfet } from './components/Mosfet'
-import { useEffect, useRef, useState } from 'react'
 import { TripMeter } from './components/Trip'
+import { useVehicleData } from './hooks/useVehicleData'
 
 function App() {
-  const [testValue, setTestValue] = useState(0)
-  const direction = useRef(1)
-
-  const update = () => {
-    setTestValue((old) => {
-      if (old > 60) direction.current = -1
-      if (old < 10) direction.current = +1
-      return old + direction.current
-    })
-  }
-
-  // useEffect(() => {
-  //   const int = setInterval(update, 20)
-  //   return () => {
-  //     clearInterval(int)
-  //   }
-  // }, [])
+  const data = useVehicleData()
 
   return (
     <div className='flex flex-col justify-between h-full'>
       <div className=''></div>
       <div className='flex items-center justify-between'>
-        <Gauge value={testValue} max={60} unit='km/h' left outerRing={{ value: testValue, max: 75 }}>
-          <span className='text-rose-100/80 text-lg font-medium text-center'>{testValue * 6}m</span>
+        <Gauge value={data.speed} max={60} unit='km/h' left outerRing={{ value: data.dutyCycle, max: 1 }}>
+          <span className='text-rose-100/80 text-lg font-medium text-center'>{data.distance}m</span>
         </Gauge>
         <TripMeter />
-        <Gauge value={testValue * 4} max={300} step={50} unit='watt' outerRing={{ value: testValue, max: 75 }}>
-          <span className='text-rose-100/80 text-lg font-medium text-center'>{testValue} Wh</span>
+        {/* TODO: implement ADC reading */}
+        <Gauge value={data.power} max={300} step={50} unit='watt' outerRing={{ value: 0, max: 75 }}>
+          <span className='text-rose-100/80 text-lg font-medium text-center'>{data.wattHours.consumed} Wh</span>
         </Gauge>
       </div>
       <motion.div
@@ -42,8 +27,8 @@ function App() {
         transition={{ delay: 0.5 }}
         className='flex justify-between items-center mx-9'
       >
-        <Battery voltage={10 + testValue} current={testValue} />
-        <Mosfet voltage={10 + testValue} current={testValue} temp={25 + testValue} />
+        <Battery voltage={data.voltage.battery} current={data.current.battery} />
+        <Mosfet voltage={data.voltage.motor} current={data.current.motor} temp={data.temp.mosfet} />
       </motion.div>
     </div>
   )
