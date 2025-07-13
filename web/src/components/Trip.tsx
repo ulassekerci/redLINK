@@ -19,13 +19,13 @@ const TripRow = ({ icon, text, value, order }: { icon: ReactNode; text: string; 
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: order * 0.1 + 1 }}
-      className='flex justify-between w-full py-6 border-t first:border-none border-rose-200/20'
+      className='flex justify-between w-full py-6 border-t first:border-none border-white/20'
     >
-      <div className='flex gap-4 text-rose-50/90'>
+      <div className='flex gap-4'>
         {icon}
         <span>{text}</span>
       </div>
-      <span className='text-rose-100/60 '>{value}</span>
+      <span className='text-gray-300/60'>{value}</span>
     </motion.div>
   )
 }

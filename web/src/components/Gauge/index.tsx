@@ -42,7 +42,7 @@ export const Gauge = ({ value, max, unit, children, step = 10, left, outerRing }
 const NumberDisplay = ({ value, unit }: { value: number; unit: string }) => {
   return (
     <div className='flex flex-col absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
-      <span className='text-rose-50/90 text-8xl font-bold [font-variant-numeric:tabular-nums]'>{value}</span>
+      <span className='text-8xl font-bold [font-variant-numeric:tabular-nums]'>{value}</span>
       <span className='text-rose-100/80 text-lg font-medium text-center'>{unit}</span>
     </div>
   )
