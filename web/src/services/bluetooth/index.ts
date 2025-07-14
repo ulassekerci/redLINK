@@ -10,7 +10,7 @@ let gattServer: BluetoothRemoteGATTServer | undefined
 let rxCharacteristic: BluetoothRemoteGATTCharacteristic
 let txCharacteristic: BluetoothRemoteGATTCharacteristic
 
-export const connectBLE = async () => {
+export const connect = async () => {
   console.log('Requesting ble')
   const device = await navigator.bluetooth.requestDevice({
     filters: [{ name: deviceName }],
@@ -53,4 +53,10 @@ export const requestValues = async () => {
   const crc = crc16(new Uint8Array([command]))
   const request = new Uint8Array([start, lenght, command, crc.msb, crc.lsb, end])
   await rxCharacteristic.writeValue(request)
+}
+
+export const disconnect = async () => {
+  if (!gattServer) return
+  gattServer.disconnect()
+  console.log('BLE disconnected')
 }
