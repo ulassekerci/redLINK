@@ -7,11 +7,11 @@ export const calculateSpeed = (erpm: number) => {
 
   const metersPerMinute = rpm * wheelCircumference
   const kilometersPerHour = (metersPerMinute * 60) / 1000
-  return kilometersPerHour
+  return Math.round(kilometersPerHour)
 }
 
 export const calculateDistance = (eRevs: number) => {
   const totalMechanicalRevolutions = eRevs / polePairs
   const distance = totalMechanicalRevolutions * wheelDiameter // meters
-  return distance
+  return Math.round(distance)
 }
