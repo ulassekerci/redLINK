@@ -4,23 +4,11 @@ import { Battery } from './components/Battery'
 import { Mosfet } from './components/Mosfet'
 import { TripMeter } from './components/Trip'
 import { useVehicleData } from './hooks/useVehicleData'
-import { useEffect } from 'react'
-import * as ble from './services/bluetooth'
+import { useBLEStore } from './store/ble'
 
 function App() {
   const data = useVehicleData()
-
-  const handleBLE = () => {
-    if (!ble.isConnected()) return
-    ble.requestValues()
-  }
-
-  useEffect(() => {
-    const bleInt = setInterval(handleBLE, 50)
-    return () => {
-      clearInterval(bleInt)
-    }
-  }, [])
+  const ble = useBLEStore()
 
   return (
     <div className='flex flex-col justify-between h-full'>
