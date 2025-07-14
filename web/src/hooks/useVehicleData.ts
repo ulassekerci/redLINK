@@ -9,6 +9,13 @@ export const useVehicleData = () => {
     speed: calculateSpeed(bleData.erpm),
     power: Math.round(bleData.voltage * bleData.current.battery),
     distance: calculateDistance(bleData.tachometer.abs),
-    voltage: { battery: bleData.voltage, motor: bleData.voltage * bleData.dutyCycle },
+    voltage: {
+      battery: bleData.voltage,
+      motor: bleData.voltage * bleData.dutyCycle,
+    },
+    wattHours: {
+      ...bleData.wattHours,
+      abs: bleData.wattHours.consumed - bleData.wattHours.charged,
+    },
   }
 }

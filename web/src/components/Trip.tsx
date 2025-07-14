@@ -1,14 +1,17 @@
 import { GaugeIcon, SplineIcon, TimerIcon, ZapIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { motion } from 'motion/react'
+import { useTripData } from '../hooks/useTripData'
 
 export const TripMeter = () => {
+  const data = useTripData()
+
   return (
     <div className='flex flex-col items-center text-xl w-[360px]'>
-      <TripRow icon={<SplineIcon />} text='Mesafe' value='122m' order={0} />
-      <TripRow icon={<TimerIcon />} text='Süre' value='00:05:44' order={1} />
-      <TripRow icon={<GaugeIcon />} text='Ort. Hız' value='12 km/h' order={2} />
-      <TripRow icon={<ZapIcon />} text='Tüketim' value='832 km/kWh' order={3} />
+      <TripRow icon={<SplineIcon />} text='Mesafe' value={data.distanceString} order={0} />
+      <TripRow icon={<TimerIcon />} text='Süre' value={data.timeString} order={1} />
+      <TripRow icon={<GaugeIcon />} text='Ort. Hız' value={data.avgSpeedString} order={2} />
+      <TripRow icon={<ZapIcon />} text='Tüketim' value={data.consumptionString} order={3} />
     </div>
   )
 }
@@ -25,7 +28,7 @@ const TripRow = ({ icon, text, value, order }: { icon: ReactNode; text: string; 
         {icon}
         <span>{text}</span>
       </div>
-      <span className='text-gray-300/60'>{value}</span>
+      <span className='text-gray-300/60 [font-variant-numeric:tabular-nums]'>{value}</span>
     </motion.div>
   )
 }
