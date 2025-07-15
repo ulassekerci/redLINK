@@ -1,5 +1,7 @@
+import { getAspilsanPercentage } from '../utils/aspilsan'
+
 export const Battery = ({ voltage, current }: { voltage: number; current: number }) => {
-  const percentage = 40 // TODO: percentage calculating logic
+  const percentage = getAspilsanPercentage(voltage / 12)
   const batteryColor = percentage > 20 ? 'rgba(255,241,242,0.9)' : percentage > 10 ? '#fcc800' : '#e7000b'
 
   return (
@@ -14,7 +16,7 @@ export const Battery = ({ voltage, current }: { voltage: number; current: number
       </div>
       <div className='w-1 h-2 bg-white/50 rounded-r-full' />
       <div className='text-lg font-medium flex gap-3 ml-3 [font-variant-numeric:tabular-nums]'>
-        <span className='w-10 text-right'>{percentage}%</span>
+        <span className='text-right'>{percentage}%</span>
         <span>{voltage.toFixed(1)}V</span>
         <span className='w-9'>{current}A</span>
       </div>
