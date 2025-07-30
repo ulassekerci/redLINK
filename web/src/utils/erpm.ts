@@ -2,7 +2,7 @@ const polePairs = 15 // 30 poles
 const wheelDiameter = 0.5 // meters
 
 export const calculateSpeed = (erpm: number) => {
-  const wheelCircumference = 2 * Math.PI * wheelDiameter
+  const wheelCircumference = Math.PI * wheelDiameter
   const rpm = erpm / polePairs
 
   const metersPerMinute = rpm * wheelCircumference
