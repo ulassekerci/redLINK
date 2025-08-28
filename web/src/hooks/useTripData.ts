@@ -14,7 +14,7 @@ export const useTripData = () => {
   const whConsume = data.wattHours.consumed - trip.whConsumeBeforeTrip
   const consumption = calculateConsumption(distance, whConsume, whCharge)
 
-  const distanceString = distance + 'm'
+  const distanceString = distance + ' m'
   const timeString = getTimeString(trip.timeStarted)
   const avgSpeedString = avgSpeed + ' km/h'
   const consumptionString = consumption + ' km/kWh'
