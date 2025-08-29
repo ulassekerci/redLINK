@@ -1,7 +1,7 @@
-import { type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { GaugeMarkers } from './Markers'
 import { GaugeNumbers } from './Numbers'
-import { motion } from 'motion/react'
+import { motion, useMotionValue, animate, useTransform } from 'motion/react'
 import { useUIStore } from '../../store/ui'
 import { OuterRing } from './OuterRing'
 
@@ -49,18 +49,31 @@ const NumberDisplay = ({ value, unit }: { value: number; unit: string }) => {
 }
 
 const GradientCircle = ({ value, max }: { value: number; max: number }) => {
+  const angle = useMotionValue(0)
+
+  const background = useTransform(angle, (a) => {
+    return `
+    conic-gradient(
+      from 0deg,
+      rgba(159, 18, 57, 0.5) 0deg,
+      rgba(225, 29, 72, 1) ${a}deg,
+      rgba(159, 18, 57, 0.5) ${a}deg
+    )`
+  })
+
+  useEffect(() => {
+    const clamped = Math.max(0, Math.min(value, max))
+    const newAngle = (clamped / max) * 270
+    animate(angle, newAngle, { type: 'spring', stiffness: 150, damping: 20 })
+  }, [value, max, angle])
+
   return (
     <>
-      <div
+      <motion.div
         className='absolute inset-0 rounded-full scale-[93.7%]'
         style={{
-          background: `conic-gradient(
-              from 0deg,
-              rgba(159, 18, 57, 0.5) 0deg,
-              rgba(225, 29, 72, 1) ${(value * 270) / max + 90}deg,
-              rgba(159, 18, 57, 0.5) ${(value * 270) / max + 90}deg
-            )`,
-          transform: `rotate(135deg)`,
+          background,
+          rotate: 225,
         }}
       />
       <div className='absolute inset-0 rounded-full bg-gradient-to-tr from-[#12011e] to-[#1e0109] scale-[56%]' />
@@ -69,19 +82,30 @@ const GradientCircle = ({ value, max }: { value: number; max: number }) => {
 }
 
 const InnerRing = ({ value, max }: { value: number; max: number }) => {
-  const limitedValue = value > max ? max : value
-  return (
-    <>
-      <div
-        className='absolute inset-0 rounded-full scale-[52%]'
-        style={{
-          background: `conic-gradient(
+  const angle = useMotionValue(0)
+
+  const background = useTransform(angle, (a) => {
+    return `conic-gradient(
               from 0deg,
               rgba(225, 29, 72, 1) 0deg,
-              rgba(225, 29, 72, 1) ${(limitedValue * 270) / max}deg,
-              rgba(159, 18, 57, 0.5) ${(limitedValue * 270) / max}deg
-            )`,
-          transform: `rotate(225deg)`,
+              rgba(225, 29, 72, 1) ${a}deg,
+              rgba(159, 18, 57, 0.5) ${a}deg
+            )`
+  })
+
+  useEffect(() => {
+    const clamped = Math.max(0, Math.min(value, max))
+    const newAngle = (clamped / max) * 270
+    animate(angle, newAngle, { type: 'spring', stiffness: 150, damping: 20 })
+  }, [value, max, angle])
+
+  return (
+    <>
+      <motion.div
+        className='absolute inset-0 rounded-full scale-[52%]'
+        style={{
+          background,
+          rotate: 225,
         }}
       />
       <div className='absolute inset-0 rounded-full bg-gradient-to-tr from-[#12011e] to-[#1e0109] scale-[50%]' />
