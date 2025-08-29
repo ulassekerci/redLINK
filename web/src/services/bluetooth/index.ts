@@ -1,3 +1,4 @@
+import { useBLEStore } from '../../store/ble'
 import { crc16 } from '../../utils/crc'
 import { Packet } from './packet'
 
@@ -6,16 +7,19 @@ const uartServiceUUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
 const rxCharacteristicUUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'
 const txCharacteristicUUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'
 
+let device: BluetoothDevice | undefined
 let gattServer: BluetoothRemoteGATTServer | undefined
-let rxCharacteristic: BluetoothRemoteGATTCharacteristic
-let txCharacteristic: BluetoothRemoteGATTCharacteristic
+let rxCharacteristic: BluetoothRemoteGATTCharacteristic | undefined
+let txCharacteristic: BluetoothRemoteGATTCharacteristic | undefined
 
 export const connect = async () => {
   console.log('Requesting ble')
-  const device = await navigator.bluetooth.requestDevice({
+  device = await navigator.bluetooth.requestDevice({
     filters: [{ name: deviceName }],
     optionalServices: [uartServiceUUID],
   })
+
+  device.addEventListener('gattserverdisconnected', handleDisconnected)
 
   gattServer = await device.gatt?.connect()
   if (!gattServer) return console.log("Couldn't connect")
@@ -28,12 +32,12 @@ export const connect = async () => {
   console.log('Discovered RX and TX characteristics')
 
   txCharacteristic.addEventListener('characteristicvaluechanged', handleTX)
-  txCharacteristic.startNotifications()
+  await txCharacteristic.startNotifications()
   console.log('Notifications Started.')
 }
 
 export const isConnected = () => {
-  return !!(gattServer && rxCharacteristic)
+  return !!(gattServer?.connected && rxCharacteristic && txCharacteristic)
 }
 
 const handleTX = (event: Event) => {
@@ -45,6 +49,7 @@ const handleTX = (event: Event) => {
 }
 
 export const requestValues = async () => {
+  if (!rxCharacteristic) return
   const start = 2
   const lenght = 1
   const command = 4
@@ -55,8 +60,20 @@ export const requestValues = async () => {
   await rxCharacteristic.writeValue(request)
 }
 
-export const disconnect = async () => {
-  if (!gattServer) return
-  gattServer.disconnect()
+export const disconnect = () => {
+  if (!device) return
+  if (txCharacteristic) txCharacteristic.removeEventListener('characteristicvaluechanged', handleTX)
+  if (gattServer?.connected) gattServer.disconnect()
+  device.removeEventListener('gattserverdisconnected', handleDisconnected)
+  device = undefined
+  gattServer = undefined
+  rxCharacteristic = undefined
+  txCharacteristic = undefined
   console.log('BLE disconnected')
+}
+
+const handleDisconnected = () => {
+  console.log('BLE device disconnected')
+  disconnect()
+  useBLEStore.getState().disconnectBLE()
 }

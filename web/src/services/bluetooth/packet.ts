@@ -6,7 +6,7 @@ import { Payload } from './payload'
 export class Packet {
   payload: Payload
 
-  constructor(buffer: ArrayBuffer) {
+  constructor(buffer: ArrayBufferLike) {
     const response = new Uint8Array(buffer)
     if (response.length < 6) throw new Error('Response is too short')
 
