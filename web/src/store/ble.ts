@@ -18,7 +18,7 @@ export const useBLEStore = create<BLEState>((set) => {
     retryTimeout = setTimeout(async () => {
       retryTimeout = undefined
       await useBLEStore.getState().connectBLE()
-    }, 1000)
+    }, 500)
   }
 
   return {
@@ -36,9 +36,9 @@ export const useBLEStore = create<BLEState>((set) => {
           if (ble.isConnected()) ble.requestValues()
         }, 100)
       } catch (err) {
-        console.error('BLE connection failed:', err)
-        ble.disconnect() // ensure cleanup
+        ble.disconnect()
         set({ connected: false, connecting: false })
+        console.error('BLE connection failed:', err)
       }
     },
 
