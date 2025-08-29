@@ -12,10 +12,9 @@ interface BLEState {
 export const useBLEStore = create<BLEState>((set) => {
   let intervalId: number | undefined
   let retryTimeout: number | undefined
-  let windowFocused = document.visibilityState === 'visible'
 
   const reconnect = () => {
-    if (retryTimeout || !windowFocused) return
+    if (retryTimeout) return
     retryTimeout = setTimeout(async () => {
       retryTimeout = undefined
       await useBLEStore.getState().connectBLE()
