@@ -1,17 +1,20 @@
 const polePairs = 15 // 30 poles
 const wheelDiameter = 0.5 // meters
+const wheelCircumference = Math.PI * wheelDiameter // meters
 
 export const calculateSpeed = (erpm: number) => {
-  const wheelCircumference = Math.PI * wheelDiameter
   const rpm = erpm / polePairs
-
   const metersPerMinute = rpm * wheelCircumference
   const kilometersPerHour = (metersPerMinute * 60) / 1000
-  return Math.round(kilometersPerHour)
+  return kilometersPerHour
 }
 
-export const calculateDistance = (eRevs: number) => {
-  const totalMechanicalRevolutions = eRevs / polePairs
-  const distance = totalMechanicalRevolutions * wheelDiameter // meters
-  return Math.round(distance)
+export const calculateDistance = (tachometer: number) => {
+  // vesc tachometer counts every hall sensor update,
+  // as 3 sensors update twice for each revolution
+  // we need to divide it by 6 to get electrical revolutions
+  const electricalRevolutions = tachometer / 6
+  const totalMechanicalRevolutions = electricalRevolutions / polePairs
+  const distance = totalMechanicalRevolutions * wheelCircumference // meters
+  return distance
 }

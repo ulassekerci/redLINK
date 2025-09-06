@@ -14,10 +14,10 @@ export const useTripData = () => {
   const whConsume = data.wattHours.consumed - trip.whConsumeBeforeTrip
   const consumption = calculateConsumption(distance, whConsume, whCharge)
 
-  const distanceString = distance + ' m'
+  const distanceString = Math.round(distance) + ' m'
   const timeString = getTimeString(trip.timeStarted)
-  const avgSpeedString = avgSpeed + ' km/h'
-  const consumptionString = consumption + ' km/kWh'
+  const avgSpeedString = avgSpeed.toFixed(1) + ' km/h'
+  const consumptionString = Math.round(consumption) + ' km/kWh'
 
   const handleSpace = (e: KeyboardEvent) => {
     if (e.code !== 'Space') return
@@ -47,12 +47,11 @@ const getAvgSpeed = (distance: number, tripStart: DateTime | null) => {
   const diffHr = DateTime.now().diff(tripStart, 'hours').hours
   if (diffHr === 0) return 0 // prevent divison by zero
   const distanceKm = distance / 1000
-  const speed = distanceKm / diffHr
-  return Math.round(speed)
+  return distanceKm / diffHr
 }
 
 const calculateConsumption = (distance: number, whConsume: number, whCharge: number) => {
   const whAbs = whConsume - whCharge
   if (whAbs === 0) return 0
-  return Math.round(distance / whAbs)
+  return distance / whAbs // m/wh or km/kwh - same result
 }

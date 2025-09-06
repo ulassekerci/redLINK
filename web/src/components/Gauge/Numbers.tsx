@@ -20,7 +20,7 @@ export const GaugeNumbers = ({ value, max, step = 10 }: { value: number; max: nu
                 transform: `rotate(${135 - (n / max) * 270}deg)`,
               }}
             >
-              {n === max && value > max ? value : n}
+              {n === max && value > max ? Math.round(value) : n}
             </p>
           </div>
         )

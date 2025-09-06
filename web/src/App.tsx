@@ -15,12 +15,12 @@ function App() {
       <div className=''>{/* TODO: implement fault code warnings */}</div>
       <div className='flex items-center justify-between'>
         <Gauge value={data.speed} max={60} unit='km/h' left outerRing={{ value: data.dutyCycle, max: 1 }}>
-          <span className='opacity-70 text-lg font-medium text-center'>{data.distance} m</span>
+          <span className='opacity-70 text-lg font-medium text-center'>{Math.round(data.distance)} m</span>
         </Gauge>
         <MiddleSection />
         {/* TODO: implement ADC reading */}
         <Gauge value={data.power} max={300} step={50} unit='watt' outerRing={{ value: 0, max: 75 }}>
-          <span className='opacity-70 text-lg font-medium text-center'>{data.wattHours.consumed} Wh</span>
+          <span className='opacity-70 text-lg font-medium text-center'>{Math.round(data.wattHours.consumed)} Wh</span>
         </Gauge>
       </div>
       <motion.div
