@@ -1,5 +1,6 @@
 import { useVehicleStore } from '../../store/vehicle'
 import { checkCRC } from '../../utils/crc'
+import { parseGetDecodedADC } from './commands/get-adc'
 import { parseGetValues } from './commands/get-values'
 import { Payload } from './payload'
 
@@ -25,9 +26,14 @@ export class Packet {
     switch (this.payload.command) {
       // COMM_GET_VALUES
       case 4:
-        const data = parseGetValues(this.payload)
-        useVehicleStore.setState(data)
-        // TODO: share this data over socket.io
+        const parsedValues = parseGetValues(this.payload)
+        useVehicleStore.setState(parsedValues)
+        break
+
+      // COMM_GET_DECODED_ADC
+      case 32:
+        const parsedADC = parseGetDecodedADC(this.payload)
+        useVehicleStore.setState({ adc: parsedADC })
         break
 
       default:
