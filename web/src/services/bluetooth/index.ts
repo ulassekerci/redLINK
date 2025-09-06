@@ -48,16 +48,26 @@ const handleTX = (event: Event) => {
   response.parse()
 }
 
-export const requestValues = async () => {
+export const requestData = async (command: number) => {
   if (!rxCharacteristic) return
   const start = 2
   const lenght = 1
-  const command = 4
   const end = 3
 
   const crc = crc16(new Uint8Array([command]))
   const request = new Uint8Array([start, lenght, command, crc.msb, crc.lsb, end])
   await rxCharacteristic.writeValue(request)
+}
+
+export const requestLoop = async () => {
+  if (!isConnected()) return
+  try {
+    await requestData(4)
+    await requestData(32)
+  } catch (error) {
+    console.log(error)
+  }
+  setTimeout(requestLoop, 100)
 }
 
 export const disconnect = () => {
