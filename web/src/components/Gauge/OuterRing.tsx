@@ -1,68 +1,70 @@
+import { motion, animate, useMotionValue, useTransform } from 'motion/react'
 import { useUIStore } from '../../store/ui'
+import { useEffect } from 'react'
 
 export const OuterRing = ({ value, max, left }: { value?: number; max?: number; left?: boolean }) => {
-  const limitedValue = value && max ? (value > max ? max : value) / 3 : 0
-  const proportionateValue = (limitedValue * 135) / (max || 1)
+  const angle = useMotionValue(0)
+
+  useEffect(() => {
+    const limitedValue = value && max ? (value > max ? max : value) / 3 : 0
+    const proportionateValue = (limitedValue * 135) / (max || 1)
+    animate(angle, proportionateValue, { type: 'spring', stiffness: 150, damping: 20 })
+  }, [value, max, angle])
+
   const { aston } = useUIStore()
 
   const color1 = 'rgb(225, 29, 72)'
   const color2 = 'rgb(245, 49, 92)'
   const bgColor = 'rgba(159, 18, 57, 0.5)'
 
-  const appleGradient = `conic-gradient(
-    from ${left ? 90 : -45}deg,
-    ${left ? bgColor : color1} 0deg,
-    ${left ? bgColor : color2} ${left ? 45 - proportionateValue : proportionateValue}deg,
-    ${left ? color2 : bgColor} ${left ? 45 - proportionateValue : proportionateValue}deg,
-    ${left ? color1 : bgColor} 45deg,
-    transparent 45deg
-  )`
+  const astonRightGradient = useTransform(angle, (a) => {
+    return `
+      conic-gradient(
+        from 0.25deg,
+        ${color1} 0deg,
+        ${color2} ${a}deg,
+        ${bgColor} ${a}deg,
+        ${bgColor} 45deg,
+        transparent 45deg,
+        transparent 50deg,
+        ${bgColor} 50deg,
+        ${bgColor} 169deg,
+        transparent 169deg,
+        transparent 192deg,
+        ${bgColor} 192deg,
+        ${bgColor} 270deg,
+        transparent 270deg
+      )`
+  })
 
-  const astonRightGradient = `
-    conic-gradient(
-      from 0.25deg,
-      ${color1} 0deg,
-      ${color2} ${proportionateValue}deg,
-      ${bgColor} ${proportionateValue}deg,
-      ${bgColor} 45deg,
-      transparent 45deg,
-      transparent 50deg,
-      ${bgColor} 50deg,
-      ${bgColor} 169deg,
-      transparent 169deg,
-      transparent 192deg,
-      ${bgColor} 192deg,
-      ${bgColor} 270deg,
-      transparent 270deg
-    )`
-
-  const astonLeftGradient = `
-    conic-gradient(
-      from 45deg,
-      ${bgColor} 0deg,
-      ${bgColor} ${45 - proportionateValue}deg,
-      ${color2} ${45 - proportionateValue}deg,
-      ${color1} 45deg,
-      transparent 45deg,
-      transparent 135deg,
-      ${bgColor} 135deg,
-      ${bgColor} 218deg,
-      transparent 218deg,
-      transparent 232deg,
-      ${bgColor} 232deg,
-      ${bgColor} 355deg,
-      transparent 355deg
-    )
-  `
+  const astonLeftGradient = useTransform(angle, (a) => {
+    return `
+      conic-gradient(
+        from 45deg,
+        ${bgColor} 0deg,
+        ${bgColor} ${45 - a}deg,
+        ${color2} ${45 - a}deg,
+        ${color1} 45deg,
+        transparent 45deg,
+        transparent 135deg,
+        ${bgColor} 135deg,
+        ${bgColor} 218deg,
+        transparent 218deg,
+        transparent 232deg,
+        ${bgColor} 232deg,
+        ${bgColor} 355deg,
+        transparent 355deg
+      )`
+  })
 
   const getGradient = () => {
     if (aston) return left ? astonLeftGradient : astonRightGradient
-    else limitedValue ? appleGradient : 'transparent'
+    else return 'transparent'
   }
 
   return (
     <>
-      <div
+      <motion.div
         className='absolute inset-0 rounded-full scale-[99%]'
         style={{
           background: getGradient(),
