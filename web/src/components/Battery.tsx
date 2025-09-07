@@ -18,7 +18,7 @@ export const Battery = ({ voltage, current }: { voltage: number; current: number
       <div className='text-lg font-medium flex gap-3 ml-3 [font-variant-numeric:tabular-nums]'>
         <span className='text-right'>{percentage}%</span>
         <span>{voltage.toFixed(1)}V</span>
-        <span className='w-9'>{current.toFixed(0)}A</span>
+        <span className='w-9'>{current.toFixed(1)}A</span>
       </div>
     </div>
   )
