@@ -29,6 +29,7 @@ export const useBLEStore = create<BLEState>((set) => {
       try {
         if (!ble.isConnected()) await ble.connect()
         set({ connected: true, connecting: false })
+        ble.requestLoop()
       } catch (err) {
         ble.disconnect()
         set({ connected: false, connecting: false })
