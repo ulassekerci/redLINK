@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "redLink",
-    "slug": "redLink",
+    "name": "redLINK",
+    "slug": "redLINK",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -28,7 +28,7 @@
         {
           "isBackgroundEnabled": true,
           "modes": ["peripheral", "central"],
-          "bluetoothAlwaysPermission": "Allow redLink to connect to bluetooth devices"
+          "bluetoothAlwaysPermission": "Allow redLINK to connect to vehicles"
         }
       ]
     ]
