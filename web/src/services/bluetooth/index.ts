@@ -15,7 +15,7 @@ let txCharacteristic: BluetoothRemoteGATTCharacteristic | undefined
 export const connect = async () => {
   console.log('Requesting ble')
   device = await navigator.bluetooth.requestDevice({
-    filters: [{ name: deviceName }],
+    filters: [{ namePrefix: deviceName }],
     optionalServices: [uartServiceUUID],
   })
 
@@ -43,8 +43,7 @@ export const isConnected = () => {
 const handleTX = (event: Event) => {
   const value = (event.target as BluetoothRemoteGATTCharacteristic).value
   if (!value) return
-
-  const response = new Packet(value.buffer)
+  const response = new Packet(value.buffer, device)
   response.parse()
 }
 
@@ -67,7 +66,7 @@ export const requestLoop = async () => {
   } catch (error) {
     console.log(error)
   }
-  setTimeout(requestLoop, 100)
+  setTimeout(requestLoop, 10)
 }
 
 export const disconnect = () => {
