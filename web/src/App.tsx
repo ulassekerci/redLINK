@@ -19,7 +19,7 @@ function App() {
         </Gauge>
         <MiddleSection />
         {/* TODO: implement ADC reading */}
-        <Gauge value={data.power} max={300} step={50} unit='watt' outerRing={{ value: 0, max: 75 }}>
+        <Gauge value={data.power} max={300} step={50} unit='watt' outerRing={{ value: data.adc.level1, max: 1 }}>
           <span className='opacity-70 text-lg font-medium text-center'>{Math.round(data.wattHours.consumed)} Wh</span>
         </Gauge>
       </div>
