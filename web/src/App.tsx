@@ -18,7 +18,6 @@ function App() {
           <span className='opacity-70 text-lg font-medium text-center'>{Math.round(data.distance)} m</span>
         </Gauge>
         <MiddleSection />
-        {/* TODO: implement ADC reading */}
         <Gauge value={data.power} max={300} step={50} unit='watt' outerRing={{ value: data.adc.level1, max: 1 }}>
           <span className='opacity-70 text-lg font-medium text-center'>{Math.round(data.wattHours.consumed)} Wh</span>
         </Gauge>
