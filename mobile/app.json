@@ -21,17 +21,31 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT"
+      ],
+      "package": "org.metucet.redlink"
     },
     "plugins": [
       [
         "react-native-ble-plx",
         {
           "isBackgroundEnabled": true,
-          "modes": ["peripheral", "central"],
+          "modes": [
+            "peripheral",
+            "central"
+          ],
           "bluetoothAlwaysPermission": "Allow redLINK to connect to vehicles"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6fc9093f-1d47-4ce8-83e0-956df1511a46"
+      }
+    }
   }
 }
