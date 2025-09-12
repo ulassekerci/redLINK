@@ -28,6 +28,8 @@ export const startStreamingData = async (device: Device) => {
 }
 
 const requestLoop = async (device: Device) => {
+  const isConnected = await device.isConnected()
+  if (!isConnected) return
   try {
     await requestData(4, device)
     await requestData(32, device)
@@ -51,7 +53,6 @@ const requestData = async (command: number, device: Device) => {
 export const handleTX = (error: BleError | null, characteristic: Characteristic | null, device: Device) => {
   if (error) return console.log(error)
   if (!characteristic?.value) return
-
   const response = new Packet(toByteArray(characteristic.value).buffer, device)
   response.parse()
 }
