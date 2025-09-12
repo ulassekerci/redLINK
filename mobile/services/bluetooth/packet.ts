@@ -23,7 +23,7 @@ export class Packet {
     this.payload = new Payload(payloadBytes.slice().buffer)
   }
 
-  parse() {
+  consume() {
     switch (this.payload.command) {
       // COMM_GET_VALUES
       case 4:

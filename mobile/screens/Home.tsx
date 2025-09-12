@@ -1,6 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
 import { StyleSheet, View } from 'react-native'
-import { socket } from '../services/socket'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '../components/Text'
 import { useNavigation } from '@react-navigation/native'

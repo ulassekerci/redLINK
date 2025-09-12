@@ -3,6 +3,7 @@ import { BLEManager } from './manager'
 import { fromByteArray, toByteArray } from 'base64-js'
 import { crc16 } from '../../utils/crc'
 import { Packet } from './packet'
+import { uploadData } from '../socket'
 
 export const uartServiceUUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
 export const rxCharacteristicUUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'
@@ -54,5 +55,6 @@ export const handleTX = (error: BleError | null, characteristic: Characteristic 
   if (error) return console.log(error)
   if (!characteristic?.value) return
   const response = new Packet(toByteArray(characteristic.value).buffer, device)
-  response.parse()
+  response.consume()
+  uploadData()
 }
