@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { BleError, Device } from 'react-native-ble-plx'
 import * as ble from '../services/bluetooth'
+import { useVehicleStore } from './vehicle'
 
 interface BLEState {
   devices: Device[]
@@ -46,6 +47,9 @@ export const useBLEStore = create<BLEState>((set, get) => {
         await connectedDevice.discoverAllServicesAndCharacteristics()
         get().stopScan()
         ble.startStreamingData(connectedDevice)
+        connectedDevice.onDisconnected((_, device) => {
+          set({ connectedDevice: null })
+        })
       } catch (error) {
         console.log('Failed to connect', error)
       }
@@ -56,6 +60,7 @@ export const useBLEStore = create<BLEState>((set, get) => {
       if (!deviceID) return set({ connectedDevice: null })
       await ble.disconnectFromDevice(deviceID)
       set({ connectedDevice: null })
+      useVehicleStore.getState().clear()
     },
   }
 })

@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
-import { Button, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { socket } from '../services/socket'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '../components/Text'
@@ -7,6 +7,9 @@ import { useNavigation } from '@react-navigation/native'
 import { useBLEStore } from '../store/ble'
 import { useVehicleData } from '../hooks/useVehicleData'
 import { requestPermissions } from '../services/bluetooth/permissions'
+import colors from 'tailwindcss/colors'
+import { Button } from '../components/Button'
+import { DataRow } from '../components/DataRow'
 
 export const HomeScreen = () => {
   const navigation = useNavigation()
@@ -14,28 +17,31 @@ export const HomeScreen = () => {
   const data = useVehicleData()
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text>redLINK</Text>
-      <Button title='send' color='#ec003f' onPress={() => socket.emit('data', 'test')} />
-      {!ble.connectedDevice && (
-        <Button
-          title='connect'
-          color='#ec003f'
-          onPress={async () => {
-            await requestPermissions()
-            navigation.navigate('Connect')
-          }}
-        />
-      )}
-      {ble.connectedDevice && (
-        <View>
-          <Text>speed: {Math.round(data.speed)} km/h</Text>
-          <Text>power: {Math.round(data.power)} watts</Text>
-          <Text>distance: {Math.round(data.distance)} m</Text>
-          <Text>temperature: {Math.round(data.temp.mosfet)} °C</Text>
-          <Text>consumption: {Math.round(data.wattHours.abs)} Wh</Text>
-        </View>
-      )}
+    <SafeAreaView style={styles.safe}>
+      <Text style={styles.largeTitle}>redLINK</Text>
+      <View style={styles.dataDisplay}>
+        <DataRow name='Hız' data={data.speed} unit='km/h' />
+        <DataRow name='Güç' data={data.power} unit='watt' />
+        <DataRow name='Voltaj' data={data.voltage.battery} unit='V' precision={1} />
+        <DataRow name='Mesafe' data={data.distance} unit='metre' />
+        <DataRow name='Tüketim' data={data.wattHours.consumed} unit='Wh' />
+        <DataRow name='Sıcaklık' data={data.temp.mosfet} unit='°C' last />
+      </View>
+
+      <View>
+        {ble.connectedDevice ? (
+          <Button title='Bağlantıyı Kes' onPress={ble.disconnect} />
+        ) : (
+          <Button
+            title='Bluetooth ile bağlan'
+            color='#ec003f'
+            onPress={async () => {
+              await requestPermissions()
+              navigation.navigate('Connect')
+            }}
+          />
+        )}
+      </View>
 
       <StatusBar hidden={false} />
     </SafeAreaView>
@@ -43,15 +49,20 @@ export const HomeScreen = () => {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    height: '100%',
+  safe: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    padding: 24,
     gap: 48,
-  },
-  devicesView: {
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  largeTitle: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: colors.rose[700],
+  },
+  dataDisplay: {
+    width: '100%',
   },
 })

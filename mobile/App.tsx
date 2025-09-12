@@ -1,5 +1,5 @@
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { createStaticNavigation, DefaultTheme, StaticParamList, Theme } from '@react-navigation/native'
+import { createStaticNavigation, DefaultTheme, StaticParamList, Theme, useNavigation } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { HomeScreen } from './screens/Home'
 import { ConnectScreen } from './screens/Connect'
@@ -10,13 +10,16 @@ const RootStack = createNativeStackNavigator({
   screens: {
     Home: {
       screen: HomeScreen,
-      options: { headerShown: false },
+      options: {
+        title: 'Home',
+        headerShown: false,
+      },
     },
     Connect: {
       screen: ConnectScreen,
       options: {
         presentation: 'modal',
-        title: 'Choose a device',
+        title: 'Bluetooth Cihazları',
       },
     },
   },
