@@ -1,6 +1,8 @@
 import { RemoteSocket, Server, Socket } from 'socket.io'
 
-const io = new Server(3000)
+const io = new Server(3000, {
+  cors: { origin: '*' },
+})
 
 io.on('connection', (socket) => {
   const socketName = getName(socket)
