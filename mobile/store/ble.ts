@@ -38,9 +38,10 @@ export const useBLEStore = create<BLEState>((set, get) => {
 
     connect: async (id: string) => {
       const oldDevice = get().connectedDevice
-      if (oldDevice) await get().disconnect()
+      if (oldDevice) get().disconnect()
       try {
         const connectedDevice = await ble.connectToDevice(id)
+        await connectedDevice.requestMTU(185)
         set({ connectedDevice })
         await connectedDevice.discoverAllServicesAndCharacteristics()
         get().stopScan()
