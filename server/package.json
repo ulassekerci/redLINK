@@ -1,20 +1,23 @@
 {
-  "name": "server",
-  "type": "module",
+  "name": "redlink-server",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@hono/node-server": "^1.16.0",
-    "hono": "^4.8.5",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "@types/node": "^20.11.17",
-    "tsx": "^4.7.1",
-    "typescript": "^5.8.3"
+    "@types/node": "^24.3.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.9",
