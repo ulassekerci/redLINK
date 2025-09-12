@@ -8,13 +8,14 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "org.metucet.redlink"
+      "bundleIdentifier": "org.metucet.redlink",
+      "icon": "./assets/ios-icon.icon"
     },
     "android": {
       "adaptiveIcon": {
@@ -34,10 +35,7 @@
         "react-native-ble-plx",
         {
           "isBackgroundEnabled": true,
-          "modes": [
-            "peripheral",
-            "central"
-          ],
+          "modes": ["central"],
           "bluetoothAlwaysPermission": "Allow redLINK to connect to vehicles"
         }
       ]
