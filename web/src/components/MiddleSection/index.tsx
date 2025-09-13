@@ -1,24 +1,18 @@
 import { AnimatePresence } from 'motion/react'
-// import { useEffect, useState } from 'react'
 import { TEKLogo } from './Logo'
 import { TripMeter } from './TripMeter'
 import { useBLEStore } from '../../store/ble'
+import { useSocketStore } from '../../store/socket'
 
 export const MiddleSection = () => {
   const ble = useBLEStore()
-  // const [showLogo, setShowLogo] = useState(true)
-
-  // useEffect(() => {
-  //   const logoTimer = setTimeout(() => setShowLogo(false), 1500)
-  //   return () => {
-  //     clearTimeout(logoTimer)
-  //   }
-  // }, [])
+  const socket = useSocketStore()
+  const connected = ble.connected || !!socket.connectedSource
 
   return (
     <div className='flex flex-col relative items-center text-xl w-[360px]'>
-      <AnimatePresence>{!ble.connected && <TEKLogo />}</AnimatePresence>
-      {ble.connected && <TripMeter />}
+      <AnimatePresence>{!connected && <TEKLogo />}</AnimatePresence>
+      {connected && <TripMeter />}
     </div>
   )
 }
