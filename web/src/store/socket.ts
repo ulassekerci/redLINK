@@ -1,40 +1,31 @@
 import { create } from 'zustand'
 import { socket } from '../services/socket'
-import { useVehicleStore } from './vehicle'
+import type { Source } from '../services/socket/interfaces'
 
 interface SocketState {
-  sources: string[]
-  connectedSource: string | null
-  connectToSource: (newSource: string) => void
+  sources: Source[]
+  connectedSourceID: string | null
+
+  connect: (sourceID: string) => void
 }
 
 export const useSocketStore = create<SocketState>((set, get) => {
-  let updateCount = 0
-
-  socket.on('sources', (sources: string[]) => {
-    if (!updateCount && sources.length === 1) get().connectToSource(sources[0])
-    set((state) => {
-      updateCount += 1
-      const oldSource = sources.find((source) => source === state.connectedSource)
-      return {
-        sources,
-        connectedSource: oldSource ?? null,
-      }
-    })
+  socket.on('sources', (sources: Source[]) => {
+    // if there is only one active source, connect it
+    // TODO: reimplement, this way user can't have a disconnect button
+    if (sources.length === 1) get().connect(sources[0].id)
+    // check if connected source disconnected
+    const oldSource = sources.find((source) => source.id === get().connectedSourceID)
+    set({ sources, connectedSourceID: oldSource?.id ?? null })
   })
 
   return {
     sources: [],
-    connectedSource: null,
+    connectedSourceID: null,
 
-    connectToSource: (newSource: string) => {
-      if (newSource === get().connectedSource) return
-      set((state) => {
-        const oldSource = state.connectedSource
-        if (oldSource) socket.off(oldSource)
-        socket.on(newSource, (data) => useVehicleStore.setState(data))
-        return { connectedSource: newSource }
-      })
+    connect: (newSourceID: string) => {
+      socket.emit('registerClient', newSourceID)
+      set({ connectedSourceID: newSourceID })
     },
   }
 })
