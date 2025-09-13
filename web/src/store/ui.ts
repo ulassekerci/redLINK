@@ -9,7 +9,7 @@ interface uiState {
 export const useUIStore = create<uiState>()(
   persist(
     (set) => ({
-      aston: false,
+      aston: true,
       toggleAston: () => set((state) => ({ aston: !state.aston })),
     }),
     { name: 'uiState' }
