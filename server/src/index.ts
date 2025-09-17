@@ -21,7 +21,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const isDeleted = sources.delete(socket.id)
     if (isDeleted) broadcastSources()
-    if (isDeleted) console.log('source disconnected')
   })
 
   socket.on('registerClient', (sourceID) => {
