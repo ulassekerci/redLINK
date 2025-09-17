@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client'
 import { useVehicleStore } from '../../store/vehicle'
 
-const socket = io('http://172.20.10.2:3000')
+const socket = io(process.env.EXPO_PUBLIC_SOCKET_URL)
 
 socket.on('connect', () => {
   // TODO: get user input
