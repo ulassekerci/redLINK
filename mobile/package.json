@@ -25,7 +25,9 @@
     "react-native-screens": "~4.16.0",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^3.4.17",
-    "zustand": "^5.0.8"
+    "zustand": "^5.0.8",
+    "expo-location": "~19.0.7",
+    "expo-task-manager": "~14.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

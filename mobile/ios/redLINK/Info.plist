@@ -51,11 +51,18 @@
 		<true/>
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Allow redLINK to connect to vehicles</string>
+	<string>redLINK'in araçlara erişmesine izin ver</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>redLINK'in cihaz konumuna erişmesine izin ver</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Allow $(PRODUCT_NAME) to access your location</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Allow $(PRODUCT_NAME) to access your location</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>location</string>
 		<string>bluetooth-central</string>
 	</array>
 	<key>UILaunchStoryboardName</key>

@@ -35,7 +35,16 @@
         {
           "isBackgroundEnabled": true,
           "modes": ["central"],
-          "bluetoothAlwaysPermission": "Allow redLINK to connect to vehicles"
+          "bluetoothAlwaysPermission": "redLINK'in araçlara erişmesine izin ver"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "redLINK'in cihaz konumuna erişmesine izin ver",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ]
     ],
