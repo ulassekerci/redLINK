@@ -1,7 +1,7 @@
 import { platformApiLevel } from 'expo-device'
 import { PermissionsAndroid, Platform } from 'react-native'
 
-export const requestPermissions = async () => {
+export const requestBLEPermissions = async () => {
   if (Platform.OS === 'android') {
     if ((platformApiLevel ?? -1) < 31) {
       const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, {

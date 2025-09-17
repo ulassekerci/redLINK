@@ -5,7 +5,7 @@ import { Text } from '../components/Text'
 import { useNavigation } from '@react-navigation/native'
 import { useBLEStore } from '../store/ble'
 import { useVehicleData } from '../hooks/useVehicleData'
-import { requestPermissions } from '../services/bluetooth/permissions'
+import { requestBLEPermissions } from '../services/bluetooth/permissions'
 import colors from 'tailwindcss/colors'
 import { Button } from '../components/Button'
 import { DataRow } from '../components/DataRow'
@@ -35,7 +35,7 @@ export const HomeScreen = () => {
             title='Bluetooth ile bağlan'
             color='#ec003f'
             onPress={async () => {
-              await requestPermissions()
+              await requestBLEPermissions()
               navigation.navigate('Connect')
             }}
           />
