@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 export const useTripData = () => {
   const data = useVehicleData()
   const trip = useTripStore()
-  const [_, setNow] = useState<number>(0)
+  const [, forceRender] = useState(0)
 
   const distance = data.distance - trip.distanceBeforeTrip
   const avgSpeed = getAvgSpeed(distance, trip.timeStarted)
@@ -25,8 +25,8 @@ export const useTripData = () => {
   }
 
   useEffect(() => {
-    addEventListener('keypress', handleSpace)
-    const timer = setInterval(() => setNow(Date.now()), 1000)
+    addEventListener('keydown', handleSpace)
+    const timer = setInterval(() => forceRender(Date.now()), 1000)
     return () => {
       removeEventListener('keydown', handleSpace)
       clearInterval(timer)
@@ -38,7 +38,7 @@ export const useTripData = () => {
 
 const getTimeString = (tripStart: DateTime | null) => {
   if (!tripStart) return '00:00:00'
-  const diff = DateTime.now().diff(tripStart, ['hours', 'minutes', 'seconds'])
+  const diff = DateTime.now().diff(tripStart).shiftTo('hours', 'minutes', 'seconds')
   return diff.toFormat('hh:mm:ss')
 }
 

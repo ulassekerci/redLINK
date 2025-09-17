@@ -13,13 +13,13 @@ export interface VehicleState {
 }
 
 export const useVehicleStore = create<VehicleState>()(() => ({
-  temp: { mosfet: 0.0 },
-  current: { motor: 0.0, battery: 0.0 },
-  dutyCycle: 0.0,
-  erpm: 0.0,
-  voltage: 0.0,
-  wattHours: { consumed: 0.0, charged: 0.0 },
-  tachometer: { value: 0.0, abs: 0.0 },
+  temp: { mosfet: 0 },
+  current: { motor: 0, battery: 0 },
+  dutyCycle: 0,
+  erpm: 0,
+  voltage: 0,
+  wattHours: { consumed: 0, charged: 0 },
+  tachometer: { value: 0, abs: 0 },
   adc: { level1: 0, voltage1: 0, level2: 0, voltage2: 0 },
   faultCode: 0,
 }))
