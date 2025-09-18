@@ -5,6 +5,7 @@ import { Mosfet } from './components/Mosfet'
 import { useVehicleData } from './hooks/useVehicleData'
 import { useBLEStore } from './store/ble'
 import { MiddleSection } from './components/MiddleSection'
+import { Warning } from './components/Warning'
 
 function App() {
   const data = useVehicleData()
@@ -12,7 +13,7 @@ function App() {
 
   return (
     <div className='flex flex-col justify-between h-full'>
-      <div className=''>{/* TODO: implement fault code warnings */}</div>
+      <Warning code={data.faultCode} />
       <div className='flex items-center justify-between'>
         <Gauge value={data.speed} max={60} unit='km/h' left outerRing={{ value: data.dutyCycle, max: 1 }}>
           <span className='opacity-70 text-lg font-medium text-center'>{Math.round(data.distance)} m</span>
