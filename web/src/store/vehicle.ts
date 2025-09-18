@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { LocationData } from '../services/location/interfaces'
 
 export interface VehicleState {
   temp: { mosfet: number }
@@ -10,6 +11,7 @@ export interface VehicleState {
   tachometer: { value: number; abs: number }
   adc: { level1: number; voltage1: number; level2: number; voltage2: number }
   faultCode: number
+  location: LocationData | null
 }
 
 export const useVehicleStore = create<VehicleState>()(() => ({
@@ -22,4 +24,5 @@ export const useVehicleStore = create<VehicleState>()(() => ({
   tachometer: { value: 0, abs: 0 },
   adc: { level1: 0, voltage1: 0, level2: 0, voltage2: 0 },
   faultCode: 0,
+  location: null,
 }))

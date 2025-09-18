@@ -31,6 +31,12 @@ export const downloadCSV = () => {
     adc_level1: row.adc.level1,
     adc_level2: row.adc.level2,
     faultCode: row.faultCode,
+    ...(row.location && {
+      gps_lat: row.location.coords.latitude,
+      gps_lng: row.location.coords.longitude,
+      gps_accuracy: row.location.coords.accuracy.toFixed(2),
+      gps_timestamp: row.location.timestamp.toFixed(0),
+    }),
   })
 
   const flatData = vehicleLog.map((entry) => flatten({ ...entry.data, timestamp: entry.timestamp }))
