@@ -9,6 +9,7 @@ import { requestBLEPermissions } from '../services/bluetooth/permissions'
 import colors from 'tailwindcss/colors'
 import { Button } from '../components/Button'
 import { DataRow } from '../components/DataRow'
+import { getLocationPermissions } from '../services/location/permissions'
 
 export const HomeScreen = () => {
   const navigation = useNavigation()
@@ -37,6 +38,7 @@ export const HomeScreen = () => {
             onPress={async () => {
               await requestBLEPermissions()
               navigation.navigate('Connect')
+              getLocationPermissions()
             }}
           />
         )}
