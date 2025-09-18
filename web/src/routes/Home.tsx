@@ -1,13 +1,14 @@
 import { motion } from 'motion/react'
-import { Gauge } from './components/Gauge'
-import { Battery } from './components/Battery'
-import { Mosfet } from './components/Mosfet'
-import { useVehicleData } from './hooks/useVehicleData'
-import { useBLEStore } from './store/ble'
-import { MiddleSection } from './components/MiddleSection'
-import { Warning } from './components/Warning'
+import { Gauge } from '../components/Gauge'
+import { Battery } from '../components/Battery'
+import { Mosfet } from '../components/Mosfet'
+import { useVehicleData } from '../hooks/useVehicleData'
+import { useBLEStore } from '../store/ble'
+import { MiddleSection } from '../components/MiddleSection'
+import { Warning } from '../components/Warning'
+import { NavLink } from 'react-router'
 
-function App() {
+export const HomeScreen = () => {
   const data = useVehicleData()
   const ble = useBLEStore()
 
@@ -36,5 +37,3 @@ function App() {
     </div>
   )
 }
-
-export default App
