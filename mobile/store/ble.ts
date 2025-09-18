@@ -12,7 +12,7 @@ interface BLEState {
   scan: () => Promise<void>
   stopScan: () => Promise<void>
   connect: (deviceID: string) => void
-  disconnect: () => void
+  disconnect: () => Promise<void>
 }
 
 export const useBLEStore = create<BLEState>((set, get) => {
@@ -40,19 +40,16 @@ export const useBLEStore = create<BLEState>((set, get) => {
 
     connect: async (id: string) => {
       const oldDevice = get().connectedDevice
-      if (oldDevice) get().disconnect()
+      if (oldDevice) await get().disconnect()
       try {
         const connectedDevice = await ble.connectToDevice(id)
-        await connectedDevice.requestMTU(185)
         set({ connectedDevice })
+        await connectedDevice.requestMTU(185)
         await connectedDevice.discoverAllServicesAndCharacteristics()
         get().stopScan()
         ble.startStreamingData(connectedDevice)
         gps.start()
-        connectedDevice.onDisconnected((_, device) => {
-          set({ connectedDevice: null })
-          gps.stop()
-        })
+        connectedDevice.onDisconnected(get().disconnect)
       } catch (error) {
         console.log('Failed to connect', error)
       }
@@ -60,8 +57,7 @@ export const useBLEStore = create<BLEState>((set, get) => {
 
     disconnect: async () => {
       const deviceID = get().connectedDevice?.id
-      if (!deviceID) return set({ connectedDevice: null })
-      await ble.disconnectFromDevice(deviceID)
+      if (deviceID) await ble.disconnectFromDevice(deviceID)
       set({ connectedDevice: null })
       gps.stop()
       useVehicleStore.getState().clear()

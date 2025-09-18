@@ -1,4 +1,4 @@
-import { BleError, Characteristic, Device } from 'react-native-ble-plx'
+import { BleError, Characteristic, Device, Subscription } from 'react-native-ble-plx'
 import { BLEManager } from './manager'
 import { fromByteArray, toByteArray } from 'base64-js'
 import { crc16 } from '../../utils/crc'
@@ -8,6 +8,7 @@ import { uploadData } from '../socket'
 export const uartServiceUUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
 export const rxCharacteristicUUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e'
 export const txCharacteristicUUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e'
+let txSubscription: Subscription | null = null
 
 export const startScan = (scanCallback: (error: BleError | null, device: Device | null) => void) => {
   return BLEManager.startDeviceScan([uartServiceUUID], null, scanCallback)
@@ -17,13 +18,17 @@ export const stopScan = () => BLEManager.stopDeviceScan()
 
 export const connectToDevice = (id: string) => BLEManager.connectToDevice(id)
 
-export const disconnectFromDevice = (id: string) => BLEManager.cancelDeviceConnection(id)
+export const disconnectFromDevice = async (id: string) => {
+  await BLEManager.cancelDeviceConnection(id)
+  txSubscription?.remove()
+}
 
-export const startStreamingData = async (device: Device) => {
-  if (!device) return
-  // TODO: clear this subscription when disconnected
-  device.monitorCharacteristicForService(uartServiceUUID, txCharacteristicUUID, (error, characteristic) =>
-    handleTX(error, characteristic, device)
+export const startStreamingData = (device: Device) => {
+  if (!device) return null
+  txSubscription = device.monitorCharacteristicForService(
+    uartServiceUUID,
+    txCharacteristicUUID,
+    (error, characteristic) => handleTX(error, characteristic, device)
   )
   requestLoop(device)
 }
