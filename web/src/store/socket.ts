@@ -12,7 +12,6 @@ interface SocketState {
 export const useSocketStore = create<SocketState>((set, get) => {
   socket.on('sources', (sources: Source[]) => {
     // if there is only one active source, connect it
-    // TODO: reimplement, this way user can't have a disconnect button
     if (sources.length === 1) get().connect(sources[0].id)
     // check if connected source disconnected
     const oldSource = sources.find((source) => source.id === get().connectedSourceID)

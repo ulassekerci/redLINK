@@ -76,7 +76,7 @@ const GradientCircle = ({ value, max }: { value: number; max: number }) => {
           rotate: 225,
         }}
       />
-      <div className='absolute inset-0 rounded-full bg-gradient-to-tr from-[#12011e] to-[#1e0109] scale-[56%]' />
+      <div className='absolute inset-0 rounded-full bg-black scale-[56%]' />
     </>
   )
 }
@@ -108,7 +108,7 @@ const InnerRing = ({ value, max }: { value: number; max: number }) => {
           rotate: 225,
         }}
       />
-      <div className='absolute inset-0 rounded-full bg-gradient-to-tr from-[#12011e] to-[#1e0109] scale-[50%]' />
+      <div className='absolute inset-0 rounded-full bg-black scale-[50%]' />
     </>
   )
 }
