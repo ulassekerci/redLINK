@@ -1,13 +1,11 @@
 import { createLocationTask } from './task'
-import { getLocationPermissions } from './permissions'
 import { startLocationUpdatesAsync, stopLocationUpdatesAsync } from 'expo-location'
 import colors from 'tailwindcss/colors'
+import { getLocationPermissions } from './permissions'
 
 const startGPS = async () => {
-  const permissionState = await getLocationPermissions()
-  if (!permissionState.permitted) return console.log(permissionState.msg)
-
   createLocationTask()
+  await getLocationPermissions()
   await startLocationUpdatesAsync('updateGPS', {
     foregroundService: {
       notificationTitle: 'RedLINK',
@@ -19,9 +17,7 @@ const startGPS = async () => {
   })
 }
 
-const stopGPS = async () => {
-  await stopLocationUpdatesAsync('updateGPS')
-}
+const stopGPS = () => stopLocationUpdatesAsync('updateGPS')
 
 export const gps = {
   start: startGPS,
