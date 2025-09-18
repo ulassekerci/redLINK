@@ -2,23 +2,20 @@ import { StatusBar } from 'expo-status-bar'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '../components/Text'
-import { useNavigation } from '@react-navigation/native'
-import { useBLEStore } from '../store/ble'
 import { useVehicleData } from '../hooks/useVehicleData'
-import { requestBLEPermissions } from '../services/bluetooth/permissions'
 import colors from 'tailwindcss/colors'
-import { Button } from '../components/Button'
 import { DataRow } from '../components/DataRow'
-import { getLocationPermissions } from '../services/location/permissions'
+import { ConnectButton } from '../components/ConnectButton'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export const HomeScreen = () => {
-  const navigation = useNavigation()
-  const ble = useBLEStore()
   const data = useVehicleData()
 
   return (
     <SafeAreaView style={styles.safe}>
-      <Text style={styles.largeTitle}>redLINK</Text>
+      <Text style={styles.largeTitle} onPress={() => AsyncStorage.clear()}>
+        redLINK
+      </Text>
       <View style={styles.dataDisplay}>
         <DataRow name='Hız' data={data.speed} unit='km/h' />
         <DataRow name='Güç' data={data.power} unit='watt' />
@@ -28,21 +25,7 @@ export const HomeScreen = () => {
         <DataRow name='Sıcaklık' data={data.temp.mosfet} unit='°C' last />
       </View>
 
-      <View>
-        {ble.connectedDevice ? (
-          <Button title='Bağlantıyı Kes' onPress={ble.disconnect} />
-        ) : (
-          <Button
-            title='Bluetooth ile bağlan'
-            color='#ec003f'
-            onPress={async () => {
-              await requestBLEPermissions()
-              navigation.navigate('Connect')
-              getLocationPermissions()
-            }}
-          />
-        )}
-      </View>
+      <ConnectButton />
 
       <StatusBar hidden={false} />
     </SafeAreaView>
@@ -61,7 +44,7 @@ const styles = StyleSheet.create({
   largeTitle: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: colors.rose[700],
+    color: colors.rose[600],
   },
   dataDisplay: {
     width: '100%',
