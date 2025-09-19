@@ -73,7 +73,7 @@ export const disconnect = () => {
   if (!device) return
   if (txCharacteristic) txCharacteristic.removeEventListener('characteristicvaluechanged', handleTX)
   if (gattServer?.connected) gattServer.disconnect()
-  device.removeEventListener('gattserverdisconnected', handleDisconnected)
+  device?.removeEventListener('gattserverdisconnected', handleDisconnected)
   device = undefined
   gattServer = undefined
   rxCharacteristic = undefined

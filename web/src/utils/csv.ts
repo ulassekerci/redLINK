@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { useVehicleStore, type VehicleState } from '../store/vehicle'
 import { calculateDistance, calculateSpeed } from './erpm'
 
-const vehicleLog: { timestamp: number; data: VehicleState }[] = []
+export const vehicleLog: { timestamp: number; data: VehicleState }[] = []
 
 const updateLog = (state: VehicleState) => {
   vehicleLog.push({ timestamp: Date.now(), data: state })

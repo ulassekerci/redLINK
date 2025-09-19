@@ -10,16 +10,6 @@ interface BLEState {
 }
 
 export const useBLEStore = create<BLEState>((set) => {
-  let retryTimeout: number | undefined
-
-  const reconnect = () => {
-    if (retryTimeout) return
-    retryTimeout = setTimeout(async () => {
-      retryTimeout = undefined
-      await useBLEStore.getState().connectBLE()
-    }, 500)
-  }
-
   return {
     connected: false,
     connecting: false,
@@ -39,8 +29,7 @@ export const useBLEStore = create<BLEState>((set) => {
 
     disconnectBLE: (retry?: boolean) => {
       set({ connected: false, connecting: false })
-      if (retry) reconnect()
-      else ble.disconnect()
+      ble.disconnect()
     },
   }
 })

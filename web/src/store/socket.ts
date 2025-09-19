@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { socket } from '../services/socket'
 import type { Source } from '../services/socket/interfaces'
+import { useVehicleStore } from './vehicle'
+import { useBLEStore } from './ble'
 
 interface SocketState {
   sources: Source[]
@@ -11,11 +13,16 @@ interface SocketState {
 
 export const useSocketStore = create<SocketState>((set, get) => {
   socket.on('sources', (sources: Source[]) => {
-    // if there is only one active source, connect it
+    // if there is only one active source and user didn't disconnect, connect it
     if (sources.length === 1) get().connect(sources[0].id)
     // check if connected source disconnected
     const oldSource = sources.find((source) => source.id === get().connectedSourceID)
     set({ sources, connectedSourceID: oldSource?.id ?? null })
+  })
+
+  socket.on('data', (payload) => {
+    if (useBLEStore.getState().connected) return
+    useVehicleStore.setState(payload)
   })
 
   return {

@@ -1,11 +1,14 @@
 import { LucideTriangleAlert } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
+import { useVehicleData } from '../hooks/useVehicleData'
 
-export const Warning = ({ code }: { code: number }) => {
+export const Warning = () => {
+  const { faultCode } = useVehicleData()
+
   return (
     <div>
       <AnimatePresence>
-        {code !== 0 && (
+        {faultCode !== 0 && (
           <motion.div
             initial={{ y: -200 }}
             animate={{ y: 0 }}
@@ -14,7 +17,7 @@ export const Warning = ({ code }: { code: number }) => {
           >
             <div className='flex flex-col justify-center gap-2'>
               <span className='text-xl font-medium'>Uyarı</span>
-              <span>{FaultCode[code]}</span>
+              <span>{FaultCode[faultCode]}</span>
             </div>
             <LucideTriangleAlert className='text-rose-500/80' size={48} />
           </motion.div>

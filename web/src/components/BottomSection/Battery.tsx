@@ -1,7 +1,10 @@
-import { getAspilsanPercentage } from '../utils/aspilsan'
+import { useVehicleData } from '../../hooks/useVehicleData'
+import { getAspilsanPercentage } from '../../utils/aspilsan'
 
-export const Battery = ({ voltage, current }: { voltage: number; current: number }) => {
-  const percentage = getAspilsanPercentage(voltage / 12)
+export const Battery = () => {
+  const { voltage, current } = useVehicleData()
+
+  const percentage = getAspilsanPercentage(voltage.battery / 12)
   const batteryColor = percentage > 20 ? 'rgba(255,241,242,0.9)' : percentage > 10 ? '#fcc800' : '#e7000b'
 
   return (
@@ -17,8 +20,8 @@ export const Battery = ({ voltage, current }: { voltage: number; current: number
       <div className='w-1 h-2 bg-white/50 rounded-r-full' />
       <div className='text-lg font-medium flex gap-3 ml-3 [font-variant-numeric:tabular-nums]'>
         <span className='text-right'>{percentage}%</span>
-        <span>{voltage.toFixed(1)}V</span>
-        <span className='w-9'>{current.toFixed(1)}A</span>
+        <span>{voltage.battery.toFixed(1)}V</span>
+        <span className='w-9'>{current.battery.toFixed(1)}A</span>
       </div>
     </div>
   )
