@@ -57,7 +57,7 @@ export const useBLEStore = create<BLEState>((set, get) => {
 
     disconnect: async () => {
       const deviceID = get().connectedDevice?.id
-      if (deviceID) await ble.disconnectFromDevice(deviceID)
+      if (deviceID) ble.disconnectFromDevice(deviceID)
       set({ connectedDevice: null })
       gps.stop()
       useVehicleStore.getState().clear()
