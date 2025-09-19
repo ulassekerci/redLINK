@@ -10,6 +10,8 @@ const updateLog = (state: VehicleState) => {
 
 useVehicleStore.subscribe(updateLog)
 
+export const clearLog = () => (vehicleLog.length = 0)
+
 export const downloadCSV = () => {
   if (vehicleLog.length === 0) return
 

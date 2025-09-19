@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { create } from 'zustand'
 import { useVehicleStore } from './vehicle'
 import { calculateDistance } from '../utils/erpm'
+import { clearLog } from '../utils/csv'
 
 export interface TripState {
   distanceBeforeTrip: number
@@ -25,5 +26,6 @@ export const useTripStore = create<TripState>()((set) => ({
       whChargeBeforeTrip: vehicleState.wattHours.charged,
       timeStarted: DateTime.now(),
     })
+    clearLog()
   },
 }))
