@@ -10,10 +10,13 @@ export const Warning = ({ code }: { code: number }) => {
             initial={{ y: -200 }}
             animate={{ y: 0 }}
             exit={{ y: -200 }}
-            className='absolute left-1/2 transform -translate-x-1/2 flex gap-3 items-center p-3 pr-5 min-w-[360px] h-24 bg-rose-600/20 rounded-2xl'
+            className='absolute left-1/2 transform -translate-x-1/2 flex gap-4 items-center justify-between p-3 min-w-[360px] h-24 bg-gradient-to-tr from-rose-600/30 to-rose-600/50 rounded-2xl'
           >
-            <LucideTriangleAlert className='text-rose-800' size={48} />
-            <span className='w-full text-center'>{FaultCode[code]}</span>
+            <div className='flex flex-col justify-center gap-2'>
+              <span className='text-xl font-medium'>Uyarı</span>
+              <span>{FaultCode[code]}</span>
+            </div>
+            <LucideTriangleAlert className='text-rose-500/80' size={48} />
           </motion.div>
         )}
       </AnimatePresence>
