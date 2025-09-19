@@ -1,9 +1,7 @@
-import { createLocationTask } from './task'
 import { startLocationUpdatesAsync, stopLocationUpdatesAsync } from 'expo-location'
 import colors from 'tailwindcss/colors'
 
 const startGPS = async () => {
-  createLocationTask()
   await startLocationUpdatesAsync('updateGPS', {
     foregroundService: {
       notificationTitle: 'RedLINK',
