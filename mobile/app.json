@@ -14,7 +14,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "org.metucet.redlink"
+      "bundleIdentifier": "org.metucet.redlink",
+      "icon": "./assets/ios-icon.icon"
     },
     "android": {
       "adaptiveIcon": {

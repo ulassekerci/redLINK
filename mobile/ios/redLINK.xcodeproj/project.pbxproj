@@ -7,29 +7,31 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		09A06A0968DA53783A126C8E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FB958417DAF32AEC82A9EDA5 /* PrivacyInfo.xcprivacy */; };
-		0A9ED6AC641F8DA52511B0E3 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB1C3FBD89385D8731A9CECE /* ExpoModulesProvider.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		B041928CD971F16F709D2EC3 /* libPods-redLINK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D7A5F9F7E645A0514B87A4D /* libPods-redLINK.a */; };
+		83473B6A5084D846B7A9CB76 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 48080CA32D314366424CB1D5 /* PrivacyInfo.xcprivacy */; };
+		A6F24FEF87F24B4D9FCB35D6 /* ios-icon.icon in Resources */ = {isa = PBXBuildFile; fileRef = CF9BA6B0A4BE4AEC8188B62C /* ios-icon.icon */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		EE75CDD5D7839A4AD1E548F8 /* libPods-redLINK.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0BF1DDACE14D954F07737AC5 /* libPods-redLINK.a */; };
+		EF8CE3527600E1A5B5C0C6CF /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC1A57818C039A8DC054A4B /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0D7A5F9F7E645A0514B87A4D /* libPods-redLINK.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-redLINK.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0BF1DDACE14D954F07737AC5 /* libPods-redLINK.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-redLINK.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* redLINK.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = redLINK.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = redLINK/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = redLINK/Info.plist; sourceTree = "<group>"; };
+		191786486DF40B88C2969474 /* Pods-redLINK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-redLINK.release.xcconfig"; path = "Target Support Files/Pods-redLINK/Pods-redLINK.release.xcconfig"; sourceTree = "<group>"; };
+		4468BD4DE6D1BC6D236276E0 /* Pods-redLINK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-redLINK.debug.xcconfig"; path = "Target Support Files/Pods-redLINK/Pods-redLINK.debug.xcconfig"; sourceTree = "<group>"; };
+		48080CA32D314366424CB1D5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = redLINK/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4BC1A57818C039A8DC054A4B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-redLINK/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = redLINK/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CB1C3FBD89385D8731A9CECE /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-redLINK/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		D36CF647F8B19B2FA7F49F96 /* Pods-redLINK.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-redLINK.release.xcconfig"; path = "Target Support Files/Pods-redLINK/Pods-redLINK.release.xcconfig"; sourceTree = "<group>"; };
+		CF9BA6B0A4BE4AEC8188B62C /* ios-icon.icon */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "ios-icon.icon"; path = "redLINK/ios-icon.icon"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = redLINK/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* redLINK-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "redLINK-Bridging-Header.h"; path = "redLINK/redLINK-Bridging-Header.h"; sourceTree = "<group>"; };
-		F942099160FC71264C17B274 /* Pods-redLINK.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-redLINK.debug.xcconfig"; path = "Target Support Files/Pods-redLINK/Pods-redLINK.debug.xcconfig"; sourceTree = "<group>"; };
-		FB958417DAF32AEC82A9EDA5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = redLINK/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,7 +39,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B041928CD971F16F709D2EC3 /* libPods-redLINK.a in Frameworks */,
+				EE75CDD5D7839A4AD1E548F8 /* libPods-redLINK.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,44 +55,37 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				FB958417DAF32AEC82A9EDA5 /* PrivacyInfo.xcprivacy */,
+				CF9BA6B0A4BE4AEC8188B62C /* ios-icon.icon */,
+				48080CA32D314366424CB1D5 /* PrivacyInfo.xcprivacy */,
 			);
 			name = redLINK;
 			sourceTree = "<group>";
 		};
-		22DFC0FC829D6062401EEFB5 /* redLINK */ = {
+		20A5AD527067B0FCD88B9149 /* redLINK */ = {
 			isa = PBXGroup;
 			children = (
-				CB1C3FBD89385D8731A9CECE /* ExpoModulesProvider.swift */,
+				4BC1A57818C039A8DC054A4B /* ExpoModulesProvider.swift */,
 			);
 			name = redLINK;
+			sourceTree = "<group>";
+		};
+		274C61881EAC880BC9A2559E /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				4468BD4DE6D1BC6D236276E0 /* Pods-redLINK.debug.xcconfig */,
+				191786486DF40B88C2969474 /* Pods-redLINK.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				0D7A5F9F7E645A0514B87A4D /* libPods-redLINK.a */,
+				0BF1DDACE14D954F07737AC5 /* libPods-redLINK.a */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		5D105DCBAF2336FFFC6F8DD7 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				F942099160FC71264C17B274 /* Pods-redLINK.debug.xcconfig */,
-				D36CF647F8B19B2FA7F49F96 /* Pods-redLINK.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		75EEA6BA6570DB687DA03A9E /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				22DFC0FC829D6062401EEFB5 /* redLINK */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -107,8 +102,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				5D105DCBAF2336FFFC6F8DD7 /* Pods */,
-				75EEA6BA6570DB687DA03A9E /* ExpoModulesProviders */,
+				274C61881EAC880BC9A2559E /* Pods */,
+				88A28D508FF1019C2796A7FE /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -121,6 +116,14 @@
 				13B07F961A680F5B00A75B9A /* redLINK.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		88A28D508FF1019C2796A7FE /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				20A5AD527067B0FCD88B9149 /* redLINK */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -140,13 +143,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "redLINK" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				4712BB090830C690619850BE /* [Expo] Configure project */,
+				A1BBC663718AC18065DF543F /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				9685CA80227A7AFA10550B8F /* [CP] Embed Pods Frameworks */,
+				F622487BDD526303C62E020B /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -198,7 +201,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				09A06A0968DA53783A126C8E /* PrivacyInfo.xcprivacy in Resources */,
+				A6F24FEF87F24B4D9FCB35D6 /* ios-icon.icon in Resources */,
+				83473B6A5084D846B7A9CB76 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -244,30 +248,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		4712BB090830C690619850BE /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/redLINK/redLINK.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-redLINK/expo-configure-project.sh",
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-redLINK/ExpoModulesProvider.swift",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-redLINK/expo-configure-project.sh\"\n";
-		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -304,7 +284,31 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-redLINK/Pods-redLINK-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		9685CA80227A7AFA10550B8F /* [CP] Embed Pods Frameworks */ = {
+		A1BBC663718AC18065DF543F /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/redLINK/redLINK.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-redLINK/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-redLINK/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-redLINK/expo-configure-project.sh\"\n";
+		};
+		F622487BDD526303C62E020B /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -334,7 +338,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				0A9ED6AC641F8DA52511B0E3 /* ExpoModulesProvider.swift in Sources */,
+				EF8CE3527600E1A5B5C0C6CF /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -343,9 +347,9 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F942099160FC71264C17B274 /* Pods-redLINK.debug.xcconfig */;
+			baseConfigurationReference = 4468BD4DE6D1BC6D236276E0 /* Pods-redLINK.debug.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "ios-icon";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = redLINK/redLINK.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
@@ -382,9 +386,9 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D36CF647F8B19B2FA7F49F96 /* Pods-redLINK.release.xcconfig */;
+			baseConfigurationReference = 191786486DF40B88C2969474 /* Pods-redLINK.release.xcconfig */;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "ios-icon";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = redLINK/redLINK.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
@@ -417,6 +421,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "ios-icon";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -480,6 +485,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "ios-icon";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
