@@ -1,22 +1,8 @@
-import { useEffect } from 'react'
 import { useVehicleStore } from '../store/vehicle'
 import { calculateDistance, calculateSpeed } from '../utils/erpm'
-import { downloadCSV } from '../utils/csv'
 
 export const useVehicleData = () => {
   const bleData = useVehicleStore()
-
-  useEffect(() => {
-    addEventListener('keydown', handleSave)
-    return () => removeEventListener('keydown', handleSave)
-  }, [])
-
-  const handleSave = (e: KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault()
-      downloadCSV()
-    }
-  }
 
   return {
     ...bleData,
