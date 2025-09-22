@@ -27,7 +27,7 @@ export const useBLEStore = create<BLEState>((set) => {
       }
     },
 
-    disconnectBLE: (retry?: boolean) => {
+    disconnectBLE: () => {
       set({ connected: false, connecting: false })
       ble.disconnect()
     },
