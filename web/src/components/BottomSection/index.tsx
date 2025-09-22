@@ -7,7 +7,6 @@ import { useBLEStore } from '../../store/ble'
 export const BottomSection = () => {
   const ble = useBLEStore()
   let location = useLocation()
-  console.log(location)
 
   return (
     <motion.div

@@ -7,7 +7,7 @@ import type { LocationData } from '../services/location/interfaces'
 export const MapScreen = () => {
   const { location } = useVehicleData()
 
-  // deduped array is needed as pastLocations array grows a lot
+  // deduped array is needed as pastLocations array grows huge
   const pastPoints: LocationData[] = []
   const logWithValidLocation = vehicleLog.filter((log) => log.data.location)
   const pastLocations = logWithValidLocation.map((log) => log.data.location) as LocationData[]
@@ -37,9 +37,9 @@ export const MapScreen = () => {
         initial={{ opacity: 0, scale: 0.25 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', damping: 20, stiffness: 200 }}
-        className='w-full border-4 border-neutral-800 rounded-4xl'
+        className='w-full min-h-[80vh] border-4 border-neutral-800 rounded-4xl bg-neutral-950'
       >
-        {initialState.latitude && (
+        {initialState.latitude ? (
           <Map
             initialViewState={initialState}
             style={{ width: '100%', height: '80vh', borderRadius: 32 }}
@@ -52,11 +52,17 @@ export const MapScreen = () => {
               </Marker>
             )}
             {pastPoints.map((location) => (
-              <Marker latitude={location!.coords.latitude} longitude={location!.coords.longitude}>
+              <Marker
+                key={location.timestamp}
+                latitude={location!.coords.latitude}
+                longitude={location!.coords.longitude}
+              >
                 <div className='bg-rose-600 w-4 h-4 rounded-full' />
               </Marker>
             ))}
           </Map>
+        ) : (
+          <div className='w-full h-[80vh] flex flex-col items-center justify-center'>Konum verisi yok</div>
         )}
       </motion.div>
       <motion.div
