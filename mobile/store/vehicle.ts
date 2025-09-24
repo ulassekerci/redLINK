@@ -12,6 +12,7 @@ export interface VehicleState {
   adc: { level1: number; voltage1: number; level2: number; voltage2: number }
   faultCode: number
   location: LocationData | null
+  timestamp: number
 
   clear: () => void
 }
@@ -27,6 +28,7 @@ export const useVehicleStore = create<VehicleState>()((set) => ({
   adc: { level1: 0, voltage1: 0, level2: 0, voltage2: 0 },
   faultCode: 0,
   location: null,
+  timestamp: 0,
 
   clear: () => {
     set({

@@ -27,13 +27,13 @@ export class Packet {
       // COMM_GET_VALUES
       case 4:
         const parsedValues = parseGetValues(this.payload)
-        useVehicleStore.setState(parsedValues)
+        useVehicleStore.setState({ ...parsedValues, timestamp: Date.now() })
         break
 
       // COMM_GET_DECODED_ADC
       case 32:
         const parsedADC = parseGetDecodedADC(this.payload)
-        useVehicleStore.setState({ adc: parsedADC })
+        useVehicleStore.setState({ adc: parsedADC, timestamp: Date.now() })
         break
 
       default:
