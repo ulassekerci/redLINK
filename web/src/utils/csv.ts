@@ -2,20 +2,17 @@ import { DateTime } from 'luxon'
 import { useVehicleStore, type VehicleState } from '../store/vehicle'
 import { calculateDistance, calculateSpeed } from './erpm'
 
-export const vehicleLog: { timestamp: number; data: VehicleState }[] = []
+export const vehicleLog: VehicleState[] = []
 
-const updateLog = (state: VehicleState) => {
-  vehicleLog.push({ timestamp: Date.now(), data: state })
-}
-
-useVehicleStore.subscribe(updateLog)
+useVehicleStore.subscribe((state: VehicleState) => vehicleLog.push(state))
 
 export const clearLog = () => (vehicleLog.length = 0)
 
 export const downloadCSV = () => {
   if (vehicleLog.length === 0) return
 
-  const flatten = (row: VehicleState & { timestamp: number }) => ({
+  // flatten the state object
+  const csvData = vehicleLog.map((row: VehicleState) => ({
     timestamp: row.timestamp,
     speed_kmh: calculateSpeed(row.erpm),
     power_w: row.voltage * row.current.battery,
@@ -39,21 +36,19 @@ export const downloadCSV = () => {
       gps_accuracy: row.location.coords.accuracy.toFixed(2),
       gps_timestamp: row.location.timestamp.toFixed(0),
     }),
-  })
-
-  const flatData = vehicleLog.map((entry) => flatten({ ...entry.data, timestamp: entry.timestamp }))
+  }))
 
   // Get CSV headers
-  const headers = Object.keys(flatData[0])
+  const headers = Object.keys(csvData[0])
 
   // Build CSV string
   const csvRows = [
     headers.join(','), // header row
-    ...flatData.map((row) => headers.map((h) => row[h as keyof typeof row]).join(',')),
+    ...csvData.map((row) => headers.map((h) => row[h as keyof typeof row]).join(',')),
   ]
   const csvString = csvRows.join('\n')
 
-  // Create Blob and trigger download
+  // Create blob and download
   const blob = new Blob([csvString], { type: 'text/csv' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

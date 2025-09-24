@@ -9,8 +9,8 @@ export const MapScreen = () => {
 
   // deduped array is needed as pastLocations array grows huge
   const pastPoints: LocationData[] = []
-  const logWithValidLocation = vehicleLog.filter((log) => log.data.location)
-  const pastLocations = logWithValidLocation.map((log) => log.data.location) as LocationData[]
+  const logWithValidLocation = vehicleLog.filter((log) => log.location)
+  const pastLocations = logWithValidLocation.map((log) => log.location) as LocationData[]
   pastLocations.forEach((location) => {
     const lastPoint = pastPoints.at(-1)
     if (JSON.stringify(location?.coords) === JSON.stringify(lastPoint?.coords)) return
