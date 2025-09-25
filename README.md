@@ -9,15 +9,16 @@ An end-to-end telemetry system for our Shell Eco-marathon vehicle
 
 ---
 
-## 🚀 Getting Started
-Clone the repository:
+## Getting Started
+Clone and navigate into the repository:
 ```bash
 git clone https://github.com/ulassekerci/redLINK.git
+cd redLINK
 ```
 ### Server
 Build and run the server
 ```bash
-cd redLINK/server
+cd server
 npm install
 npm run build
 npm run start
@@ -28,7 +29,7 @@ Navigate to the web folder and install dependencies
 cd web
 npm install
 ```
-Create a .env file and enter your server url
+Create .env file and enter your server url
 ```bash
 VITE_SOCKET_URL="localhost:3000"
 ```
@@ -43,7 +44,7 @@ CD into mobile folder
 ```bash
 cd redLINK/mobile
 ```
-Create a .env file and enter your server url
+Create .env file and enter your server url
 ```bash
 EXPO_PUBLIC_SOCKET_URL="192.168.1.72:3000"
 ```
