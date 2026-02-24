@@ -11,6 +11,10 @@ export const ConnectButton = () => {
   const ble = useBLEStore()
   const { deviceName, gpsPermissions } = useDeviceStore()
 
+  if (ble.isReconnecting) {
+    return <Button title='Yeniden bağlanılıyor...' onPress={ble.disconnect} />
+  }
+
   if (ble.connectedDevice) {
     return <Button title='Bağlantıyı Kes' onPress={ble.disconnect} />
   }
