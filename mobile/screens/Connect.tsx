@@ -13,16 +13,16 @@ export const ConnectScreen = () => {
   const navigation = useNavigation()
 
   const connect = (id: string) => {
-    ble.stopScan()
+    ble.scanner.stop()
     ble.connect(id)
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
     navigation.goBack()
   }
 
   useEffect(() => {
-    ble.scan()
+    ble.scanner.start()
     return () => {
-      ble.stopScan()
+      ble.scanner.stop()
     }
   }, [])
 
@@ -30,15 +30,15 @@ export const ConnectScreen = () => {
     <SafeAreaView style={{ paddingTop: 24 }}>
       <View style={styles.scanIndicator}>
         <Text style={{ opacity: 0.5 }}>Cihazlar</Text>
-        {ble.isScanning && <ActivityIndicator />}
+        {ble.scanner.isScanning && <ActivityIndicator />}
       </View>
 
       <FlatList
-        data={ble.devices}
+        data={[...ble.scanner.devices.values()]}
         keyExtractor={(item) => item.id + Math.random()}
         style={styles.deviceList}
         renderItem={(device) => {
-          const isLast = device.index === ble.devices.length - 1
+          const isLast = device.index === ble.scanner.devices.size - 1
           return (
             <View style={{ ...styles.deviceItem, borderBottomWidth: isLast ? 0 : 0.5 }}>
               <Text>{device.item.name}</Text>

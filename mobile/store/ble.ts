@@ -1,126 +1,89 @@
 import { create } from 'zustand'
-import { BleError, Device, Subscription } from 'react-native-ble-plx'
-import * as ble from '../services/bluetooth'
-import { useVehicleStore } from './vehicle'
-import { gps } from '../services/location'
+import { Device } from 'react-native-ble-plx'
+import { BLE } from '../services/bluetooth'
 
 interface BLEState {
-  devices: Device[]
-  isScanning: boolean
-  connectedDevice: Device | null
-  isReconnecting: boolean
+  scanner: {
+    isScanning: boolean
+    devices: Map<string, Device> // id, device
+    start: () => void
+    stop: () => void
+    scanCallback: (newDevice: Device) => void
+  }
 
-  scan: () => Promise<void>
-  stopScan: () => Promise<void>
+  connection: {
+    device: Device | null
+    state: 'connected' | 'disconnected' | 'reconnecting'
+    intentionalDisconnect: boolean
+  }
+
   connect: (deviceID: string) => void
   disconnect: () => Promise<void>
 }
 
 export const useBLEStore = create<BLEState>((set, get) => {
-  let reconnecting = false
-  let intentionalDisconnect = false
-  let disconnectSub: Subscription | null = null
-
-  const cleanupDisconnectListener = () => {
-    if (disconnectSub) {
-      disconnectSub.remove()
-      disconnectSub = null
-    }
-  }
-
-  const listenForDisconnect = (device: Device, deviceID: string) => {
-    cleanupDisconnectListener()
-    disconnectSub = device.onDisconnected(() => {
-      cleanupDisconnectListener()
-      if (!intentionalDisconnect) {
-        attemptReconnect(deviceID)
-      }
-    })
-  }
-
-  const attemptReconnect = async (deviceID: string) => {
-    if (intentionalDisconnect) return
-    if (reconnecting) return
-    reconnecting = true
-
-    const reconnect = async () => {
-      if (intentionalDisconnect) {
-        reconnecting = false
-        return
-      }
-
-      console.log(`Attempting reconnect...`)
-      set({ isReconnecting: true })
-
-      try {
-        const connectedDevice = await ble.connectToDevice(deviceID)
-        set({ connectedDevice, isReconnecting: false })
-        await connectedDevice.requestMTU(185)
-        await connectedDevice.discoverAllServicesAndCharacteristics()
-        ble.startStreamingData(connectedDevice)
-        listenForDisconnect(connectedDevice, deviceID)
-        reconnecting = false
-        console.log('Reconnected successfully')
-      } catch (error) {
-        console.log(`Reconnect attempt failed:`, error)
-        await reconnect()
-      }
-    }
-
-    await reconnect()
-  }
-
   return {
-    devices: [],
-    isScanning: false,
-    connectedDevice: null,
-    isReconnecting: false,
-
-    scan: async () => {
-      await ble.startScan((error: BleError | null, newDevice: Device | null) => {
-        if (error) console.log(error)
-        if (!newDevice) return
-        const oldDevices = get().devices
-        const deviceExists = oldDevices.find((d) => d.id === newDevice.id)
-        if (deviceExists) return
-        else set({ devices: [...get().devices, newDevice] })
-      })
-      set({ isScanning: true })
+    scanner: {
+      isScanning: false,
+      devices: new Map<string, Device>(),
+      start: async () => {
+        await BLE.scanner.start(get().scanner.scanCallback)
+        set((state) => ({ scanner: { ...state.scanner, isScanning: true } }))
+      },
+      stop: async () => {
+        await BLE.scanner.stop()
+        set((state) => ({ scanner: { ...state.scanner, isScanning: false } }))
+      },
+      scanCallback: (newDevice: Device) => {
+        set((state) => {
+          return {
+            scanner: {
+              ...state.scanner,
+              devices: new Map(state.scanner.devices).set(newDevice.id, newDevice),
+            },
+          }
+        })
+      },
     },
 
-    stopScan: async () => {
-      await ble.stopScan()
-      set({ isScanning: false })
+    connection: {
+      device: null,
+      state: 'disconnected',
+      intentionalDisconnect: true,
     },
 
-    connect: async (id: string) => {
-      const oldDevice = get().connectedDevice
+    connect: async (deviceID) => {
+      const oldDevice = get().connection.device
       if (oldDevice) await get().disconnect()
-      intentionalDisconnect = false
-      reconnecting = false
-      try {
-        const connectedDevice = await ble.connectToDevice(id)
-        set({ connectedDevice })
-        await connectedDevice.requestMTU(185)
-        await connectedDevice.discoverAllServicesAndCharacteristics()
-        get().stopScan()
-        ble.startStreamingData(connectedDevice)
-        gps.start()
-        listenForDisconnect(connectedDevice, id)
-      } catch (error) {
-        console.log('Failed to connect', error)
-      }
+
+      const connectedDevice = await BLE.connect(deviceID)
+      await connectedDevice.requestMTU(185)
+      await connectedDevice.discoverAllServicesAndCharacteristics()
+
+      set((state) => ({
+        connection: {
+          ...state.connection,
+          device: connectedDevice,
+          state: 'connected',
+          intentionalDisconnect: false,
+        },
+      }))
+      get().scanner.stop()
+      BLE.startStream(connectedDevice)
     },
 
     disconnect: async () => {
-      intentionalDisconnect = true
-      reconnecting = false
-      cleanupDisconnectListener()
-      const deviceID = get().connectedDevice?.id
-      if (deviceID) ble.disconnectFromDevice(deviceID)
-      set({ connectedDevice: null, isReconnecting: false })
-      gps.stop()
-      useVehicleStore.getState().clear()
+      const oldDevice = get().connection.device
+      if (!oldDevice) return
+      await BLE.disconnect(oldDevice.id)
+      set((state) => ({
+        connection: {
+          ...state.connection,
+          device: null,
+          state: 'disconnected',
+          intentionalDisconnect: true,
+        },
+      }))
     },
   }
 })
