@@ -74,7 +74,7 @@
       "source": "openfreemap",
       "source-layer": "transportation",
       "minzoom": 8,
-      "filter": ["all", ["==", "$type", "LineString"], ["in", "class", "minor", "service", "track"]],
+      "filter": ["all", ["==", "$type", "LineString"], ["in", "class", "minor", "service", "track", "raceway"]],
       "layout": {
         "line-cap": "round",
         "line-join": "round",
