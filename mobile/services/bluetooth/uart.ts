@@ -6,11 +6,12 @@ import { rxCharacteristicUUID, uartServiceUUID } from './uuid'
 
 interface PendingRequest {
   command: number
+  device: Device
   promise: {
     resolve: (value: Packet) => void
     reject: (reason?: Error) => void
-    timeout: ReturnType<typeof setTimeout>
   }
+  timeoutId: ReturnType<typeof setTimeout>
 }
 
 class UART {
@@ -18,43 +19,50 @@ class UART {
 
   async send(command: number, device: Device) {
     if (this.pendingRequest) throw new Error('UART busy')
+
     const start = 2 // start byte is always 2
     const length = 1 // 1 is used for short commands
     const crc = crc16(new Uint8Array([command]))
     const end = 3 // end byte is always 3
     const bytes = new Uint8Array([start, length, command, crc.msb, crc.lsb, end])
     const requestBase64 = base64.fromByteArray(bytes)
-    let currentRequest: PendingRequest
-    const promise = new Promise<Packet>((resolve, reject) => {
+
+    return new Promise<Packet>(async (resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        if (this.pendingRequest && this.pendingRequest.timeoutId === timeoutId) {
+          this.clear()
+          reject(new Error('UART response timeout'))
+        }
+      }, 250)
+
       this.pendingRequest = {
         command,
+        device,
         promise: {
           resolve,
           reject,
-          timeout: setTimeout(() => this.timeout(reject), 250),
         },
+        timeoutId,
       }
-      currentRequest = this.pendingRequest // capture locally
-    })
-    try {
-      await device.writeCharacteristicWithResponseForService(uartServiceUUID, rxCharacteristicUUID, requestBase64)
-      return promise
-    } catch (error) {
-      currentRequest!.promise.reject(error as Error)
-      this.clear()
-      throw error
-    }
-  }
 
-  timeout(reject: (reason: Error) => void) {
-    reject(new Error('UART response timeout'))
-    this.clear()
+      try {
+        await device.writeCharacteristicWithResponseForService(uartServiceUUID, rxCharacteristicUUID, requestBase64)
+      } catch (error) {
+        if (this.pendingRequest && this.pendingRequest.timeoutId === timeoutId) {
+          this.clear()
+          reject(error as Error)
+        }
+      }
+    })
   }
 
   handleTX(error: BleError | null, characteristic: Characteristic | null, device: Device) {
     if (error) {
-      this.pendingRequest?.promise.reject(error)
-      this.clear()
+      if (this.pendingRequest) {
+        const { promise } = this.pendingRequest
+        this.clear()
+        promise.reject(error)
+      }
       return
     }
 
@@ -72,7 +80,7 @@ class UART {
 
   clear() {
     if (!this.pendingRequest) return
-    clearTimeout(this.pendingRequest.promise.timeout)
+    clearTimeout(this.pendingRequest.timeoutId)
     this.pendingRequest = null
   }
 }
