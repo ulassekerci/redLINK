@@ -19,20 +19,23 @@ export const HomeScreen = () => {
 
   useEffect(() => {
     const syncGPS = async () => {
-      const shouldRunGPS = ble.connection.state === 'connected' && gpsPermissions.bg === true
+      const shouldRunGPS =
+        (ble.connection.state === 'connected' || ble.connection.state === 'reconnecting') && gpsPermissions.bg === true
       try {
         if (shouldRunGPS) await gps.start()
         else await gps.stop()
       } catch {
-        // Ignore transient location-task errors; the next connection state change will resync.
+        // ignore errors
       }
     }
     syncGPS()
+  }, [ble.connection.state, gpsPermissions.bg])
 
+  useEffect(() => {
     return () => {
       gps.stop().catch(() => {})
     }
-  }, [ble.connection.state, gpsPermissions.bg])
+  }, [])
 
   return (
     <SafeAreaView style={styles.safe}>
