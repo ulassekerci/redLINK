@@ -38,7 +38,6 @@ export class Packet {
         break
 
       default:
-        console.log(`Command ${this.payload.command} not supported`)
         break
     }
   }

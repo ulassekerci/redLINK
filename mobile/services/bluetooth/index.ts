@@ -43,7 +43,7 @@ class BLEClient {
       await this.requestData(32, device)
       uploadData()
     } catch (error) {
-      console.log('request error', error)
+      return
     }
     const after = performance.now()
     const duration = after - before

@@ -5,7 +5,7 @@ import { Device } from 'react-native-ble-plx'
 class Scanner {
   start(scanCallback: (newDevice: Device) => void) {
     return BLEManager.startDeviceScan([uartServiceUUID], null, (err, newDevice) => {
-      if (err) return console.error('Failed to scan')
+      if (err) return
       if (!newDevice) return
       scanCallback(newDevice)
     })
