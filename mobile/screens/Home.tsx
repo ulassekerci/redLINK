@@ -7,9 +7,32 @@ import colors from 'tailwindcss/colors'
 import { DataRow } from '../components/DataRow'
 import { ConnectButton } from '../components/ConnectButton'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useEffect } from 'react'
+import { useBLEStore } from '../store/ble'
+import { useDeviceStore } from '../store/device'
+import { gps } from '../services/location'
 
 export const HomeScreen = () => {
   const data = useVehicleData()
+  const ble = useBLEStore()
+  const { gpsPermissions } = useDeviceStore()
+
+  useEffect(() => {
+    const syncGPS = async () => {
+      const shouldRunGPS = ble.connection.state === 'connected' && gpsPermissions.bg === true
+      try {
+        if (shouldRunGPS) await gps.start()
+        else await gps.stop()
+      } catch {
+        // Ignore transient location-task errors; the next connection state change will resync.
+      }
+    }
+    syncGPS()
+
+    return () => {
+      gps.stop().catch(() => {})
+    }
+  }, [ble.connection.state, gpsPermissions.bg])
 
   return (
     <SafeAreaView style={styles.safe}>

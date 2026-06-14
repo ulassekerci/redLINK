@@ -11,6 +11,9 @@ export const getGPSPermisson = {
   bg: async () => {
     const { granted } = await Location.requestBackgroundPermissionsAsync()
     useDeviceStore.getState().updateGPSPermission.bg(granted)
-    if (!granted) Alert.alert('Arkaplanda konum izni alınamadı', 'Ayarlardan izin verebilirsiniz.', [{ text: 'Tamam' }])
+    if (!granted) {
+      Alert.alert('Arkaplanda konum izni alınamadı', 'Ayarlardan izin verebilirsiniz.', [{ text: 'Tamam' }])
+      return
+    }
   },
 }
