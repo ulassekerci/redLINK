@@ -1,25 +1,13 @@
 import { motion } from 'motion/react'
 import { useVehicleData } from '../hooks/useVehicleData'
 import Map, { Marker } from 'react-map-gl/maplibre'
-import { vehicleLog } from '../utils/csv'
-import type { LocationData } from '../services/location/interfaces'
 
 export const MapScreen = () => {
   const { location } = useVehicleData()
 
-  // deduped array is needed as pastLocations array grows huge
-  const pastPoints: LocationData[] = []
-  const logWithValidLocation = vehicleLog.filter((log) => log.location)
-  const pastLocations = logWithValidLocation.map((log) => log.location) as LocationData[]
-  pastLocations.forEach((location) => {
-    const lastPoint = pastPoints.at(-1)
-    if (JSON.stringify(location?.coords) === JSON.stringify(lastPoint?.coords)) return
-    pastPoints.push(location!)
-  })
-
   const initialState = {
-    latitude: location?.coords.latitude ?? pastLocations.at(-1)?.coords.latitude,
-    longitude: location?.coords.longitude ?? pastLocations.at(-1)?.coords.longitude,
+    latitude: location?.coords.latitude,
+    longitude: location?.coords.longitude,
     zoom: 17.5,
   }
 
@@ -51,15 +39,6 @@ export const MapScreen = () => {
                 <div className='bg-rose-600 w-4 h-4 rounded-full' />
               </Marker>
             )}
-            {pastPoints.map((location) => (
-              <Marker
-                key={location.timestamp}
-                latitude={location!.coords.latitude}
-                longitude={location!.coords.longitude}
-              >
-                <div className='bg-rose-600 w-4 h-4 rounded-full' />
-              </Marker>
-            ))}
           </Map>
         ) : (
           <div className='w-full h-[80vh] flex flex-col items-center justify-center'>Konum verisi yok</div>
