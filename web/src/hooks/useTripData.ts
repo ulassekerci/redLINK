@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 import { useTripStore } from '../store/trip'
 import { useVehicleData } from './useVehicleData'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 export const useTripData = () => {
   const data = useVehicleData()
@@ -19,10 +19,10 @@ export const useTripData = () => {
   const avgSpeedString = avgSpeed.toFixed(1) + ' km/h'
   const consumptionString = Math.round(consumption) + ' km/kWh'
 
-  const handleSpace = (e: KeyboardEvent) => {
+  const handleSpace = useCallback((e: KeyboardEvent) => {
     if (e.code !== 'Space') return
     trip.newTrip()
-  }
+  }, [trip])
 
   useEffect(() => {
     addEventListener('keydown', handleSpace)
@@ -31,7 +31,7 @@ export const useTripData = () => {
       removeEventListener('keydown', handleSpace)
       clearInterval(timer)
     }
-  }, [])
+  }, [handleSpace])
 
   return { distanceString, timeString, avgSpeedString, consumptionString }
 }
