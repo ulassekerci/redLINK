@@ -40,6 +40,7 @@ class BLEClient {
     const before = performance.now()
     try {
       await this.requestData(4, device)
+      uploadData()
       await this.requestData(32, device)
       uploadData()
     } catch (error) {
