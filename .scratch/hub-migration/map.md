@@ -29,6 +29,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - [Hub limits for multiple registrations](issues/01-hub-limits-for-multiple-registrations.md): one phone can hold several registrations with no cap or idle timeout in the hub code, but unattached registrations buffer without bound and nothing is published about the public hub's capacity.
 - [How desktop VESC Tool behaves as a hub client](issues/03-how-desktop-vesc-tool-behaves-as-a-hub-client.md): it dispatches packets by command ID alone, so the phone's unsolicited stream is harmless and custom app data is ignored, but it needs a firmware version reply within about 2 s and sends writes (including an Esc-key motor stop) that the bridge must filter with an allow-list.
 - [How several pit laptops watch at once](issues/04-how-several-pit-laptops-watch-at-once.md): one registration per viewer, handed out through a lobby using a per-launch token and confirmed by `PING`; viewers send a 1 Hz heartbeat, the phone never refuses a viewer, and 8 is the tested number.
+- [Android headless operation constraints](issues/02-android-headless-operation-constraints.md): one foreground service typed `connectedDevice|location`, started from a visible activity with a partial wake lock, is the documented shape and needs no background location permission; survival under Doze rests on AOSP source, and manufacturer killing on the actual phone is untested.
 
 ## Not yet specified
 

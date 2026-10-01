@@ -1,7 +1,7 @@
 # What travels on the stream
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: 01, 03
 
 Map: [Hub migration](../map.md)
