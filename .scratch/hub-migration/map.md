@@ -26,6 +26,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 <!-- one line per resolved ticket -->
 
 - [Hub limits for multiple registrations](issues/01-hub-limits-for-multiple-registrations.md): one phone can hold several registrations with no cap or idle timeout in the hub code, but unattached registrations buffer without bound and nothing is published about the public hub's capacity.
+- [How desktop VESC Tool behaves as a hub client](issues/03-how-desktop-vesc-tool-behaves-as-a-hub-client.md): it dispatches packets by command ID alone, so the phone's unsolicited stream is harmless and custom app data is ignored, but it needs a firmware version reply within about 2 s and sends writes (including an Esc-key motor stop) that the bridge must filter with an allow-list.
 - [How desktop VESC Tool behaves as a hub client](issues/03-how-desktop-vesc-tool-behaves-as-a-hub-client.md): it probes the firmware version with a 2 s deadline, reads configs and scans CAN once, then stays silent; it acts on unsolicited packets by command ID, ignores `COMM_CUSTOM_APP_DATA`, and its Esc key sends a motor stop, so a bridge needs an allow-list (read from code, not tested).
 
 ## Not yet specified
