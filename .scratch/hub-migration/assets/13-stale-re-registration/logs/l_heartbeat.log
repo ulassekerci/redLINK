@@ -1,0 +1,6 @@
+[    1.23] heartbeat id RLT86489BEDB088 ping: PONG
+[    1.23] silenced
+[  602.43] still PONG at +601s
+[  994.16] client closed at +993s: [Errno 32] Broken pipe
+[ 1002.36] ping changed PONG -> NULL at +1001s
+[ 1002.57] end: last=NULL at +1001s; S1 local view: 2 bytes, open

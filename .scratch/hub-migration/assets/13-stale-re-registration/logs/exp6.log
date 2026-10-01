@@ -1,0 +1,7 @@
+[    4.21] id RLT311C2F08D31D ping after re-register: PONG
+[  988.95] ping changed PONG -> NULL at +986s
+[  989.46] S2 socket state: open
+[  991.35] after change: S2 got b'' (open); new client error(ConnectionResetError)
+[  992.57] third registration ping: PONG
+[  993.08] S2 after third registration: open
+[  993.08] done

@@ -1,0 +1,6 @@
+[   12.52] id RLT3CD5F428D6AE ping after re-register: PONG
+[ 1221.33] S2 socket state: open
+[ 1223.72] after change: S2 got b'' (open); new client open
+[ 1224.95] third registration ping: PONG
+[ 1225.45] S2 after third registration: open
+[ 1225.45] done

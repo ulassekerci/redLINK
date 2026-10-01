@@ -1,0 +1,79 @@
+[    6.68] SANITY before-silence client got b'before'; after-silence client got b'' (open)
+[    6.68] --- A live-idle old, no client: id=RLTEC0E3D151B4E
+[    7.41]   ping after S1: PONG
+[    7.93]   ping +0.3s after S2: PONG
+[    9.08]   ping +1.5s after S2: PONG
+[   12.24]   ping +4.6s after S2: PONG
+[   12.24]   S1 state: closed-by-hub, got b'' len=0
+[   14.44]   S2 got b'NEWREQ' (open)
+[   14.44]   S1 got b'' (closed-by-hub)
+[   15.95]   new client got b'REPLY-FROM-S2' (open)
+[   26.10]   ping +~17s: PONG
+[   26.76]   ping after S2 closed: NULL
+[   26.76] --- B silenced old, no client: id=RLTB1C3A9B77824
+[   27.49]   ping after S1: PONG
+[   28.32]   ping +0.3s after S2: PONG
+[   29.47]   ping +1.5s after S2: PONG
+[   32.62]   ping +4.6s after S2: PONG
+[   34.82]   S2 got b'NEWREQ' (open)
+[   34.82]   S1(silenced, local view) got 0 bytes (closed-by-hub)
+[   36.33]   new client got b'REPLY-FROM-S2' (open)
+[   46.48]   ping +~17s: PONG
+[   47.14]   ping after S2 closed: NULL
+[   47.14] --- C silenced old, client wrote and left: id=RLTF8E6D349594E
+[   47.87]   ping after S1: PONG
+[   50.10]   ping +0.3s after S2: PONG
+[   51.26]   ping +1.5s after S2: PONG
+[   54.41]   ping +4.6s after S2: PONG
+[   56.59]   S2 got b'NEWREQ' (open)
+[   56.59]   S1(silenced, local view) got 6 bytes (closed-by-hub)
+[   58.11]   new client got b'REPLY-FROM-S2' (open)
+[   68.26]   ping +~17s: PONG
+[   68.91]   ping after S2 closed: NULL
+[   68.91] --- D silenced old, client still attached: id=RLT9555BC73C82D
+[   69.63]   ping after S1: PONG
+[   71.57]   ping +0.3s after S2: PONG
+[   72.72]   ping +1.5s after S2: PONG
+[   75.88]   ping +4.6s after S2: PONG
+[   75.88]   old client state: closed-by-hub
+[   78.07]   S2 got b'NEWREQ' (open)
+[   78.07]   S1(silenced, local view) got 6 bytes (closed-by-hub)
+[   79.58]   new client got b'REPLY-FROM-S2' (open)
+[   89.74]   ping +~17s: PONG
+[   90.39]   ping after S2 closed: NULL
+[   90.39] --- E silenced old, different password: id=RLT938977326225
+[   91.12]   ping after S1: PONG
+[   91.96]   ping +0.3s after S2: PONG
+[   93.11]   ping +1.5s after S2: PONG
+[   96.28]   ping +4.6s after S2: PONG
+[   98.47]   S2 got b'NEWREQ' (open)
+[   98.47]   S1(silenced, local view) got 0 bytes (closed-by-hub)
+[   99.98]   new client got b'REPLY-FROM-S2' (open)
+[  100.46]   login with old password: closed-by-hub
+[  110.61]   ping +~17s: PONG
+[  111.27]   ping after S2 closed: NULL
+[  111.27] --- F live-idle old, client still attached: id=RLT5418523CFC9D
+[  112.00]   ping after S1: PONG
+[  113.62]   ping +0.3s after S2: PONG
+[  114.76]   ping +1.5s after S2: PONG
+[  117.91]   ping +4.6s after S2: PONG
+[  117.91]   S1 state: closed-by-hub, got b'OLDREQ' len=6
+[  117.91]   old client state: closed-by-hub
+[  120.11]   S2 got b'NEWREQ' (open)
+[  120.11]   S1 got b'' (closed-by-hub)
+[  121.61]   new client got b'REPLY-FROM-S2' (open)
+[  131.77]   ping +~17s: PONG
+[  132.43]   ping after S2 closed: NULL
+[  132.43] --- G silenced old, client flooded 1 MiB and still attached: id=RLTF910B8BA9EC4
+[  133.15]   ping after S1: PONG
+[  134.73]   flooded 1048576 bytes into old registration
+[  135.96]   ping +0.3s after S2: PONG
+[  137.12]   ping +1.5s after S2: PONG
+[  140.27]   ping +4.6s after S2: PONG
+[  140.78]   old client state: open
+[  142.97]   S2 got b'NEWREQ' (open)
+[  143.18]   S1(silenced, local view) got 14486 bytes (open)
+[  144.68]   new client got b'REPLY-FROM-S2' (open)
+[  154.83]   ping +~17s: PONG
+[  155.48]   ping after S2 closed: NULL
+[  155.48] done

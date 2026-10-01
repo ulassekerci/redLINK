@@ -1,0 +1,5 @@
+[    1.23] once id RLT7B64AE32ED00 ping: PONG
+[    1.23] silenced
+[  602.86] still PONG at +602s
+[ 1002.72] ping changed PONG -> NULL at +1001s
+[ 1002.93] end: last=NULL at +1002s; S1 local view: 2 bytes, open

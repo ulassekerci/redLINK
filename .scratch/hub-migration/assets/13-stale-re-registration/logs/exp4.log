@@ -1,0 +1,23 @@
+[    0.07] TCP connect time to hub: 74 ms
+[    7.57] (a) gap=0 ms: 1/10 packets arrived
+[   14.55] (a) gap=10 ms: 10/10 packets arrived
+[   21.66] (a) gap=20 ms: 10/10 packets arrived
+[   28.89] (a) gap=30 ms: 10/10 packets arrived
+[   36.31] (a) gap=50 ms: 10/10 packets arrived
+[   44.21] (a) gap=100 ms: 10/10 packets arrived
+[   53.14] (a) gap=200 ms: 10/10 packets arrived
+[   63.35] (b) gap=50 ms stagger=0 ms n=4: arrived ['<P0>', '<P0>', '<P0>', '<P0>']
+[   73.86] (b) gap=50 ms stagger=20 ms n=4: arrived ['', '', '', '']
+[   84.73] (b) gap=50 ms stagger=50 ms n=4: arrived ['', '', '', '']
+[   96.38] (b) gap=50 ms stagger=100 ms n=4: arrived ['', '', '', '']
+[  109.72] (b) gap=50 ms stagger=150 ms n=4: arrived ['', '', '', '']
+[  125.38] (b) gap=50 ms stagger=250 ms n=4: arrived ['', '', '', '']
+[  143.63] (b) gap=50 ms stagger=500 ms n=4: arrived ['', '', '', '']
+[  154.00] (b) gap=100 ms stagger=0 ms n=4: arrived ['<P0>', '<P0>', '<P0>', '<P0>']
+[  164.75] (b) gap=100 ms stagger=20 ms n=4: arrived ['<P0>', '<P0>', '<P0>', '<P0>']
+[  175.77] (b) gap=100 ms stagger=50 ms n=4: arrived ['', '', '', '']
+[  187.37] (b) gap=100 ms stagger=100 ms n=4: arrived ['', '', '', '']
+[  199.74] (b) gap=100 ms stagger=150 ms n=4: arrived ['', '', '', '']
+[  213.73] (b) gap=100 ms stagger=250 ms n=4: arrived ['', '', '', '']
+[  231.72] (b) gap=100 ms stagger=500 ms n=4: arrived ['', '', '', '']
+[  231.72] done
