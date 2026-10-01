@@ -32,4 +32,6 @@ The phone polls the board at 20 Hz and copies the replies unchanged to every act
   - Phone lost: no status for 3 s. The viewer sends `PING`; on `NULL` it returns to the lobby, on `PONG` it keeps waiting.
 - **Cost:** about 101 bytes per cycle, so roughly 2 kB/s per viewer and 58 MB per hour of phone data with 8 viewers.
 
+Amended 2026-10-02 by [Android runtime and stack](07-android-runtime-and-stack.md): the "phone lost" rule above is replaced. When the phone's network drops silently the hub keeps the registration and answers `PONG`, so the viewer would wait on a dead registration. Instead, after 3 s without status the viewer returns to the lobby with a fresh token and does not `PING` its old registration.
+
 Handed on: token length and alphabet go to [How hub credentials are set and shared](10-how-hub-credentials-are-set-and-shared.md); how the desktop polls on its direct-Bluetooth path, where no status message exists, goes to [Desktop app architecture](11-desktop-app-architecture.md); which polled fields the log keeps goes to [What the phone log contains](08-what-the-phone-log-contains.md).

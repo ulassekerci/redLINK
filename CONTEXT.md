@@ -40,6 +40,10 @@ _Avoid_: Keep-alive, ping (the hub's `PING` is a different thing)
 The message the bridge sends each viewer about once a second, saying the bridge is alive and whether the board is answering.
 _Avoid_: Health, state packet
 
+**Run**:
+The span from someone pressing Start on the phone to someone pressing Stop or the phone restarting, during which the bridge works and the log of record is written.
+_Avoid_: Session, trip (a trip is a distance measurement, not a span of bridging)
+
 **Log of record**:
 The telemetry file the phone writes during a run, authoritative over any copy a viewer saves.
 _Avoid_: Export, CSV (as a name for the concept)

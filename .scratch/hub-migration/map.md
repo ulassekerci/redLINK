@@ -17,7 +17,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
   - The stream stays pure VESC framing; phone GPS travels as `COMM_CUSTOM_APP_DATA`. Compatibility with VESC Tool (desktop or mobile) is not a goal: only our own apps attach to the phone's registrations. (Changed 2026-10-01; desktop VESC Tool attaching for debugging was dropped.)
   - The desktop app can also connect straight to the board over Bluetooth with no phone, for testing the vehicle. Pure VESC framing is kept so both paths share one parser.
   - The phone owns polling at a fixed rate; desktops listen.
-  - The phone log is the log of record: a CSV per session including GPS, exported through the share sheet. The desktop keeps its CSV export as a convenience copy.
+  - The phone log is the log of record: a CSV per run including GPS, exported through the share sheet. The desktop keeps its CSV export as a convenience copy.
   - Several laptops watching at once is a hard requirement. Assume 3-8 laptops with no shared LAN.
   - Electron targets macOS and Windows; its renderer is the existing React dashboard with the data layer swapped.
   - New apps live in this repo and replace `mobile/`, `server/` and `web/`; the old stack stays until parity.
@@ -31,6 +31,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - [How several pit laptops watch at once](issues/04-how-several-pit-laptops-watch-at-once.md): one registration per viewer, handed out through a lobby using a per-launch token and confirmed by `PING`; viewers send a 1 Hz heartbeat, the phone never refuses a viewer, and 8 is the tested number.
 - [Android headless operation constraints](issues/02-android-headless-operation-constraints.md): one foreground service typed `connectedDevice|location`, started from a visible activity with a partial wake lock, is the documented shape and needs no background location permission; survival under Doze rests on AOSP source, and manufacturer killing on the actual phone is untested.
 - [What travels on the stream](issues/05-what-travels-on-the-stream.md): the phone polls `COMM_GET_VALUES` and decoded ADC at 20 Hz and copies replies unchanged; GPS, lobby request, heartbeat and status are `COMM_CUSTOM_APP_DATA` messages told apart by a type byte, and a 1 Hz status message lets a viewer tell live from board unreachable from phone lost.
+- [Android runtime and stack](issues/07-android-runtime-and-stack.md): a run is one foreground service from Start to Stop that resumes after a kill or crash but not a reboot, with six grants blocking Start; Kotlin, Compose and the Nordic BLE library on Android 12+. It also amended the viewer's "phone lost" rule, because a silent network drop leaves stale registrations on the hub.
 
 ## Not yet specified
 
