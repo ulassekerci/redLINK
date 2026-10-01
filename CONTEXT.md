@@ -20,6 +20,10 @@ _Avoid_: Source, uploader
 A bridge's presence on the hub under one ID and password, which one viewer at a time can attach to.
 _Avoid_: Session, channel, room
 
+**Lobby**:
+The one registration every viewer attaches to first, where it asks the bridge for a registration of its own.
+_Avoid_: Slot, seat, pool
+
 **Viewer**:
 A desktop app instance attached to the hub to watch the board's stream.
 _Avoid_: Client, dashboard (for the instance), listener
