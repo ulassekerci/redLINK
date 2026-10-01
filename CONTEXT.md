@@ -28,6 +28,18 @@ _Avoid_: Slot, seat, pool
 A desktop app instance attached to the hub to watch the board's stream.
 _Avoid_: Client, dashboard (for the instance), listener
 
+**Stream**:
+Everything the bridge writes to a viewer's registration: the board's replies plus the bridge's own messages.
+_Avoid_: Feed, telemetry (for the bytes on the hub)
+
+**Heartbeat**:
+The message a viewer sends about once a second to tell the bridge it is still watching.
+_Avoid_: Keep-alive, ping (the hub's `PING` is a different thing)
+
+**Status**:
+The message the bridge sends each viewer about once a second, saying the bridge is alive and whether the board is answering.
+_Avoid_: Health, state packet
+
 **Log of record**:
 The telemetry file the phone writes during a run, authoritative over any copy a viewer saves.
 _Avoid_: Export, CSV (as a name for the concept)

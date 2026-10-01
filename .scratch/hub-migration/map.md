@@ -30,6 +30,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - [How desktop VESC Tool behaves as a hub client](issues/03-how-desktop-vesc-tool-behaves-as-a-hub-client.md): it dispatches packets by command ID alone, so the phone's unsolicited stream is harmless and custom app data is ignored, but it needs a firmware version reply within about 2 s and sends writes (including an Esc-key motor stop) that the bridge must filter with an allow-list.
 - [How several pit laptops watch at once](issues/04-how-several-pit-laptops-watch-at-once.md): one registration per viewer, handed out through a lobby using a per-launch token and confirmed by `PING`; viewers send a 1 Hz heartbeat, the phone never refuses a viewer, and 8 is the tested number.
 - [Android headless operation constraints](issues/02-android-headless-operation-constraints.md): one foreground service typed `connectedDevice|location`, started from a visible activity with a partial wake lock, is the documented shape and needs no background location permission; survival under Doze rests on AOSP source, and manufacturer killing on the actual phone is untested.
+- [What travels on the stream](issues/05-what-travels-on-the-stream.md): the phone polls `COMM_GET_VALUES` and decoded ADC at 20 Hz and copies replies unchanged; GPS, lobby request, heartbeat and status are `COMM_CUSTOM_APP_DATA` messages told apart by a type byte, and a 1 Hz status message lets a viewer tell live from board unreachable from phone lost.
 
 ## Not yet specified
 
