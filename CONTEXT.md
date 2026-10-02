@@ -24,6 +24,10 @@ _Avoid_: Session, channel, room
 The one registration every viewer attaches to first, where it asks the bridge for a registration of its own.
 _Avoid_: Slot, seat, pool
 
+**Team code**:
+The one secret the phone generates and the pit crew types into each laptop, which lets a viewer find and attach to the bridge on the hub.
+_Avoid_: Password, hub ID, credentials, key
+
 **Viewer**:
 A desktop app instance attached to the hub to watch the board's stream.
 _Avoid_: Client, dashboard (for the instance), listener
