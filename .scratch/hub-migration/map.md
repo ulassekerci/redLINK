@@ -10,6 +10,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 
 - Domain: Shell Eco-marathon vehicle telemetry. Read `CONTEXT.md` for vocabulary and `tcp-hub.md` for the hub protocol before any ticket.
 - Skills: `grilling` and `domain-modeling` for grilling tickets, `research` for research tickets, `prototype` for prototype tickets.
+- Execution override: the spec-writing tickets are `task` tickets that write documents, not decisions. No code is built. Resolving one means the file exists; its answer records the path and any section left open.
 - Why the change: drop the self-hosted relay and drop the unreliable React Native app.
 - Standing decisions from charting (not tickets):
   - Android first. The app is written natively and must run as a headless logger and bridge with the screen off; it also displays some information.
@@ -42,10 +43,11 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - [Testing without the car](issues/16-testing-without-the-car.md): a simulated board in the phone app's debug build plays a fixed generated lap and runs on an emulator, which is also how a viewer is tested with no phone; desk tests use the public hub, the direct link is tested on a real board only, and there is no fake bridge; the specs require named automated suites that gate the tag workflow and a desk checklist to pass before the acceptance session.
 - [Self-run hub fallback](issues/17-self-run-hub-fallback.md): no standing hub and no recipe; a self-hosted hub on a rented server is proven once as a desk checklist item and then destroyed, and on race day the software side starts one and tells the pit crew to switch; host and port are typed by hand, locked on the phone during a run, and shown in both apps only when they differ from the public hub.
 - [Board speed settings and firmware version](issues/14-board-speed-settings-and-firmware-version.md): the board runs firmware 6.06, which returns odometer and uptime as the last two fields of `COMM_GET_VALUES_SETUP` (6.05 does too), so the log's columns are filled; the board's wheel, gear and pole values are rough estimates that the mechanics team will replace, which becomes a desk checklist item before the acceptance session and changes nothing in the apps.
+- [Where the specs live and how they are split](issues/18-where-the-specs-live-and-how-they-are-split.md): four files in `.scratch/hub-migration/` (`spec.md` as the front page holding cutover, release, checklist and acceptance session, plus `spec-hub.md`, `spec-android.md`, `spec-desktop.md`), each restating decisions in final form; the hub spec is the wire format's only home until implementation moves it into `protocol/README.md`; one writing session per file, hub before Android and desktop, then a check of all four against this list.
 
 ## Not yet specified
 
-- Writing the three specs themselves (Android app, hub usage, Electron app). Likely one ticket per part, shaped by the open ticket Where the specs live and how they are split.
+<!-- nothing: every remaining step is a ticket -->
 
 ## Out of scope
 
