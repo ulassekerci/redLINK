@@ -28,3 +28,5 @@ The log of record is one plain CSV per run, one row per poll cycle, with speed a
 - **Trips:** the log knows nothing about trips. A file is a run; a trip stays a viewer-side measurement.
 
 Handed on: the change of polled command amends [What travels on the stream](05-what-travels-on-the-stream.md); the viewer's parser, the direct-Bluetooth polling and the trip meter's inputs go to [Desktop app architecture](11-desktop-app-architecture.md); the run list with share and delete goes to [What the phone screen shows](09-what-the-phone-screen-shows.md).
+
+Amended 2026-10-02 by [Testing without the car](16-testing-without-the-car.md): the log file of a run on the simulated board gets a `SIM_` prefix.

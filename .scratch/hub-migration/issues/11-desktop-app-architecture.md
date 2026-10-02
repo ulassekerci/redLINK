@@ -41,3 +41,7 @@ The main process owns the hub; the renderer stays a display and owns only the di
 Handed on: the bridge must treat a repeated lobby request for a token that already has a registration as a no-op; this amends [What travels on the stream](05-what-travels-on-the-stream.md) and belongs in the Android spec. Build tooling, packaging, signing and the macOS Bluetooth permission text stay with Distribution on the map. Directory names and whether `web/` is copied or converted go to [Repo layout and cutover](12-repo-layout-and-cutover.md).
 
 Added to `CONTEXT.md`: **Direct link**.
+
+Amended 2026-10-02 by [Distribution](15-distribution.md): the state "protocol version newer than this app knows" becomes "version mismatch". It applies when the bridge's major version differs from the app's in either direction; the status line states both versions and recommends no action. The app still shows nothing from the stream in that state.
+
+Amended 2026-10-02 by [Testing without the car](16-testing-without-the-car.md): the app takes no single-instance lock, so several viewer windows can run on one laptop.

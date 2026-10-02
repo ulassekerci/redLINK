@@ -34,3 +34,5 @@ Handed on: how the hub's credentials are entered on the Setup screen goes to [Ho
 ## Comments
 
 2026-10-02: prototype at [assets/09-phone-screen/prototype.html](../assets/09-phone-screen/prototype.html), three variants (A one page, B cockpit, C chain) with a panel that fakes the board, hub, viewers and grants. Variants D (merged) and E (D in Material 3 web components) were added in later rounds.
+
+Amended 2026-10-02 by [Testing without the car](16-testing-without-the-car.md): on the simulated board the Vehicle row reads "Simulated"; in debug builds only, Setup offers the simulated board beside the real one and a "stop answering" control.

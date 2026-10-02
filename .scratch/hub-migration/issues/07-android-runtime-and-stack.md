@@ -29,3 +29,5 @@ A run is one lifetime of a single foreground service, started and stopped by a p
 Found on the way: a silent loss of the phone's network leaves every registration "registered" on the hub, possibly for minutes, so `PING` answers `PONG` for a dead registration. The "phone lost" rule in [What travels on the stream](05-what-travels-on-the-stream.md) is amended there. Whether a stale lobby can be re-registered is unknown and goes to [Stale re-registration on the public hub](13-stale-re-registration-on-the-public-hub.md).
 
 Handed on: whether a resumed run appends to its file or opens a second one goes to [What the phone log contains](08-what-the-phone-log-contains.md); the setup screen and notification layout go to [What the phone screen shows](09-what-the-phone-screen-shows.md); the randomised lobby retry on the viewer goes to [Desktop app architecture](11-desktop-app-architecture.md).
+
+Amended 2026-10-02 by [Testing without the car](16-testing-without-the-car.md): with the simulated board selected in a debug build, the Bluetooth grants are not asked for and do not block Start.
