@@ -2,11 +2,9 @@ import { motion } from 'motion/react'
 import { Battery } from './Battery'
 import { NavLink, useLocation } from 'react-router'
 import { Mosfet } from './Mosfet'
-import { useBLEStore } from '../../store/ble'
 
 export const BottomSection = () => {
-  const ble = useBLEStore()
-  let location = useLocation()
+  const location = useLocation()
 
   return (
     <motion.div
@@ -31,21 +29,9 @@ export const BottomSection = () => {
           </NavLink>
         )}
 
-        {ble.connected ? (
-          <span
-            className='text-center rounded-xl cursor-pointer text-rose-100/80 hover:text-rose-500/80'
-            onClick={ble.disconnectBLE}
-          >
-            Soket
-          </span>
-        ) : (
-          <span
-            className='text-center rounded-xl cursor-pointer text-rose-100/80 hover:text-rose-500/80'
-            onClick={ble.connectBLE}
-          >
-            Bluetooth
-          </span>
-        )}
+        <NavLink to='/settings' className='flex gap-4'>
+          <span className='text-center rounded-xl cursor-pointer text-rose-100/80 hover:text-rose-500/80'>Ayarlar</span>
+        </NavLink>
       </div>
       <Mosfet />
     </motion.div>

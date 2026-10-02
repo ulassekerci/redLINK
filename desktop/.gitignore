@@ -25,3 +25,5 @@ dist-ssr
 
 # .env file
 .env
+# electron-vite output
+out

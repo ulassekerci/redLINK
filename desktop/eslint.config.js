@@ -7,7 +7,7 @@ import { globalIgnores } from 'eslint/config'
 import { builtinModules } from 'node:module'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'out']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -20,6 +20,10 @@ export default tseslint.config([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+  },
+  {
+    files: ['electron.vite.config.ts', 'scripts/**/*.ts', 'src/main/**/*.ts', 'src/preload/**/*.ts'],
+    languageOptions: { globals: globals.node },
   },
   {
     // The protocol module is shared by main and the renderer, so it may import

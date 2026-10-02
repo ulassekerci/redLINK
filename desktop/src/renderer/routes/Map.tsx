@@ -1,6 +1,8 @@
 import { motion } from 'motion/react'
 import { useVehicleData } from '../hooks/useVehicleData'
 import Map, { Marker } from 'react-map-gl/maplibre'
+import type { StyleSpecification } from 'maplibre-gl'
+import mapStyle from '../assets/mapstyle.json'
 
 export const MapScreen = () => {
   const { location } = useVehicleData()
@@ -23,7 +25,7 @@ export const MapScreen = () => {
           <Map
             initialViewState={initialState}
             style={{ width: '100%', height: '80vh', borderRadius: 32 }}
-            mapStyle={'/mapstyle.json'}
+            mapStyle={mapStyle as StyleSpecification}
             attributionControl={false}
           >
             {location && (
