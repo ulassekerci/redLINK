@@ -8,13 +8,13 @@ Spec: [front page](../spec.md) sections 2 and 3; [hub usage spec](../spec-hub.md
 
 **Status:** ready-for-agent
 
-- [ ] The last commit before any implementation change is tagged `legacy-stack`
-- [ ] `mobile/` and `server/` are deleted
-- [ ] `web/` is renamed to `desktop/` with `git mv`, so file history carries over
-- [ ] `desktop/` is on pnpm: `pnpm-lock.yaml` replaces `package-lock.json` and `packageManager` pins the pnpm version
-- [ ] `pnpm install`, `pnpm build` and `pnpm dev` work in `desktop/`, and the dashboard looks as it did
-- [ ] `protocol/` exists with `tcp-hub.md` moved in from the root
-- [ ] `protocol/README.md` holds the hub spec's sections marked **(moves)**: framing, board commands, our messages and the vector list; the hub spec keeps a link in the place of each
-- [ ] Every reference to `tcp-hub.md` at its old path is updated
-- [ ] The root `README.md` describes the new stack, with no mention of the relay or the React Native app as current
-- [ ] There is no root `package.json` and no workspace
+- [x] The last commit before any implementation change is tagged `legacy-stack`
+- [x] `mobile/` and `server/` are deleted
+- [x] `web/` is renamed to `desktop/` with `git mv`, so file history carries over
+- [x] `desktop/` is on pnpm: `pnpm-lock.yaml` replaces `package-lock.json` and `packageManager` pins the pnpm version
+- [x] `pnpm install`, `pnpm build` and `pnpm dev` work in `desktop/`, and the dashboard looks as it did
+- [x] `protocol/` exists with `tcp-hub.md` moved in from the root
+- [x] `protocol/README.md` holds the hub spec's sections marked **(moves)**: framing, board commands, our messages and the vector list; the hub spec keeps a link in the place of each
+- [x] Every reference to `tcp-hub.md` at its old path is updated
+- [x] The root `README.md` describes the new stack, with no mention of the relay or the React Native app as current
+- [x] There is no root `package.json` and no workspace

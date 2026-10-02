@@ -30,4 +30,4 @@ The pit crew is handed one secret, the team code, and every hub ID and password 
 
 Handed on: the desktop's first-launch prompt, settings and waiting screen go to [Desktop app architecture](11-desktop-app-architecture.md).
 
-Nothing here was tested against the hub; the ID forms rest on the hub rules in `tcp-hub.md` (IDs upper-cased, spaces stripped, `:` rejected), which name no length limit.
+Nothing here was tested against the hub; the ID forms rest on the hub rules in `protocol/tcp-hub.md` (IDs upper-cased, spaces stripped, `:` rejected), which name no length limit.

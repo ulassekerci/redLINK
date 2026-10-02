@@ -8,7 +8,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 
 ## Notes
 
-- Domain: Shell Eco-marathon vehicle telemetry. Read `CONTEXT.md` for vocabulary and `tcp-hub.md` for the hub protocol before any ticket.
+- Domain: Shell Eco-marathon vehicle telemetry. Read `CONTEXT.md` for vocabulary and `protocol/tcp-hub.md` for the hub protocol before any ticket.
 - Skills: `grilling` and `domain-modeling` for grilling tickets, `research` for research tickets, `prototype` for prototype tickets.
 - Execution override: the spec-writing tickets are `task` tickets that write documents, not decisions. No code is built. Resolving one means the file exists; its answer records the path and any section left open.
 - Why the change: drop the self-hosted relay and drop the unreliable React Native app.
