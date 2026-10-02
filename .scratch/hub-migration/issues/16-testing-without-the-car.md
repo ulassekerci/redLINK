@@ -44,3 +44,5 @@ A simulated board inside the phone app's debug build stands in for the board, th
 Amends: [Android runtime and stack](07-android-runtime-and-stack.md) (Bluetooth grants do not block Start on the simulated board), [What the phone log contains](08-what-the-phone-log-contains.md) (`SIM_` file name prefix), [What the phone screen shows](09-what-the-phone-screen-shows.md) (Vehicle row reads "Simulated"; Setup gains two debug-only entries), [Desktop app architecture](11-desktop-app-architecture.md) (no single-instance lock) and [Distribution](15-distribution.md) (tests are the first step of the tag workflow).
 
 Added to `CONTEXT.md`: **Simulated board**.
+
+Amended 2026-10-02 by [Write the spec front page](22-write-the-spec-front-page.md): the desk checklist's long run is 1 hour, not 2, done once on mobile data with 8 viewer windows on one laptop; the other system's 8 windows and the status-line states move to a short second run, which also gains a kill-and-resume item; the direct link on the stand is tried on one macOS and one Windows laptop.

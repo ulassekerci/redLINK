@@ -208,7 +208,7 @@ Tickets: [Distribution](issues/15-distribution.md).
 - Minimum Android 12 (API 31), targeting the current API.
 - The project is `android/` in this repo, with no tooling at the repo root. It reads `protocol/vectors.json` from the sibling directory in its tests.
 - The reference phone is the driver's Samsung on Android 16.
-- **Manufacturer checklist:** `README.md` carries the steps for settings the app cannot read, written for the reference phone during implementation: the app is put on the manufacturer's list of apps never put to sleep, and is not on any list of restricted or deep-sleeping apps. The 2-hour screen-off item on the front page's desk checklist is what proves them.
+- **Manufacturer checklist:** `README.md` carries the steps for settings the app cannot read, written for the reference phone during implementation: the app is put on the manufacturer's list of apps never put to sleep, and is not on any list of restricted or deep-sleeping apps. The 1-hour screen-off item on the front page's desk checklist is what proves them.
 
 **Not established.** None of this was run on a phone; the front page's desk checklist is where each is found out.
 
