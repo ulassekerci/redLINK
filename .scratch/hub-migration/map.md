@@ -41,10 +41,11 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - [Distribution](issues/15-distribution.md): GitHub Actions builds both apps on `v*` tags only and attaches them to a GitHub Release, with `-rc` tags as pre-releases; the APK is sideloaded, the desktop app is unsigned (arm64 `dmg`, x64 zip, electron-builder with `electron-vite`), and each app only shows an "update available" line; the protocol version is the app's major version and a different major refuses both ways ([ADR 0002](../../docs/adr/0002-protocol-version-is-the-app-major-version.md)).
 - [Testing without the car](issues/16-testing-without-the-car.md): a simulated board in the phone app's debug build plays a fixed generated lap and runs on an emulator, which is also how a viewer is tested with no phone; desk tests use the public hub, the direct link is tested on a real board only, and there is no fake bridge; the specs require named automated suites that gate the tag workflow and a desk checklist to pass before the acceptance session.
 - [Self-run hub fallback](issues/17-self-run-hub-fallback.md): no standing hub and no recipe; a self-hosted hub on a rented server is proven once as a desk checklist item and then destroyed, and on race day the software side starts one and tells the pit crew to switch; host and port are typed by hand, locked on the phone during a run, and shown in both apps only when they differ from the public hub.
+- [Board speed settings and firmware version](issues/14-board-speed-settings-and-firmware-version.md): the board runs firmware 6.06, which returns odometer and uptime as the last two fields of `COMM_GET_VALUES_SETUP` (6.05 does too), so the log's columns are filled; the board's wheel, gear and pole values are rough estimates that the mechanics team will replace, which becomes a desk checklist item before the acceptance session and changes nothing in the apps.
 
 ## Not yet specified
 
-- Writing the three specs themselves (Android app, hub usage, Electron app). They wait on the last open ticket: Board speed settings and firmware version. Likely one ticket per part; where the specs live and how the hub usage spec relates to `protocol/README.md` is not settled.
+- Writing the three specs themselves (Android app, hub usage, Electron app). Likely one ticket per part, shaped by the open ticket Where the specs live and how they are split.
 
 ## Out of scope
 
