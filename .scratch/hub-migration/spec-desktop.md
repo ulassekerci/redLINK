@@ -233,7 +233,7 @@ On and around a direct link:
 
 **The device list:** the title `Araç seçin`; one row per device found, showing its Bluetooth name (or its ID when it has none), added as the scan finds them; `Araç aranıyor` while the list is empty; and `Vazgeç`, which cancels. Pressing the action from settings returns to the gauges, where the list is. The gauges and bottom section keep showing the stream while the list is open.
 
-**The waiting screen:** the logo; the status line; the team code in use, `Takım kodu: K7QM-3XPC`; under it `host:port` when they are not the public hub's; the action `Araca doğrudan bağlan`; and, when there is one, the update line `Güncelleme var: 1.3.0`.
+**The waiting screen:** the logo; the status line; the team code in use, `Takım kodu: K7QM-3XPC`; under it `host:port` when they are not the public hub's; the action `Doğrudan bağlan`; and, when there is one, the update line `Güncelleme var: 1.3.0`.
 
 **The trip meter's rows:** `Mesafe`, `Süre`, `Ort. Hız`, `Tüketim`, as today.
 
@@ -250,7 +250,7 @@ On and around a direct link:
 - `Takım kodu`: a text field. A rejected code: `Takım kodu hatalı. Telefondaki kodu kontrol edin.`
 - `Hub adresi` and `Port`: two fields.
 - `Kaydet` saves the three together.
-- `Araca doğrudan bağlan`, or `Bağlantıyı kes` while on a direct link: the same actions as in the middle section, here so they can be reached while live.
+- `Doğrudan bağlan`, or `Bağlantıyı kes` while on a direct link: the same actions as in the middle section, here so they can be reached while live.
 - `Sürüm 1.2.0`. When a newer release exists: `Güncelleme var: 1.3.0`, which opens the Release page.
 
 `Uyarı`, `Harita`, `Göstergeler`, `Konum verisi yok`, the trip meter's rows and the gauge units are today's. The version mismatch line and the Bluetooth permission text are from [Distribution](issues/15-distribution.md). Every other string was written with this spec.
