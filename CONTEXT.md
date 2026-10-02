@@ -12,6 +12,10 @@ _Avoid_: Device, vehicle, VESC (when the hub role is meant)
 The VESC TCP Hub, a third-party relay that joins one registration to one client and copies bytes between them.
 _Avoid_: Server, relay, socket server
 
+**Self-hosted hub**:
+A stock hub the team starts on its own server and points the phone and laptops at when the public hub is unusable.
+_Avoid_: Self-run hub, custom hub, fallback hub, backup server
+
 **Bridge**:
 The phone app in its role of carrying bytes between the board and the hub.
 _Avoid_: Source, uploader

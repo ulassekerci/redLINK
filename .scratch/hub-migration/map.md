@@ -13,7 +13,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - Why the change: drop the self-hosted relay and drop the unreliable React Native app.
 - Standing decisions from charting (not tickets):
   - Android first. The app is written natively and must run as a headless logger and bridge with the screen off; it also displays some information.
-  - Target the public hub (`veschub.vedder.se:65101`), host and port configurable so a self-run stock hub is a drop-in fallback. No custom server code.
+  - Target the public hub (`veschub.vedder.se:65101`), host and port configurable so a self-hosted stock hub is a drop-in fallback. No custom server code.
   - The stream stays pure VESC framing; phone GPS travels as `COMM_CUSTOM_APP_DATA`. Compatibility with VESC Tool (desktop or mobile) is not a goal: only our own apps attach to the phone's registrations. (Changed 2026-10-01; desktop VESC Tool attaching for debugging was dropped.)
   - The desktop app can also connect straight to the board over Bluetooth with no phone, for testing the vehicle. Pure VESC framing is kept so both paths share one parser.
   - The phone owns polling at a fixed rate; desktops listen.
@@ -40,10 +40,11 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - [Repo layout and cutover](issues/12-repo-layout-and-cutover.md): `android/` and `desktop/` beside a shared `protocol/` directory (prose description plus test vectors both test suites read, with `tcp-hub.md` moved in), no root tooling, and `desktop/` on pnpm instead of npm; `web/` is renamed to `desktop/` and `mobile/` and `server/` are deleted at the start of implementation behind a `legacy-stack` tag; a real track session, the acceptance session, is the bar for the migration being done.
 - [Distribution](issues/15-distribution.md): GitHub Actions builds both apps on `v*` tags only and attaches them to a GitHub Release, with `-rc` tags as pre-releases; the APK is sideloaded, the desktop app is unsigned (arm64 `dmg`, x64 zip, electron-builder with `electron-vite`), and each app only shows an "update available" line; the protocol version is the app's major version and a different major refuses both ways ([ADR 0002](../../docs/adr/0002-protocol-version-is-the-app-major-version.md)).
 - [Testing without the car](issues/16-testing-without-the-car.md): a simulated board in the phone app's debug build plays a fixed generated lap and runs on an emulator, which is also how a viewer is tested with no phone; desk tests use the public hub, the direct link is tested on a real board only, and there is no fake bridge; the specs require named automated suites that gate the tag workflow and a desk checklist to pass before the acceptance session.
+- [Self-run hub fallback](issues/17-self-run-hub-fallback.md): no standing hub and no recipe; a self-hosted hub on a rented server is proven once as a desk checklist item and then destroyed, and on race day the software side starts one and tells the pit crew to switch; host and port are typed by hand, locked on the phone during a run, and shown in both apps only when they differ from the public hub.
 
 ## Not yet specified
 
-- Writing the three specs themselves (Android app, hub usage, Electron app). They wait on the last open tickets: Self-run hub fallback, and Board speed settings and firmware version. Likely one ticket per part; where the specs live and how the hub usage spec relates to `protocol/README.md` is not settled.
+- Writing the three specs themselves (Android app, hub usage, Electron app). They wait on the last open ticket: Board speed settings and firmware version. Likely one ticket per part; where the specs live and how the hub usage spec relates to `protocol/README.md` is not settled.
 
 ## Out of scope
 
