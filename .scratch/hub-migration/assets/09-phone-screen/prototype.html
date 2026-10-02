@@ -1,0 +1,418 @@
+<!doctype html>
+<!--
+PROTOTYPE, throwaway. Ticket: .scratch/hub-migration/issues/09-what-the-phone-screen-shows.md
+Variants of the Android app's screens, switchable via ?variant=A|B|C|D and the bar at the bottom.
+D is the merge asked for after the first round (A's status rows, C's hidden logs and setup, OLED black, redLINK red); A-C are kept for the record.
+E is D built from real Material 3 web components (@material/web from a CDN, so it needs internet).
+There is no Android app yet, so this is a standalone page: double-click to open.
+Nothing here is real: the panel on the right fakes the board, the hub, viewers and grants.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>redLINK phone screen prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+<script type="module" src="https://esm.run/@material/web/all.js"></script>
+<style>
+  :root {
+    --bg: #101214; --surface: #1a1d21; --surface2: #23272c; --line: #32373e;
+    --text: #eef0f2; --dim: #9aa3ad; --ok: #3ecf7a; --warn: #f2b33d; --bad: #f0554d; --accent: #ff4136;
+  }
+  .light {
+    --bg: #f4f5f6; --surface: #ffffff; --surface2: #eceef0; --line: #d5d9de;
+    --text: #14171a; --dim: #5d6670; --ok: #14893f; --warn: #a86a00; --bad: #c9271f; --accent: #d9261c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.35 system-ui, sans-serif; background: #2b2f36; color: #e6e8ea;
+    display: flex; gap: 32px; justify-content: center; align-items: flex-start; padding: 24px 16px 96px; flex-wrap: wrap; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* phone */
+  #phone { width: 360px; height: 740px; border-radius: 28px; border: 8px solid #000; background: var(--bg); color: var(--text);
+    overflow: hidden; display: flex; flex-direction: column; position: relative; flex: none; }
+  #scroll { flex: 1; overflow-y: auto; }
+  .bar { display: flex; align-items: center; gap: 8px; padding: 14px 16px; }
+  .bar h1 { font-size: 18px; margin: 0; flex: 1; }
+  .icon { background: none; border: 0; padding: 6px 8px; border-radius: 8px; color: var(--dim); }
+  .icon:hover { background: var(--surface2); }
+  .card { background: var(--surface); border-radius: 14px; margin: 0 12px 12px; padding: 4px 14px; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row .grow { flex: 1; min-width: 0; }
+  .sub { color: var(--dim); font-size: 12px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dim); flex: none; }
+  .ok { background: var(--ok); } .warn { background: var(--warn); } .bad { background: var(--bad); }
+  .t-ok { color: var(--ok); } .t-warn { color: var(--warn); } .t-bad { color: var(--bad); } .t-dim { color: var(--dim); }
+  .h { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); margin: 14px 16px 6px; display: flex; }
+  .h span { flex: 1; }
+  .big { display: block; width: calc(100% - 24px); margin: 12px; padding: 16px; border: 0; border-radius: 14px;
+    font-size: 17px; font-weight: 600; background: var(--ok); color: #06210f; }
+  .big.stop { background: var(--bad); color: #fff; }
+  .big[disabled] { background: var(--surface2); color: var(--dim); cursor: not-allowed; }
+  .pill { border: 1px solid var(--line); background: var(--surface2); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+  .pill.danger { color: var(--bad); }
+  .notice { margin: 0 12px 12px; padding: 10px 14px; border-radius: 12px; background: var(--surface2); border-left: 4px solid var(--warn); font-size: 13px; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 12px 12px; }
+  .tile { background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+  .tile b { font-size: 22px; font-variant-numeric: tabular-nums; display: block; }
+  .check { width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--dim); flex: none; display: grid; place-items: center; font-size: 13px; }
+  .check.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tabs { display: flex; border-top: 1px solid var(--line); background: var(--surface); }
+  .tabs button { flex: 1; background: none; border: 0; padding: 12px 0 14px; color: var(--dim); }
+  .tabs button.on { color: var(--text); font-weight: 600; box-shadow: inset 0 2px 0 var(--accent); }
+  .modal { position: absolute; inset: 0; background: #000a; display: grid; place-items: center; }
+  .modal > div { background: var(--surface); border-radius: 16px; padding: 18px; width: 280px; }
+  .modal .btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+  /* variant B */
+  .strip { display: flex; gap: 6px; padding: 10px 12px; font-size: 11px; letter-spacing: .05em; }
+  .strip div { flex: 1; text-align: center; padding: 6px 0; border-radius: 8px; background: var(--surface); border-bottom: 3px solid var(--dim); }
+  .strip .s-ok { border-color: var(--ok); } .strip .s-warn { border-color: var(--warn); } .strip .s-bad { border-color: var(--bad); }
+  .hero { text-align: center; padding: 18px 0 6px; }
+  .hero b { font-size: 112px; line-height: 1; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .hero span { display: block; color: var(--dim); }
+
+  /* variant C */
+  .chain { margin: 4px 12px 12px; }
+  .node { background: var(--surface); border-radius: 14px; padding: 12px 14px; border-left: 5px solid var(--dim); }
+  .node.n-ok { border-color: var(--ok); } .node.n-warn { border-color: var(--warn); } .node.n-bad { border-color: var(--bad); }
+  .node .title { display: flex; font-weight: 600; } .node .title span { flex: 1; }
+  .link { width: 4px; height: 22px; margin-left: 30px; background: var(--dim); }
+  .link.l-ok { background: var(--ok); }
+  .link.l-bad { background: repeating-linear-gradient(var(--bad) 0 4px, transparent 4px 8px); }
+  .mono { font-variant-numeric: tabular-nums; }
+
+  /* variant D: OLED black, redLINK red (#E11D48, from mobile/assets/splash.png) */
+  .oled { --bg: #000; --surface: #0e0e10; --surface2: #1a1a1d; --line: #26262a; --accent: #E11D48; }
+  .oled .wordmark { color: var(--accent); font: 700 24px Arial, Helvetica, sans-serif; letter-spacing: -.01em; }
+  .oled .big { background: var(--accent); color: #fff; }
+  .oled .big.stop { background: var(--surface2); color: var(--text); border: 1px solid var(--line); }
+  .oled .big[disabled] { background: var(--surface2); color: var(--dim); }
+  .oled .row { padding: 14px 0; }
+
+  /* variant E: D built from real Material 3 web components (@material/web), themed black and redLINK red */
+  .m3 { font-family: Roboto, system-ui, sans-serif;
+    --md-ref-typeface-plain: Roboto, system-ui, sans-serif; --md-ref-typeface-brand: Roboto, system-ui, sans-serif;
+    --md-sys-color-primary: #E11D48; --md-sys-color-on-primary: #fff;
+    --md-sys-color-secondary-container: #4a1420; --md-sys-color-on-secondary-container: #ffd9dd;
+    --md-sys-color-surface: #000; --md-sys-color-surface-container: #121214; --md-sys-color-surface-container-high: #1c1c1f;
+    --md-sys-color-on-surface: #eef0f2; --md-sys-color-on-surface-variant: #9aa3ad;
+    --md-sys-color-outline: #6b7178; --md-sys-color-outline-variant: #2a2a2e; --md-sys-color-error: #f0554d;
+    --md-list-container-color: #121214; --md-filled-button-container-height: 56px; --md-filled-tonal-button-container-height: 56px; }
+  .m3 md-list { border-radius: 16px; margin: 0 12px 12px; padding: 0; overflow: hidden; }
+  .m3 .foot { padding: 12px; } .m3 .foot > * { width: 100%; font-size: 16px; }
+  .m3 .acts { display: flex; gap: 8px; margin: 0 12px 16px; flex-wrap: wrap; }
+  .m3 .modal > div { border-radius: 28px; padding: 24px; width: 300px; background: var(--md-sys-color-surface-container-high); }
+  .m3 .modal b { font-size: 22px; font-weight: 400; }
+
+  /* simulator panel and switcher: not part of the design */
+  #sim { width: 300px; background: #1d2026; border-radius: 12px; padding: 14px 16px; font-size: 13px; }
+  #sim h2 { font-size: 13px; margin: 14px 0 6px; color: #9aa3ad; text-transform: uppercase; letter-spacing: .06em; }
+  #sim h2:first-child { margin-top: 0; }
+  #sim label { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; gap: 8px; }
+  #sim select, #sim input[type=number] { background: #2b2f36; color: inherit; border: 1px solid #444; border-radius: 6px; padding: 3px 6px; }
+  #sim input[type=number] { width: 60px; }
+  #notif { background: #33373d; border-radius: 12px; padding: 10px 12px; }
+  #notif .a { color: #8ab4f8; margin-top: 8px; display: flex; gap: 16px; }
+  #switcher { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: #fff; color: #111; border-radius: 999px;
+    box-shadow: 0 6px 24px #0008; display: flex; align-items: center; gap: 6px; padding: 6px 8px; font-weight: 600; z-index: 10; }
+  #switcher button { background: #111; color: #fff; border: 0; border-radius: 50%; width: 34px; height: 34px; }
+  #switcher span { padding: 0 12px; min-width: 190px; text-align: center; }
+</style>
+</head>
+<body>
+<div id="phone"></div>
+
+<div id="sim">
+  <h2>Fake the world</h2>
+  <label>Board <select data-k="board"><option value="connected">answering</option><option value="unreachable">unreachable</option></select></label>
+  <label>Board picked <input type="checkbox" data-k="boardPicked"></label>
+  <label>Hub <select data-k="hub"><option value="connected">lobby registered</option><option value="retrying">retrying</option><option value="nonet">no network</option></select></label>
+  <label>Viewers <input type="number" min="0" max="8" data-k="viewers"></label>
+  <label>GPS <select data-k="gps"><option value="fix">fix</option><option value="nofix">no fix</option></select></label>
+  <label>Board fault <input type="checkbox" data-k="fault"></label>
+  <label>Grants in place <input type="number" min="0" max="6" data-k="grantCount"></label>
+  <label>"Ended by phone restart" notice <input type="checkbox" data-k="rebootNotice"></label>
+  <label>Light theme (A-C only) <input type="checkbox" data-k="light"></label>
+  <h2>Notification during a run</h2>
+  <div id="notif"></div>
+  <h2>State</h2>
+  <pre id="state" style="margin:0;white-space:pre-wrap;color:#9aa3ad;font-size:11px"></pre>
+</div>
+
+<div id="switcher"><button data-act="prev">←</button><span id="vlabel"></span><button data-act="next">→</button></div>
+
+<script>
+const VARIANTS = { A: 'One page', B: 'Cockpit', C: 'Chain', D: 'Merged', E: 'Merged, Material 3' };
+const GRANTS = ['Bluetooth', 'Precise location', 'Location "all the time"', 'Location services on', 'Battery optimisation exemption', 'Notifications'];
+const S = {
+  variant: new URLSearchParams(location.search).get('variant') || 'D',
+  screen: 'main',           // main | logs | setup
+  run: false, runStart: 0,
+  board: 'connected', boardPicked: true, hub: 'connected', viewers: 3, gps: 'fix', fault: false,
+  grantCount: 6, rebootNotice: false, light: false,
+  confirm: null,            // 'stop' | 'delete'
+  selected: [],
+  runs: [
+    { name: '2026-09-26 14:22', dur: 2460, mb: 10.2 },
+    { name: '2026-09-26 11:05', dur: 3120, mb: 13.0 },
+    { name: '2026-09-25 16:40', dur: 780, mb: 3.2 },
+    { name: '2026-09-25 15:02', dur: 5400, mb: 22.5 },
+    { name: '2026-09-20 10:11', dur: 190, mb: 0.8 },
+  ],
+};
+if (!VARIANTS[S.variant]) S.variant = 'D';
+
+const $ = (q) => document.querySelector(q);
+const dur = (s) => { s = Math.floor(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  return (h ? h + ':' : '') + String(m).padStart(h ? 2 : 1, '0') + ':' + String(x).padStart(2, '0'); };
+const elapsed = () => S.run ? (Date.now() - S.runStart) / 1000 : 0;
+const canStart = () => S.grantCount === 6 && S.boardPicked;
+const live = () => S.run && S.board === 'connected';
+const jit = (base, amp) => base + (Math.random() - .5) * amp;
+// Values from COMM_GET_VALUES_SETUP; speed is the board's own figure, shown in km/h.
+function values() {
+  if (!live()) return { speed: '–', volt: '–', level: '–', power: '–', motorT: '–', fetT: '–', dist: '–' };
+  return { speed: jit(27, 3).toFixed(0), volt: jit(47.6, .2).toFixed(1), level: '71', power: jit(180, 60).toFixed(0),
+    motorT: jit(48, 1).toFixed(0), fetT: jit(39, 1).toFixed(0), dist: (elapsed() * 7.5 / 1000).toFixed(2) };
+}
+function status() {
+  const boardTxt = !S.boardPicked ? ['No board picked', 'warn'] : !S.run ? ['Not connected (no run)', '']
+    : S.board === 'connected' ? [S.fault ? 'Answering, fault: OVER_TEMP_FET' : 'Answering, 20 Hz', S.fault ? 'bad' : 'ok'] : ['Unreachable, retrying', 'bad'];
+  const hubTxt = !S.run ? ['Not connected (no run)', ''] : S.hub === 'connected' ? ['Lobby registered', 'ok']
+    : S.hub === 'retrying' ? ['Lost, retrying in 4 s', 'bad'] : ['No network', 'bad'];
+  const v = S.run && S.hub === 'connected' ? S.viewers : 0;
+  const viewTxt = !S.run ? ['–', ''] : S.hub !== 'connected' ? ['0 (hub down)', 'warn'] : [v + (v === 1 ? ' viewer' : ' viewers'), v ? 'ok' : 'warn'];
+  const gpsTxt = S.gps === 'fix' ? ['Fix, ±4 m', 'ok'] : ['No fix', 'warn'];
+  const logTxt = S.run ? ['Recording, ' + (elapsed() / 3600 * 15).toFixed(2) + ' MB', 'ok'] : ['Idle', ''];
+  return { boardTxt, hubTxt, viewTxt, gpsTxt, logTxt };
+}
+const totalMb = () => S.runs.reduce((a, r) => a + r.mb, 0).toFixed(1);
+
+const thing = () => 'DE'.includes(S.variant) ? 'Vehicle' : 'Board';
+// ---------- shared screens ----------
+function runsList(noun = 'runs') {
+  const sel = S.selected.length;
+  return `<div class="h"><span>${S.runs.length} ${noun} · ${totalMb()} MB in Documents/redLINK</span></div>
+  ${S.run ? `<div class="card"><div class="row"><i class="dot ok"></i><div class="grow">${noun === 'logs' ? 'Current log' : 'Current run'}<div class="sub">${dur(elapsed())} · in progress, cannot be shared yet</div></div></div></div>` : ''}
+  <div class="card">${S.runs.map((r, i) => `<div class="row" data-act="sel" data-i="${i}" style="cursor:pointer">
+      <i class="check ${S.selected.includes(i) ? 'on' : ''}">${S.selected.includes(i) ? '✓' : ''}</i>
+      <div class="grow">${r.name}<div class="sub">${dur(r.dur)} · ${r.mb.toFixed(1)} MB</div></div></div>`).join('') || `<div class="row t-dim">No ${noun} yet</div>`}
+  </div>
+  <div style="display:flex;gap:8px;margin:0 12px 16px">
+    <button class="pill" data-act="share" ${sel ? '' : 'disabled'}>Share ${sel || ''}</button>
+    <button class="pill danger" data-act="askDelete" ${sel ? '' : 'disabled'}>Delete ${sel || ''}</button>
+    <button class="pill" data-act="selAll">${sel === S.runs.length ? 'Select none' : 'Select all'}</button>
+  </div>`;
+}
+function setup() {
+  return `<div class="h"><span>Grants (${S.grantCount} of 6)</span></div>
+  <div class="card">${GRANTS.map((g, i) => `<div class="row"><i class="dot ${i < S.grantCount ? 'ok' : 'bad'}"></i><div class="grow">${g}</div>
+    ${i < S.grantCount ? '<span class="sub">Granted</span>' : '<button class="pill" data-act="grant">Grant</button>'}</div>`).join('')}</div>
+  <div class="h"><span>${thing()}</span></div>
+  <div class="card"><div class="row"><div class="grow">${S.boardPicked ? 'VESC BLE UART<div class="sub">E4:5F:01:9A:22:C7</div>' : `No ${thing().toLowerCase()} picked`}</div>
+    <button class="pill" data-act="pickBoard" ${S.run ? 'disabled' : ''}>${S.boardPicked ? 'Change' : 'Pick'} ${thing().toLowerCase()}</button></div></div>
+  <div class="h"><span>Hub</span></div>
+  <div class="card"><div class="row"><div class="grow">veschub.vedder.se:65101<div class="sub">Credentials: see the credentials ticket</div></div>
+    <button class="pill" ${S.run ? 'disabled' : ''}>Edit</button></div></div>
+`;
+}
+const back = (title) => `<div class="bar"><button class="icon" data-act="go" data-s="main">←</button><h1>${title}</h1></div>`;
+const notices = () =>
+  (S.rebootNotice && !S.run ? `<div class="notice">The last run ended when the phone restarted. <a href="#" data-act="dismiss" style="color:inherit">Dismiss</a></div>` : '') +
+  (!canStart() ? `<div class="notice" data-act="go" data-s="setup" style="cursor:pointer">Setup incomplete: ${S.grantCount < 6 ? (6 - S.grantCount) + ' grants missing' : `no ${thing().toLowerCase()} picked`}. Start is disabled. Open setup →</div>` : '');
+const startStop = () => S.run ? `<button class="big stop" data-act="askStop">Stop run · ${dur(elapsed())}</button>`
+  : `<button class="big" data-act="start" ${canStart() ? '' : 'disabled'}>Start run</button>`;
+
+// ---------- Variant A: one scrolling page, status rows, runs underneath ----------
+function variantA() {
+  if (S.screen === 'setup') return { body: back('Setup') + setup() };
+  const st = status(), v = values();
+  const row = (label, [txt, cls]) => `<div class="row"><i class="dot ${cls}"></i><div class="grow">${label}</div><span class="sub">${txt}</span></div>`;
+  return { body: `<div class="bar"><h1>redLINK</h1><button class="icon" data-act="go" data-s="setup">⚙ Setup</button></div>
+    ${notices()}
+    <div class="card">${row('Board', st.boardTxt)}${row('Hub', st.hubTxt)}${row('Viewers', st.viewTxt)}${row('GPS', st.gpsTxt)}${row('Log', st.logTxt)}</div>
+    <div class="tiles">
+      <div class="tile"><b>${v.speed}</b><span class="sub">km/h</span></div>
+      <div class="tile"><b>${v.volt}</b><span class="sub">V · ${v.level}%</span></div>
+      <div class="tile"><b>${v.power}</b><span class="sub">W</span></div>
+      <div class="tile"><b>${v.motorT}</b><span class="sub">°C motor</span></div>
+    </div>
+    ${runsList()}`, footer: startStop() };
+}
+
+// ---------- Variant B: cockpit. Big numbers for a glance, tabs for the rest ----------
+function variantB() {
+  const tabs = `<div class="tabs">${[['main', 'Run'], ['logs', 'Logs'], ['setup', 'Setup' + (canStart() ? '' : ' ●')]].map(([s, l]) =>
+    `<button class="${S.screen === s ? 'on' : ''}" data-act="go" data-s="${s}">${l}</button>`).join('')}</div>`;
+  if (S.screen === 'logs') return { body: `<div class="bar"><h1>Logs</h1></div>` + runsList(), footer: tabs };
+  if (S.screen === 'setup') return { body: `<div class="bar"><h1>Setup</h1></div>` + setup(), footer: tabs };
+  const st = status(), v = values();
+  const cell = (label, [, cls]) => `<div class="s-${cls}">${label}</div>`;
+  return { body: `<div class="strip">${cell('BOARD', st.boardTxt)}${cell('HUB', st.hubTxt)}${cell((S.run && S.hub === 'connected' ? S.viewers : 0) + ' VIEW', st.viewTxt)}${cell('GPS', st.gpsTxt)}${cell(S.run ? 'REC' : 'IDLE', st.logTxt)}</div>
+    ${notices()}
+    ${S.run && S.board !== 'connected' ? `<div class="notice" style="border-color:var(--bad)">Board unreachable, retrying. GPS is still logged.</div>` : ''}
+    ${S.run && S.fault ? `<div class="notice" style="border-color:var(--bad)">Board fault: OVER_TEMP_FET</div>` : ''}
+    <div class="hero"><b>${v.speed}</b><span>km/h</span></div>
+    <div class="tiles">
+      <div class="tile"><b>${v.volt}</b><span class="sub">V · ${v.level}%</span></div>
+      <div class="tile"><b>${v.power}</b><span class="sub">W</span></div>
+      <div class="tile"><b>${v.motorT}</b><span class="sub">°C motor</span></div>
+      <div class="tile"><b>${v.dist}</b><span class="sub">km this run</span></div>
+    </div>`, footer: startStop() + tabs };
+}
+
+// ---------- Variant C: the chain board → phone → hub → viewers, broken link stands out ----------
+function variantC() {
+  if (S.screen === 'setup') return { body: back('Setup') + setup() };
+  if (S.screen === 'logs') return { body: back('Runs') + runsList() };
+  const st = status(), v = values();
+  const node = (title, right, [txt, cls], extra = '') => `<div class="node n-${cls}"><div class="title"><span>${title}</span><span class="sub" style="flex:none">${right}</span></div>
+    <div class="t-${cls || 'dim'}">${txt}</div>${extra}</div>`;
+  const link = (up) => `<div class="link ${!S.run ? '' : up ? 'l-ok' : 'l-bad'}"></div>`;
+  const phoneState = !canStart() ? ['Setup incomplete, Start disabled', 'warn'] : S.run ? ['Run in progress, log recording', 'ok'] : ['Ready', ''];
+  return { body: `<div class="bar"><h1>redLINK <span class="sub mono">${S.run ? dur(elapsed()) : ''}</span></h1>
+      ${S.run ? `<button class="pill danger" data-act="askStop">Stop</button>` : `<button class="pill" data-act="start" ${canStart() ? '' : 'disabled'} style="${canStart() ? 'background:var(--ok);color:#06210f;border:0' : ''}">Start run</button>`}</div>
+    ${S.rebootNotice && !S.run ? `<div class="notice">The last run ended when the phone restarted. <a href="#" data-act="dismiss" style="color:inherit">Dismiss</a></div>` : ''}
+    <div class="chain">
+      ${node('Board', S.boardPicked ? 'VESC BLE UART' : '', st.boardTxt, `<div class="sub mono" style="margin-top:6px">${v.speed} km/h · ${v.volt} V ${v.level}% · ${v.power} W · ${v.motorT} °C</div>`)}
+      ${link(S.board === 'connected' && S.boardPicked)}
+      ${node('Phone', '', phoneState, `<div class="sub" style="margin-top:6px">GPS: ${st.gpsTxt[0]} · Log: ${st.logTxt[0]}</div>
+        ${!canStart() ? `<button class="pill" data-act="go" data-s="setup" style="margin-top:8px">Open setup</button>` : ''}`)}
+      ${link(S.hub === 'connected')}
+      ${node('Hub', 'veschub.vedder.se', st.hubTxt)}
+      ${link(S.hub === 'connected' && S.viewers > 0)}
+      ${node('Viewers', '', st.viewTxt, S.run && S.hub === 'connected' && S.viewers ? `<div class="sub" style="margin-top:6px">Last joined 2 min ago</div>` : '')}
+    </div>
+    <div class="card">
+      <div class="row" data-act="go" data-s="logs" style="cursor:pointer"><div class="grow">Runs<div class="sub">${S.runs.length} runs · ${totalMb()} MB</div></div>›</div>
+      <div class="row" data-act="go" data-s="setup" style="cursor:pointer"><div class="grow">Setup<div class="sub">Grants ${S.grantCount} of 6 · board · hub</div></div>›</div>
+    </div>` };
+}
+
+// ---------- Variant D: A's status rows, C's hidden logs and setup, no live values ----------
+const boardD = () => !S.boardPicked ? ['No vehicle picked', 'warn'] : !S.run ? ['Not connected', '']
+  : S.board !== 'connected' ? ['Reconnecting', 'bad'] : S.fault ? ['Connected · fault OVER_TEMP_FET', 'bad'] : ['Connected', 'ok'];
+function variantD() {
+  if (S.screen === 'setup') return { body: back('Setup') + setup() };
+  if (S.screen === 'logs') return { body: back('Logs') + runsList('logs') };
+  const board = boardD();
+  const hub = !S.run ? ['Not connected', ''] : S.hub === 'connected' ? ['Connected', 'ok'] : S.hub === 'retrying' ? ['Reconnecting in 4 s', 'bad'] : ['No network', 'bad'];
+  const st = status();
+  const row = (label, [txt, cls]) => `<div class="row"><i class="dot ${cls}"></i><div class="grow">${label}</div><span class="sub badge b-${cls}">${txt}</span></div>`;
+  return { body: `<div class="bar"><h1 class="wordmark">redLINK</h1><span class="sub mono" style="font-size:15px">${S.run ? dur(elapsed()) : ''}</span></div>
+    ${notices()}
+
+    <div class="card">${row('Vehicle', board)}${row('Hub', hub)}${row('Viewers', st.viewTxt)}${S.run ? row('GPS', st.gpsTxt) : ''}${row('Log', st.logTxt)}</div>
+    <div class="card">
+      <div class="row" data-act="go" data-s="logs" style="cursor:pointer"><div class="grow">Logs</div>›</div>
+      <div class="row" data-act="go" data-s="setup" style="cursor:pointer"><div class="grow">Setup</div>›</div>
+    </div>`,
+    footer: S.run ? `<button class="big stop" data-act="askStop">Stop</button>` : `<button class="big" data-act="start" ${canStart() ? '' : 'disabled'}>Start</button>` };
+}
+
+// ---------- Variant E: same content as D, real Material 3 web components ----------
+function variantE() {
+  const item = (label, [txt, cls]) => `<md-list-item><i slot="start" class="dot ${cls}"></i><div slot="headline">${label}</div><div slot="trailing-supporting-text">${txt}</div></md-list-item>`;
+  const top = (title) => `<div class="bar"><md-text-button data-act="go" data-s="main">← Back</md-text-button><h1>${title}</h1></div>`;
+  if (S.screen === 'setup') return { body: top('Setup') + `<div class="h"><span>Grants (${S.grantCount} of 6)</span></div>
+    <md-list>${GRANTS.map((g, i) => `<md-list-item><i slot="start" class="dot ${i < S.grantCount ? 'ok' : 'bad'}"></i><div slot="headline">${g}</div>
+      ${i < S.grantCount ? '<div slot="trailing-supporting-text">Granted</div>' : '<md-text-button slot="end" data-act="grant">Grant</md-text-button>'}</md-list-item>`).join('')}</md-list>
+    <div class="h"><span>Vehicle</span></div>
+    <md-list><md-list-item><div slot="headline">${S.boardPicked ? 'VESC BLE UART' : 'No vehicle picked'}</div>${S.boardPicked ? '<div slot="supporting-text">E4:5F:01:9A:22:C7</div>' : ''}
+      <md-text-button slot="end" data-act="pickBoard" ${S.run ? 'disabled' : ''}>${S.boardPicked ? 'Change' : 'Pick'}</md-text-button></md-list-item></md-list>
+    <div class="h"><span>Hub</span></div>
+    <md-list><md-list-item><div slot="headline">veschub.vedder.se:65101</div><md-text-button slot="end" ${S.run ? 'disabled' : ''}>Edit</md-text-button></md-list-item></md-list>` };
+  if (S.screen === 'logs') { const sel = S.selected.length; return { body: top('Logs') + `<div class="h"><span>${S.runs.length} logs · ${totalMb()} MB in Documents/redLINK</span></div>
+    ${S.run ? `<md-list><md-list-item><i slot="start" class="dot ok"></i><div slot="headline">Current log</div><div slot="supporting-text">${dur(elapsed())} · in progress, cannot be shared yet</div></md-list-item></md-list>` : ''}
+    <md-list>${S.runs.map((r, i) => `<md-list-item type="button" data-act="sel" data-i="${i}"><md-checkbox slot="start" touch-target="wrapper" ${S.selected.includes(i) ? 'checked' : ''}></md-checkbox>
+      <div slot="headline">${r.name}</div><div slot="supporting-text">${dur(r.dur)} · ${r.mb.toFixed(1)} MB</div></md-list-item>`).join('')}</md-list>
+    <div class="acts"><md-filled-tonal-button data-act="share" ${sel ? '' : 'disabled'}>Share ${sel || ''}</md-filled-tonal-button>
+      <md-outlined-button data-act="askDelete" ${sel ? '' : 'disabled'}>Delete ${sel || ''}</md-outlined-button>
+      <md-text-button data-act="selAll">${sel === S.runs.length ? 'Select none' : 'Select all'}</md-text-button></div>` }; }
+  const hub = !S.run ? ['Not connected', ''] : S.hub === 'connected' ? ['Connected', 'ok'] : S.hub === 'retrying' ? ['Reconnecting in 4 s', 'bad'] : ['No network', 'bad'];
+  const st = status();
+  return { body: `<div class="bar"><h1 class="wordmark">redLINK</h1><span class="sub mono" style="font-size:15px">${S.run ? dur(elapsed()) : ''}</span></div>
+    ${notices()}
+    <md-list>${item('Vehicle', boardD())}${item('Hub', hub)}${item('Viewers', st.viewTxt)}${S.run ? item('GPS', st.gpsTxt) : ''}${item('Log', st.logTxt)}</md-list>
+    <md-list><md-list-item type="button" data-act="go" data-s="logs"><div slot="headline">Logs</div><span slot="end">›</span></md-list-item>
+      <md-divider></md-divider>
+      <md-list-item type="button" data-act="go" data-s="setup"><div slot="headline">Setup</div><span slot="end">›</span></md-list-item></md-list>`,
+    footer: `<div class="foot">${S.run ? `<md-filled-tonal-button data-act="askStop">Stop</md-filled-tonal-button>`
+      : `<md-filled-button data-act="start" ${canStart() ? '' : 'disabled'}>Start</md-filled-button>`}</div>` };
+}
+
+// ---------- render ----------
+function render() {
+  const keep = $('#scroll') ? $('#scroll').scrollTop : 0;
+  const { body, footer = '' } = { A: variantA, B: variantB, C: variantC, D: variantD, E: variantE }[S.variant]();
+  let modal = '';
+  const D = S.variant === 'D' || S.variant === 'E';
+  const E = S.variant === 'E';
+  if (S.confirm === 'stop' && E) modal = `<div class="modal"><div><b>Stop redLINK?</b><div class="sub" style="margin-top:12px;font-size:14px">Bridging and logging end. The log is saved.</div>
+    <div class="btns"><md-text-button data-act="cancel">Keep running</md-text-button><md-filled-button data-act="stop">Save &amp; stop</md-filled-button></div></div></div>`;
+  else if (S.confirm === 'delete' && E) modal = `<div class="modal"><div><b>Delete ${S.selected.length} log${S.selected.length > 1 ? 's' : ''}?</b><div class="sub" style="margin-top:12px;font-size:14px">The files are removed from Documents/redLINK. This cannot be undone.</div>
+    <div class="btns"><md-text-button data-act="cancel">Cancel</md-text-button><md-filled-button data-act="delete">Delete</md-filled-button></div></div></div>`;
+  else if (S.confirm === 'stop' && D) modal = `<div class="modal"><div><b>Stop redLINK?</b><div class="sub" style="margin-top:6px">Bridging and logging end. The log is saved.</div>
+    <div class="btns"><button class="pill" data-act="cancel">Keep running</button><button class="pill" data-act="stop" style="background:var(--accent);border:0;color:#fff">Save &amp; stop</button></div></div></div>`;
+  else if (S.confirm === 'stop') modal = `<div class="modal"><div><b>Stop this run?</b><div class="sub" style="margin-top:6px">Bridging and logging end. Viewers see "phone lost".</div>
+    <div class="btns"><button class="pill" data-act="cancel">Keep running</button><button class="pill danger" data-act="stop">Stop run</button></div></div></div>`;
+  else if (S.confirm === 'delete') modal = `<div class="modal"><div><b>Delete ${S.selected.length} ${D ? 'log' : 'run'}${S.selected.length > 1 ? 's' : ''}?</b><div class="sub" style="margin-top:6px">The files are removed from Documents/redLINK. This cannot be undone.</div>
+    <div class="btns"><button class="pill" data-act="cancel">Cancel</button><button class="pill danger" data-act="delete">Delete</button></div></div></div>`;
+  const phone = $('#phone');
+  phone.className = E ? 'oled m3' : D ? 'oled' : S.light ? 'light' : '';
+  phone.innerHTML = `<div id="scroll">${body}</div>${footer}${modal}`;
+  $('#scroll').scrollTop = keep;
+  $('#vlabel').textContent = `${S.variant} (${VARIANTS[S.variant]})`;
+  const st = status();
+  $('#notif').innerHTML = S.run ? `<b>redLINK · run ${dur(elapsed())}</b><div>${D ? 'Vehicle ' + boardD()[0].toLowerCase() : 'Board: ' + st.boardTxt[0].toLowerCase()} · ${st.viewTxt[0]}</div><div class="a"><span>STOP</span></div>`
+    : `<span style="color:#9aa3ad">No notification while idle</span>`;
+  const { runs, ...shown } = S;
+  $('#state').textContent = JSON.stringify({ ...shown, elapsed: dur(elapsed()) }, null, 1);
+  document.querySelectorAll('#sim [data-k]').forEach((el) => {
+    if (document.activeElement === el) return;
+    if (el.type === 'checkbox') el.checked = S[el.dataset.k]; else el.value = S[el.dataset.k];
+  });
+}
+function setVariant(d) {
+  const keys = Object.keys(VARIANTS);
+  S.variant = keys[(keys.indexOf(S.variant) + d + keys.length) % keys.length];
+  S.screen = 'main';
+  try { history.replaceState(null, '', '?variant=' + S.variant); } catch (e) { /* preview panes serve this as data: */ }
+  render();
+}
+const ACT = {
+  prev: () => setVariant(-1), next: () => setVariant(1),
+  go: (el) => { S.screen = el.dataset.s; S.selected = []; },
+  start: () => { if (canStart()) { S.run = true; S.runStart = Date.now(); S.rebootNotice = false; } },
+  askStop: () => { S.confirm = 'stop'; }, cancel: () => { S.confirm = null; },
+  stop: () => { const now = new Date(); S.runs.unshift({ name: now.toISOString().slice(0, 16).replace('T', ' '), dur: elapsed(), mb: elapsed() / 3600 * 15 });
+    S.selected = []; S.run = false; S.confirm = null; },
+  sel: (el) => { const i = +el.dataset.i; S.selected = S.selected.includes(i) ? S.selected.filter((x) => x !== i) : [...S.selected, i]; },
+  selAll: () => { S.selected = S.selected.length === S.runs.length ? [] : S.runs.map((_, i) => i); },
+  share: () => { alert('Share sheet opens with ' + S.selected.length + ' CSV file(s)'); },
+  askDelete: () => { S.confirm = 'delete'; },
+  delete: () => { S.runs = S.runs.filter((_, i) => !S.selected.includes(i)); S.selected = []; S.confirm = null; },
+  grant: () => { S.grantCount++; }, pickBoard: () => { S.boardPicked = true; }, dismiss: () => { S.rebootNotice = false; },
+};
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]');
+  if (!el || el.disabled) return;
+  e.preventDefault(); ACT[el.dataset.act](el); render();
+});
+document.addEventListener('input', (e) => {
+  const k = e.target.dataset.k; if (!k) return;
+  S[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.type === 'number' ? Math.max(0, +e.target.value) : e.target.value;
+  render();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea, select, [contenteditable]')) return;
+  if (e.key === 'ArrowLeft') setVariant(-1);
+  if (e.key === 'ArrowRight') setVariant(1);
+});
+setInterval(() => { if (!S.confirm) render(); }, 1000);
+render();
+</script>
+</body>
+</html>

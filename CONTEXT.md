@@ -5,7 +5,7 @@ Telemetry for a Shell Eco-marathon vehicle: data leaves the car's motor controll
 ## Language
 
 **Board**:
-The VESC motor controller in the vehicle, the origin of all motor and battery telemetry.
+The VESC motor controller in the vehicle, the origin of all motor and battery telemetry. The phone screen labels it "Vehicle"; everywhere else it is the board.
 _Avoid_: Device, vehicle, VESC (when the hub role is meant)
 
 **Hub**:
