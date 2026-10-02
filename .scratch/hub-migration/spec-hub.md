@@ -56,10 +56,11 @@ Tickets: [What travels on the stream](issues/05-what-travels-on-the-stream.md), 
 
 ### 2.3 Board commands (moves)
 
-The bridge sends the board two requests. Their replies are the board's part of the stream.
+The bridge polls the board with two requests. Their replies are the board's part of the stream. A third request is sent once per Bluetooth connect, and its reply stays on the phone.
 
 | ID | Command | Request payload | Reply |
 |---|---|---|---|
+| 0 | `COMM_FW_VERSION` | `[0]` | below; never copied to a registration |
 | 47 | `COMM_GET_VALUES_SETUP` | `[47]` | 70-byte payload, below |
 | 32 | `COMM_GET_DECODED_ADC` | `[32]` | 17-byte payload, below |
 
@@ -96,7 +97,9 @@ The board runs firmware 6.06, which sends every field, the last two included (6.
 
 **`COMM_GET_DECODED_ADC` reply,** after the command ID: level 1, voltage 1, level 2, voltage 2, each `i32/1000000`.
 
-Tickets: [What the phone log contains](issues/08-what-the-phone-log-contains.md), [Board speed settings and firmware version](issues/14-board-speed-settings-and-firmware-version.md).
+**`COMM_FW_VERSION` reply,** after the command ID: firmware major (u8), firmware minor (u8), then bytes this protocol does not read. The bridge sends the request once after each Bluetooth connect, before polling starts, and waits up to 250 ms; the Android spec says what it does with the answer. Viewers never see it.
+
+Tickets: [What the phone log contains](issues/08-what-the-phone-log-contains.md), [Board speed settings and firmware version](issues/14-board-speed-settings-and-firmware-version.md). `COMM_FW_VERSION` was added while writing the Android spec.
 
 ### 2.4 Our messages (moves)
 
@@ -274,6 +277,8 @@ The suites themselves are named in the Android and desktop specs. This spec fixe
 - `reply-values-setup-negative`: negative currents, speed and temperature.
 - `reply-values-setup-short`: a reply without the odometer and uptime; the rest is decoded.
 - `reply-decoded-adc`: a full reply.
+- `request-fw-version`: the encoded request for command 0.
+- `reply-fw-version`: a 6.06 reply; major 6 and minor 6 are decoded, the rest ignored.
 - `gps`: a full GPS message.
 - `gps-southern-western`: negative latitude and longitude.
 - `gps-trailing-bytes`: extra bytes after the fix time; decoded, the extra ignored.
@@ -319,4 +324,4 @@ No automated test opens a socket to a hub. Desk tests use the public hub.
 - Encryption or stronger access control than the team code.
 - A standing self-hosted hub, automatic failover between hubs, and a stored backup host.
 - A cap on viewers, or any promise above 8.
-- Polling by viewers, and any board command beyond the two in 2.3.
+- Polling by viewers, and any board command beyond the three in 2.3.

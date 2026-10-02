@@ -34,3 +34,5 @@ Four files in `.scratch/hub-migration/`, each written in its own session and com
   Prose is English; user-facing strings stay Turkish.
 
 No change to `CONTEXT.md` and no ADR: nothing here is hard to reverse.
+
+Amended 2026-10-02 by [Write the Android app spec](20-write-the-android-app-spec.md): the phone app's strings are English, as its prototype had them. "User-facing strings stay Turkish" applies to the desktop app only.
