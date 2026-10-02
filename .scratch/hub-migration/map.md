@@ -33,6 +33,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - [What travels on the stream](issues/05-what-travels-on-the-stream.md): the phone polls `COMM_GET_VALUES` and decoded ADC at 20 Hz and copies replies unchanged; GPS, lobby request, heartbeat and status are `COMM_CUSTOM_APP_DATA` messages told apart by a type byte, and a 1 Hz status message lets a viewer tell live from board unreachable from phone lost.
 - [Android runtime and stack](issues/07-android-runtime-and-stack.md): a run is one foreground service from Start to Stop that resumes after a kill or crash but not a reboot, with six grants blocking Start; Kotlin, Compose and the Nordic BLE library on Android 12+. It also amended the viewer's "phone lost" rule, because a silent network drop leaves stale registrations on the hub.
 - [Stale re-registration on the public hub](issues/13-stale-re-registration-on-the-public-hub.md): a stale lobby is replaced at once by registering the same ID again, so the lobby design stands; a dead registration answers `PONG` for about 17 minutes once written to, only one of several simultaneous lobby requests arrives, and a request can be lost to a stranger's slow connection, so the viewer's retry is what makes joining reliable.
+- [What the phone log contains](issues/08-what-the-phone-log-contains.md): one plain CSV per run in the shared `Documents/redLINK/` folder, one row per poll cycle with unit-named columns, never deleted automatically; the phone now polls `COMM_GET_VALUES_SETUP` instead of `COMM_GET_VALUES`, so speed and distance come from the board's own wheel, gear and pole settings, and the log knows nothing about trips.
 
 ## Not yet specified
 
@@ -40,7 +41,6 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - Distribution: how the APK reaches the phone, and how the Electron app is packaged, signed and updated for the pit crew.
 - Testing without the car: some stand-in for the board and for the hub so both apps can be exercised on a desk.
 - Self-run hub fallback: what triggers switching to it and who runs it on race day. Depends on what the hub limits research finds.
-- Trip semantics: whether a trip is a phone concept, a per-laptop concept, or both, once the log and desktop architecture are decided.
 
 ## Out of scope
 
