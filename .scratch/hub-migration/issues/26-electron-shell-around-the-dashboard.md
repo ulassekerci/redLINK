@@ -6,7 +6,7 @@ Spec: [desktop app spec](../spec-desktop.md) 2.1, 2.9 ("Dropped from `web/`"), 2
 
 **Blocked by:** 24 (Cut over the repo).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The app runs under Electron with `electron-vite`; `pnpm dev` opens one window
 - [x] Closing the window quits the app on macOS as on Windows

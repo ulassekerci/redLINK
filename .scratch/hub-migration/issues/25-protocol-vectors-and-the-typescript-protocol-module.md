@@ -8,7 +8,7 @@ Spec: [hub usage spec](../spec-hub.md) 2.2 to 2.4, 2.7 and 4.1 (now in `protocol
 
 **Blocked by:** 24 (Cut over the repo).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] `protocol/vectors.json` holds every frame case and every team-code case the vector list names, each with its input and its expected result (decoded fields, rejected, or ignored)
 - [x] The file's shape is documented in `protocol/README.md` well enough for the Kotlin suite to read it without looking at the TypeScript code

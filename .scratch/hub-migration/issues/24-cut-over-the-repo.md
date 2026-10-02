@@ -6,7 +6,7 @@ Spec: [front page](../spec.md) sections 2 and 3; [hub usage spec](../spec-hub.md
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The last commit before any implementation change is tagged `legacy-stack`
 - [x] `mobile/` and `server/` are deleted
