@@ -27,7 +27,7 @@ Implemented in `desktop/src/protocol/` with suites `protocol-vectors.test.ts` an
 
 Open points from review, not decided here:
 
-- **Long-frame stall after corruption.** The stop byte `0x03` is also the long start byte, so after a bad frame the one-byte skip can land on a "long frame" with a length up to 65,535 and wait for that many bytes before rescanning. Nothing is lost, but the stream can stall: up to ~16 s at 2 kB/s on the hub. Capping the accepted long length (VESC firmware caps packets at 512 bytes) would bound it, but the spec says a decoder accepts up to 65,535.
+- **Long-frame stall after corruption.** Decided: the long form is capped at 512 bytes, the board firmware's largest payload, so a stray long start byte costs at most 512 bytes of waiting. `protocol/README.md` "Framing" says so, and the vectors gained `frame-long-too-long` and `frame-after-bad-crc`.
 - **Lobby request with bytes after the token.** The decoder reads the first 8 bytes and ignores the rest, by the tolerance rule. The README's "a request whose token is anything else" could also be read as rejecting it. No vector pins this down; the Kotlin side should match.
 - **GPS encoding range.** Speed, heading and accuracy are u16 on the wire. The encoder doesn't clamp, so a value outside the range wraps. Only the Kotlin bridge encodes GPS for real.
 - `desktop/src/utils/crc.ts` (the old table CRC, also exporting `crc16`) should go with the legacy Bluetooth code in ticket 27.

@@ -17,7 +17,7 @@ short:  0x02 | length (1 byte)             | payload | crc hi | crc lo | 0x03
 long:   0x03 | length (2 bytes, big-endian) | payload | crc hi | crc lo | 0x03
 ```
 
-- The short form carries payloads up to 255 bytes, the long form up to 65,535. Nothing in this protocol needs the long form, but a decoder accepts it. A long frame whose length would have fitted the short form is rejected, and so is a length of zero.
+- The short form carries payloads up to 255 bytes, the long form 256 to 512, the largest payload the board's firmware handles. Nothing in this protocol needs the long form, but a decoder accepts it. A long frame whose length would have fitted the short form is rejected, and so are a length over 512 and a length of zero. The cap matters because the stop byte is also the long start byte: after a bad frame, the one-byte skip can land on what reads as a long frame, and without the cap a decoder would wait for up to 65,535 bytes before scanning on.
 - The CRC is CRC-16/XMODEM (polynomial `0x1021`, initial value 0, not reflected) over the payload only.
 - The first payload byte is the command ID. All integers are big-endian.
 - TCP delivers a stream: one read may hold part of a frame or several frames. A decoder buffers and scans. On a bad start byte, bad CRC or bad stop byte it skips one byte and tries again.
@@ -116,9 +116,11 @@ A field the fix does not carry (altitude, speed, heading or accuracy) is sent as
 - `frame-short`: a valid short frame.
 - `frame-long`: a valid long frame.
 - `frame-long-fits-short`: a long frame with a length under 256; rejected.
+- `frame-long-too-long`: a long frame with a length over 512; rejected.
 - `frame-zero-length`: rejected.
 - `frame-bad-crc`: rejected.
 - `frame-bad-stop-byte`: rejected.
+- `frame-after-bad-crc`: a frame with a bad CRC whose last bytes read as a long frame over 512, then a valid frame in the same read; the valid frame is decoded.
 - `frame-garbage-before`: bytes that are no frame, then a valid frame; the frame is decoded.
 - `frame-two-in-one-read`: two frames back to back; both decoded.
 - `frame-split-across-reads`: one frame delivered in two pieces; decoded once.

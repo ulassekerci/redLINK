@@ -3,8 +3,12 @@ import { crc16 } from './crc'
 const SHORT_START = 0x02
 const LONG_START = 0x03
 const STOP = 0x03
+// The largest payload the board's firmware handles. Capping the long form here
+// bounds how long a decoder waits after landing on a stray long start byte.
+const MAX_PAYLOAD = 512
 
 export function encodeFrame(payload: Uint8Array) {
+  if (payload.length === 0 || payload.length > MAX_PAYLOAD) throw new Error(`Bad payload length: ${payload.length}`)
   const long = payload.length > 0xff
   const header = long ? [LONG_START, payload.length >> 8, payload.length & 0xff] : [SHORT_START, payload.length]
   const crc = crc16(payload)
@@ -15,7 +19,7 @@ export function encodeFrame(payload: Uint8Array) {
 // several frames, so bytes are buffered until a frame is complete. On a bad
 // start byte, length, CRC or stop byte the decoder skips one byte and scans on.
 // The stop byte is also the long start byte, so a skip can land on what reads
-// as a long frame; the decoder then waits for its length before scanning on.
+// as a long frame; the decoder then waits for at most MAX_PAYLOAD bytes.
 export class FrameDecoder {
   private buffer = new Uint8Array(0)
 
@@ -52,7 +56,7 @@ function readFrame(buffer: Uint8Array, offset: number) {
   } else if (buffer[offset] === LONG_START) {
     if (buffer.length < offset + 3) return 'incomplete'
     length = (buffer[offset + 1] << 8) | buffer[offset + 2]
-    if (length <= 0xff) return 'invalid'
+    if (length <= 0xff || length > MAX_PAYLOAD) return 'invalid'
     payloadStart = offset + 3
   } else {
     return 'invalid'

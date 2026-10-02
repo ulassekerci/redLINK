@@ -11,6 +11,7 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parents[4] / "protocol" / "vectors.json"
 ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+MAX_PAYLOAD = 512
 
 
 def frame(payload: bytes, long: bool = False) -> bytes:
@@ -27,7 +28,7 @@ def deframe(data: bytes) -> list[bytes]:
             n, start = data[i + 1], i + 2
         elif data[i] == 3 and i + 2 < len(data):
             n, start = struct.unpack(">H", data[i + 1:i + 3])[0], i + 3
-            if n < 256:
+            if n < 256 or n > MAX_PAYLOAD:
                 n = 0
         else:
             i += 1
@@ -96,11 +97,16 @@ other = bytes([47, 1, 2, 3])
 deframe_case("frame-short", [frame(short)], [short])
 deframe_case("frame-long", [frame(long_payload, long=True)], [long_payload])
 deframe_case("frame-long-fits-short", [frame(other, long=True)], [])
+too_long = bytes([36, 200]) + bytes(i % 251 for i in range(MAX_PAYLOAD - 1))
+deframe_case("frame-long-too-long", [frame(too_long, long=True)], [])
 deframe_case("frame-zero-length", [bytes([2, 0, 0, 0, 3])], [])
 bad_crc = bytearray(frame(other)); bad_crc[-2] ^= 0x01
 deframe_case("frame-bad-crc", [bytes(bad_crc)], [])
 bad_stop = bytearray(frame(other)); bad_stop[-1] = 0x04
 deframe_case("frame-bad-stop-byte", [bytes(bad_stop)], [])
+# The bad frame's CRC and stop byte read as a long frame of 33,424 bytes, so a
+# decoder without the length cap would wait for them before finding the frame.
+deframe_case("frame-after-bad-crc", [bytes(bad_crc) + frame(short)], [short])
 # The garbage ends in a start byte and a length, so a decoder must skip a
 # frame-shaped run that fails its check and then find the frame inside it.
 deframe_case("frame-garbage-before", [bytes([0xA5, 0x02, 0x01]) + frame(short)], [short])
