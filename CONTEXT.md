@@ -32,6 +32,10 @@ _Avoid_: Password, hub ID, credentials, key
 A desktop app instance attached to the hub to watch the board's stream.
 _Avoid_: Client, dashboard (for the instance), listener
 
+**Direct link**:
+The desktop app connected straight to the board over Bluetooth, with no bridge or hub, used while testing the vehicle. An app on a direct link is not a viewer.
+_Avoid_: BLE mode, source, local
+
 **Stream**:
 Everything the bridge writes to a viewer's registration: the board's replies plus the bridge's own messages.
 _Avoid_: Feed, telemetry (for the bytes on the hub)

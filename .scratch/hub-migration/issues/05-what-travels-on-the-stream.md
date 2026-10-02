@@ -37,3 +37,5 @@ Amended 2026-10-02 by [Android runtime and stack](07-android-runtime-and-stack.m
 Handed on: token length and alphabet go to [How hub credentials are set and shared](10-how-hub-credentials-are-set-and-shared.md); how the desktop polls on its direct-Bluetooth path, where no status message exists, goes to [Desktop app architecture](11-desktop-app-architecture.md); which polled fields the log keeps goes to [What the phone log contains](08-what-the-phone-log-contains.md).
 
 Amended 2026-10-02 by [What the phone log contains](08-what-the-phone-log-contains.md): the phone polls `COMM_GET_VALUES_SETUP` (47) in place of `COMM_GET_VALUES` (4), still followed by decoded ADC on the same 50 ms cycle. The setup reply carries speed and distance computed from the board's own wheel, gear and pole settings. The bytes-per-cycle and data-cost figures above were worked out for the old command and have not been recalculated.
+
+Amended 2026-10-02 by [Desktop app architecture](11-desktop-app-architecture.md): a viewer repeats its lobby request every 100 ms for about 500 ms during one lobby visit. The phone treats a request for a token that already has a registration as a no-op.
