@@ -282,6 +282,21 @@
       }
     },
     {
+      "name": "gps-poor-accuracy",
+      "check": "encode",
+      "frame": null,
+      "message": {
+        "type": "gps",
+        "gps_lat_deg": 39.8912345,
+        "gps_lon_deg": 32.8765432,
+        "gps_alt_m": 938.5,
+        "gps_speed_m_s": 12.34,
+        "gps_heading_deg": 270.55,
+        "gps_accuracy_m": 6553.6,
+        "gps_fix_time_utc": 1790000000123
+      }
+    },
+    {
       "name": "lobby-request",
       "check": "both",
       "frame": "020a24023448543957513242c19103",

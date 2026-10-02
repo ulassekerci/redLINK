@@ -29,5 +29,5 @@ Open points from review, not decided here:
 
 - **Long-frame stall after corruption.** Decided: the long form is capped at 512 bytes, the board firmware's largest payload, so a stray long start byte costs at most 512 bytes of waiting. `protocol/README.md` "Framing" says so, and the vectors gained `frame-long-too-long` and `frame-after-bad-crc`.
 - **Lobby request with bytes after the token.** The decoder reads the first 8 bytes and ignores the rest, by the tolerance rule. The README's "a request whose token is anything else" could also be read as rejecting it. No vector pins this down; the Kotlin side should match.
-- **GPS encoding range.** Speed, heading and accuracy are u16 on the wire. The encoder doesn't clamp, so a value outside the range wraps. Only the Kotlin bridge encodes GPS for real.
+- **GPS encoding range.** Decided: a fix with an accuracy worse than 6,553.5 m is not a fix. The bridge doesn't send it, keep it for the log or show it. The encoder refuses any value its field can't carry rather than wrapping it. Added to `protocol/README.md` "Our messages" and the Android spec 2.7, with the vector `gps-poor-accuracy`.
 - `desktop/src/utils/crc.ts` (the old table CRC, also exporting `crc16`) should go with the legacy Bluetooth code in ticket 27.

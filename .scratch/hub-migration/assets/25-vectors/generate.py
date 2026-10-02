@@ -147,6 +147,10 @@ message_case("gps", "both", *gps(*fix))
 message_case("gps-southern-western", "both", *gps(-338567890, -1512093000, -1250, 0, 0, 0, 1790000001000))
 payload, message = gps(*fix)
 message_case("gps-trailing-bytes", "decode", payload + bytes([0xDE, 0xAD, 0xBE]), message)
+# Accuracy one step past what the field carries: not a fix, so nothing is sent.
+_, poor = gps(*fix)
+frames.append({"name": "gps-poor-accuracy", "check": "encode", "frame": None,
+               "message": poor | {"gps_accuracy_m": 6553.6}})
 
 token = "4HT9WQ2B"
 message_case("lobby-request", "both", bytes([36, 2]) + token.encode(), {"type": "lobby_request", "token": token})

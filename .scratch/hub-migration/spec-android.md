@@ -89,6 +89,7 @@ Tickets: [How several pit laptops watch at once](issues/04-how-several-pit-lapto
 
 - During a run the service asks for precise location once a second. Each fix is sent as a GPS message and kept as the latest fix for the log.
 - A field the fix does not carry (altitude, speed, heading or accuracy) is sent as 0, as the hub spec's "Our messages" says, and left empty in the log.
+- A fix whose accuracy is worse than 6,553.5 m, the most the GPS message carries, is not a fix: it is not sent, not kept for the log and not shown on the screen as one.
 - With no fix, nothing is sent and the log's GPS cells stay empty until the first one. Location services switched off during a run is the same as no fix; the run continues.
 - Which location API is used (the platform's or Google Play services') is left to implementation, under one condition: it gives fixes on a stock Android Studio emulator image playing a route, and on the reference phone with the screen off.
 - The simulated board does not touch location: GPS always comes from the real provider.

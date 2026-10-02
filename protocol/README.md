@@ -92,6 +92,8 @@ Everything the bridge and a viewer say to each other that is not a board reply i
 
 A field the fix does not carry (altitude, speed, heading or accuracy) is sent as 0. A viewer cannot tell that from a measured 0.
 
+A fix whose horizontal accuracy is worse than 6,553.5 m, the most the field carries, is not a fix: it is not sent. No other field of a real fix can leave its range, so an encoder never clamps or wraps a value; it refuses the message.
+
 **Status,** 2 bytes:
 
 | Offset | Field | Encoding |
@@ -135,6 +137,7 @@ A field the fix does not carry (altitude, speed, heading or accuracy) is sent as
 - `gps`: a full GPS message.
 - `gps-southern-western`: negative latitude and longitude.
 - `gps-trailing-bytes`: extra bytes after the fix time; decoded, the extra ignored.
+- `gps-poor-accuracy`: a fix with an accuracy of 6,553.6 m; not encoded.
 - `lobby-request`: a request with a well-formed token.
 - `lobby-request-short-token`: ignored by the bridge.
 - `lobby-request-bad-alphabet`: a token containing `0`, `I` or a lower-case letter; ignored by the bridge.
@@ -165,7 +168,7 @@ One JSON object with two arrays, `frames` and `team_codes`. Every case has a `na
 | `check` | Fields | What a suite does |
 |---|---|---|
 | `deframe` | `reads`: hex strings; `payloads`: hex strings | feeds each read in turn to one decoder and expects exactly these payloads, in order, from all reads together. An empty `payloads` means the bytes are rejected. |
-| `encode` | `message`; `frame`: hex | encodes the message and expects exactly the frame's bytes. |
+| `encode` | `message`; `frame`: hex, or `null` | encodes the message and expects exactly the frame's bytes. `null` means the encoder refuses the message; how it refuses is up to the implementation. |
 | `decode` | `frame`: hex; `message`, or `null` | deframes the frame, decodes its payload and expects the message. `null` means the payload is ignored. |
 | `both` | `frame`; `message` | runs `encode` and `decode` on the same pair. |
 

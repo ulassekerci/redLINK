@@ -184,16 +184,27 @@ function decodeCustomAppData(view: DataView): DecodedMessage | null {
   }
 }
 
+// Scales a value to its wire integer, refusing one the field cannot carry
+// rather than letting it wrap.
+function scaled(value: number, scale: number, encoding: 'i32' | 'u16', field: string) {
+  const integer = Math.round(value * scale)
+  const [min, max] = encoding === 'i32' ? [-0x80000000, 0x7fffffff] : [0, 0xffff]
+  if (!(integer >= min && integer <= max)) throw new RangeError(`${field} out of range: ${value}`)
+  return integer
+}
+
+// A fix whose accuracy is past what its field carries is not a fix: this
+// throws for it, and the bridge sends nothing.
 function encodeGps(message: Gps) {
   const view = new DataView(new ArrayBuffer(28))
   view.setUint8(0, COMM_CUSTOM_APP_DATA)
   view.setUint8(1, GPS)
-  view.setInt32(2, Math.round(message.gps_lat_deg * 1e7))
-  view.setInt32(6, Math.round(message.gps_lon_deg * 1e7))
-  view.setInt32(10, Math.round(message.gps_alt_m * 100))
-  view.setUint16(14, Math.round(message.gps_speed_m_s * 100))
-  view.setUint16(16, Math.round(message.gps_heading_deg * 100))
-  view.setUint16(18, Math.round(message.gps_accuracy_m * 10))
+  view.setInt32(2, scaled(message.gps_lat_deg, 1e7, 'i32', 'gps_lat_deg'))
+  view.setInt32(6, scaled(message.gps_lon_deg, 1e7, 'i32', 'gps_lon_deg'))
+  view.setInt32(10, scaled(message.gps_alt_m, 100, 'i32', 'gps_alt_m'))
+  view.setUint16(14, scaled(message.gps_speed_m_s, 100, 'u16', 'gps_speed_m_s'))
+  view.setUint16(16, scaled(message.gps_heading_deg, 100, 'u16', 'gps_heading_deg'))
+  view.setUint16(18, scaled(message.gps_accuracy_m, 10, 'u16', 'gps_accuracy_m'))
   view.setBigUint64(20, BigInt(message.gps_fix_time_utc))
   return new Uint8Array(view.buffer)
 }

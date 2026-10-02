@@ -3,7 +3,7 @@ import vectors from '../../../protocol/vectors.json'
 import { FrameDecoder, decodeMessage, encodeMessage, type DecodedMessage, type EncodableMessage } from '.'
 
 type DeframeCase = { name: string; check: 'deframe'; reads: string[]; payloads: string[] }
-type EncodeCase = { name: string; check: 'encode'; frame: string; message: EncodableMessage }
+type EncodeCase = { name: string; check: 'encode'; frame: string | null; message: EncodableMessage }
 type DecodeCase = { name: string; check: 'decode'; frame: string; message: DecodedMessage | null }
 type BothCase = { name: string; check: 'both'; frame: string; message: EncodableMessage & DecodedMessage }
 type FrameCase = DeframeCase | EncodeCase | DecodeCase | BothCase
@@ -26,7 +26,8 @@ describe('protocol-vectors', () => {
   })
 
   test.each(cases.filter((c) => c.check === 'encode' || c.check === 'both'))('$name encodes', ({ message, frame }) => {
-    expect(toHex(encodeMessage(message as EncodableMessage))).toBe(frame)
+    if (frame === null) expect(() => encodeMessage(message as EncodableMessage)).toThrow()
+    else expect(toHex(encodeMessage(message as EncodableMessage))).toBe(frame)
   })
 
   test.each(cases.filter((c) => c.check === 'decode' || c.check === 'both'))('$name decodes', ({ frame, message }) => {
