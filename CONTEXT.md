@@ -55,3 +55,7 @@ _Avoid_: Session, trip (a trip is a distance measurement, not a span of bridging
 **Log of record**:
 The telemetry file the phone writes during a run, authoritative over any copy a viewer saves.
 _Avoid_: Export, CSV (as a name for the concept)
+
+**Acceptance session**:
+One real track session with the car, run on the phone app and desktop app, that decides whether the migration to the hub is done. A test on a desk is not one.
+_Avoid_: Parity, field test

@@ -20,7 +20,7 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
   - The phone log is the log of record: a CSV per run including GPS, exported through the share sheet. The desktop keeps its CSV export as a convenience copy.
   - Several laptops watching at once is a hard requirement. Assume 3-8 laptops with no shared LAN.
   - Electron targets macOS and Windows; its renderer is the existing React dashboard with the data layer swapped.
-  - New apps live in this repo and replace `mobile/`, `server/` and `web/`; the old stack stays until parity.
+  - New apps live in this repo and replace `mobile/`, `server/` and `web/`. The old stack is already out of use and the relay is shut down; `mobile/` and `server/` are deleted and `web/` becomes `desktop/` at the start of implementation. (Changed 2026-10-02; it was to stay until parity.)
 
 ## Decisions so far
 
@@ -37,13 +37,11 @@ A locked set of architecture decisions plus one spec per part (Android app, hub 
 - [What the phone screen shows](issues/09-what-the-phone-screen-shows.md): one black main screen of status rows (Vehicle, Hub, Viewers, GPS, Log) with a Start/Stop button and no live values, with Logs and Setup on their own screens; "Vehicle" is the on-screen label for the board, and Stop asks "Stop redLINK?" first.
 - [How hub credentials are set and shared](issues/10-how-hub-credentials-are-set-and-shared.md): the phone generates one 8-character team code with a check character, typed once into each laptop; the lobby ID is `REDLINK` plus the code, a viewer's ID adds its 8-character token, and the code is the password. A phone cannot be given an existing code.
 - [Desktop app architecture](issues/11-desktop-app-architecture.md): the main process owns the hub client and hands the renderer parsed samples and one connection state; the direct link stays on Web Bluetooth in the renderer, shares one protocol module and excludes the hub while in use; the app joins on launch with no picker, repeating its lobby request for about 500 ms per visit, and the trip meter and CSV export are per laptop and in memory.
+- [Repo layout and cutover](issues/12-repo-layout-and-cutover.md): `android/` and `desktop/` beside a shared `protocol/` directory (prose description plus test vectors both test suites read, with `tcp-hub.md` moved in), no root tooling; `web/` is renamed to `desktop/` and `mobile/` and `server/` are deleted at the start of implementation behind a `legacy-stack` tag; a real track session, the acceptance session, is the bar for the migration being done.
 
 ## Not yet specified
 
-- Writing the three specs themselves, once the decisions they rest on are closed. Likely one ticket per part.
-- Distribution: how the APK reaches the phone, and how the Electron app is packaged, signed and updated for the pit crew.
-- Testing without the car: some stand-in for the board and for the hub so both apps can be exercised on a desk.
-- Self-run hub fallback: what triggers switching to it and who runs it on race day. Depends on what the hub limits research finds.
+- Writing the three specs themselves (Android app, hub usage, Electron app). They wait on the last open tickets: Distribution, Testing without the car, Self-run hub fallback, and Board speed settings and firmware version. Likely one ticket per part; where the specs live and how the hub usage spec relates to `protocol/README.md` is not settled.
 
 ## Out of scope
 
