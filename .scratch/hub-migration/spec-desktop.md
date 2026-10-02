@@ -162,7 +162,7 @@ Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Wha
 - **Columns:** the log of record's column names, units and order (the Android spec's "The log of record"), with these differences:
   - `time_utc` is the laptop's arrival time for the board sample.
   - `elapsed_s` is left out: a viewer does not know when the run started.
-  - `adc_level1` and `adc_level2` are from the latest ADC sample, and the GPS columns from the latest GPS fix, repeated on every row. On a direct link the GPS cells are empty.
+  - `adc_level1` and `adc_level2` are from the latest ADC sample, and the GPS columns from the latest GPS fix, repeated on every row. On a direct link the GPS cells are empty. A field the phone's fix lacked reads 0 here, as the GPS message carries it, where the log of record leaves the cell empty.
   - `power_w` is computed on the laptop, as on the phone.
 - **Layout:** comma-separated, decimal points, the column names as the first line, an empty cell for a missing value.
 - **Saving:** Cmd+S on macOS and Ctrl+S on Windows open the system's save dialog through main, with the default name `redLINK_<local time>.csv`, for example `redLINK_2026-09-26_14-22-09.csv`. With no rows nothing happens. Saving does not clear the rows.
@@ -273,7 +273,7 @@ Five suites in `desktop/`, run with `pnpm test` (Vitest). They need no Electron 
 - **`direct-link`:** drives the polling loop against a fake transport and a fake clock: the 50 ms cycle and the order of the two requests; giving up on a command after 250 ms; board not answering after 2 s of silence and at once on a disconnect; a reconnect attempt every 2 s; samples resuming when the transport answers again.
 - **`trip-and-csv`:** a new trip sets the baseline and clears the rows; a value falling below its baseline moves the baseline and no row goes negative; the CSV has the columns of 2.10 in order, empty GPS cells with no fix, and one row per board sample.
 
-Not automated: the Electron shell, Web Bluetooth itself, the settings screen and the dashboard's rendering. They are exercised by the front page's desk checklist, where each status-line state is produced once by hand and one laptop on a direct link shows sane values from a real board.
+Not automated: the Electron shell, Web Bluetooth itself, the settings screen and the dashboard's rendering. They are exercised by the front page's desk checklist, where each status-line state is produced once by hand and a macOS and a Windows laptop on a direct link each show sane values from a real board.
 
 Tickets: [Testing without the car](issues/16-testing-without-the-car.md), [Distribution](issues/15-distribution.md). The `trip-and-csv` suite, the last two `hub-client` cases and Vitest were added while writing this spec.
 

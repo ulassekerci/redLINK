@@ -124,6 +124,8 @@ Everything the bridge and a viewer say to each other that is not a board reply i
 | 16 | horizontal accuracy | u16, metres x 10 |
 | 18 | fix time | u64, Unix milliseconds |
 
+A field the fix does not carry (altitude, speed, heading or accuracy) is sent as 0. A viewer cannot tell that from a measured 0.
+
 **Status,** 2 bytes:
 
 | Offset | Field | Encoding |
@@ -139,7 +141,7 @@ Everything the bridge and a viewer say to each other that is not a board reply i
 - A viewer ignores extra bytes at the end of a message it does know.
 - The bridge discards every frame from a viewer that is not a lobby request on the lobby or a heartbeat on a viewer's registration. Nothing a viewer sends reaches the board.
 
-Tickets: [What travels on the stream](issues/05-what-travels-on-the-stream.md), [How hub credentials are set and shared](issues/10-how-hub-credentials-are-set-and-shared.md), [Distribution](issues/15-distribution.md).
+Tickets: [What travels on the stream](issues/05-what-travels-on-the-stream.md), [How hub credentials are set and shared](issues/10-how-hub-credentials-are-set-and-shared.md), [Distribution](issues/15-distribution.md). Sending 0 for a field the fix lacks was decided while writing the Android spec.
 
 ### 2.5 Protocol version
 
@@ -217,7 +219,7 @@ The repeats in step 4 ride out the short windows in which the hub discards bytes
 - If the hub closes the viewer's socket, the viewer visits the lobby with a fresh token.
 - A viewer that is watching cannot be kicked by another laptop, because no other laptop knows its ID.
 
-**Leaving:** a viewer leaves by closing its socket. The bridge closes the registration 10 s after the last heartbeat. Starting a direct link makes the desktop app leave.
+**Leaving:** a viewer leaves by closing its socket. The bridge closes the registration 10 s after the last heartbeat. The desktop app leaves when a board is picked for a direct link.
 
 **A code from the wrong phone** is an unknown ID to the hub, so the viewer sees phone not found and cannot tell it from the phone not running.
 

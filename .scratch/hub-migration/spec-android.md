@@ -77,7 +77,7 @@ Tickets: [Android runtime and stack](issues/07-android-runtime-and-stack.md), [A
 The bridge's whole behaviour on the hub is in the hub spec: "The lobby, bridge side", "Polling and the stream", "Our messages" and "Team code and hub identities". This app implements those sections as written. What is specific to Android:
 
 - Every registration is its own TCP socket with keep-alive on, owned by the service.
-- The lobby is registered when the run starts and dropped when it ends. Stop closes every socket, so viewers go to phone lost and then phone not found.
+- The lobby is registered when the run starts and dropped when it ends. Stop closes every socket, so the hub closes each viewer's socket and viewers go to phone not found.
 - "Android reports a network change" in the hub spec's re-registration rule means a `ConnectivityManager` network callback for a newly available default network. While Android reports no network at all, the Hub row says so (3.1).
 - A hub connection that drops never touches the log or the board link.
 - **Viewers counted** on the screen and in the notification are the active registrations, in the hub spec's sense: those with a heartbeat in the last 3 s.
@@ -88,7 +88,7 @@ Tickets: [How several pit laptops watch at once](issues/04-how-several-pit-lapto
 ### 2.7 Location
 
 - During a run the service asks for precise location once a second. Each fix is sent as a GPS message and kept as the latest fix for the log.
-- A field the fix does not carry (altitude, speed, heading or accuracy) is sent as 0 and left empty in the log.
+- A field the fix does not carry (altitude, speed, heading or accuracy) is sent as 0, as the hub spec's "Our messages" says, and left empty in the log.
 - With no fix, nothing is sent and the log's GPS cells stay empty until the first one. Location services switched off during a run is the same as no fix; the run continues.
 - Which location API is used (the platform's or Google Play services') is left to implementation, under one condition: it gives fixes on a stock Android Studio emulator image playing a route, and on the reference phone with the screen off.
 - The simulated board does not touch location: GPS always comes from the real provider.
