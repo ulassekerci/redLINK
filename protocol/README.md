@@ -109,7 +109,7 @@ A field the fix does not carry (altitude, speed, heading or accuracy) is sent as
 
 ## Vectors
 
-`vectors.json` holds two groups. Both the Kotlin and the TypeScript suite read the file and run every case. The list below names the cases; the hex and the expected values are computed during implementation.
+`vectors.json` holds two groups. Both the Kotlin and the TypeScript suite read the file and run every case. The list below names the cases; "The file" after it gives their shape.
 
 **Frames,** each a hex string with the fields a decoder must produce, or the fact that it produces nothing:
 
@@ -153,3 +153,31 @@ A field the fix does not carry (altitude, speed, heading or accuracy) is sent as
 - `code-bad-alphabet`: contains `0`, `1`, `I`, `L` or `O`; rejected.
 - `code-too-short`: rejected.
 - `code-check-character-last`: a valid code whose check character is `Z`, the last alphabet entry, to catch an off-by-one in the modulo.
+
+### The file
+
+One JSON object with two arrays, `frames` and `team_codes`. Every case has a `name` from the lists above. Hex strings are lower case with no separators. A suite fails when it meets a `check` it does not know, so no case is skipped silently.
+
+**Frame cases** have a `check` saying what to run:
+
+| `check` | Fields | What a suite does |
+|---|---|---|
+| `deframe` | `reads`: hex strings; `payloads`: hex strings | feeds each read in turn to one decoder and expects exactly these payloads, in order, from all reads together. An empty `payloads` means the bytes are rejected. |
+| `encode` | `message`; `frame`: hex | encodes the message and expects exactly the frame's bytes. |
+| `decode` | `frame`: hex; `message`, or `null` | deframes the frame, decodes its payload and expects the message. `null` means the payload is ignored. |
+| `both` | `frame`; `message` | runs `encode` and `decode` on the same pair. |
+
+A `message` is an object whose `type` names it; the other keys are its fields, with the units in their names. Numbers are JSON numbers: a scaled field is the integer on the wire divided by its scale (`i16/10` as 36.5), and a decoder that divides in double precision gets exactly the value in the file. An encoder multiplies by the scale and rounds to the nearest integer; it does not truncate. `odometer_m`, `board_uptime_ms` and `gps_fix_time_utc` can exceed a signed 32-bit integer and need a 64-bit one.
+
+| `type` | Fields |
+|---|---|
+| `fw_version_request`, `values_setup_request`, `decoded_adc_request` | none |
+| `fw_version` | `fw_major`, `fw_minor` |
+| `values_setup` | in reply order: `mosfet_temp_c`, `motor_temp_c`, `motor_current_a`, `battery_current_a`, `duty_cycle`, `erpm`, `speed_m_s`, `battery_voltage_v`, `battery_level`, `charge_used_ah`, `charge_charged_ah`, `energy_used_wh`, `energy_charged_wh`, `distance_m`, `distance_abs_m`, `position`, `fault_code`, `board_id`, `board_count`, `battery_capacity_wh`, `odometer_m`, `board_uptime_ms`. A short reply's message leaves out the keys it did not reach. |
+| `decoded_adc` | `adc_level1`, `adc_voltage1`, `adc_level2`, `adc_voltage2` |
+| `gps` | `gps_lat_deg`, `gps_lon_deg`, `gps_alt_m`, `gps_speed_m_s`, `gps_heading_deg`, `gps_accuracy_m`, `gps_fix_time_utc` (Unix milliseconds) |
+| `lobby_request` | `token` |
+| `heartbeat` | none |
+| `status` | `protocol_version`, `board_state` |
+
+**Team-code cases** have `typed`, the string as a person typed it, and `valid`. A valid case also has `code` (the normalised code, without its dash), `lobby_id`, `password`, `token` and `viewer_id`, the viewer ID for that code and token.

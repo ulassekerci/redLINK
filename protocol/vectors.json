@@ -1,0 +1,395 @@
+{
+  "frames": [
+    {
+      "name": "frame-short",
+      "check": "deframe",
+      "reads": [
+        "02022403fa4103"
+      ],
+      "payloads": [
+        "2403"
+      ]
+    },
+    {
+      "name": "frame-long",
+      "check": "deframe",
+      "reads": [
+        "03012c24c8000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fa000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e8eb503"
+      ],
+      "payloads": [
+        "24c8000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fa000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e"
+      ]
+    },
+    {
+      "name": "frame-long-fits-short",
+      "check": "deframe",
+      "reads": [
+        "0300042f010203829103"
+      ],
+      "payloads": []
+    },
+    {
+      "name": "frame-zero-length",
+      "check": "deframe",
+      "reads": [
+        "0200000003"
+      ],
+      "payloads": []
+    },
+    {
+      "name": "frame-bad-crc",
+      "check": "deframe",
+      "reads": [
+        "02042f010203829003"
+      ],
+      "payloads": []
+    },
+    {
+      "name": "frame-bad-stop-byte",
+      "check": "deframe",
+      "reads": [
+        "02042f010203829104"
+      ],
+      "payloads": []
+    },
+    {
+      "name": "frame-garbage-before",
+      "check": "deframe",
+      "reads": [
+        "a5020102022403fa4103"
+      ],
+      "payloads": [
+        "2403"
+      ]
+    },
+    {
+      "name": "frame-two-in-one-read",
+      "check": "deframe",
+      "reads": [
+        "02022403fa410302042f010203829103"
+      ],
+      "payloads": [
+        "2403",
+        "2f010203"
+      ]
+    },
+    {
+      "name": "frame-split-across-reads",
+      "check": "deframe",
+      "reads": [
+        "02042f01",
+        "0203829103"
+      ],
+      "payloads": [
+        "2f010203"
+      ]
+    },
+    {
+      "name": "request-values-setup",
+      "check": "encode",
+      "frame": "02012fd58d03",
+      "message": {
+        "type": "values_setup_request"
+      }
+    },
+    {
+      "name": "request-decoded-adc",
+      "check": "encode",
+      "frame": "020120246203",
+      "message": {
+        "type": "decoded_adc_request"
+      }
+    },
+    {
+      "name": "reply-values-setup",
+      "check": "decode",
+      "frame": "02462f016d019c000004d20000035802e6000048120000208d01e1036900003039000002a60009119100007d6d0012d6870013d620075bcd15002a0100075300b2d05e000036ee80351303",
+      "message": {
+        "type": "values_setup",
+        "mosfet_temp_c": 36.5,
+        "motor_temp_c": 41.2,
+        "motor_current_a": 12.34,
+        "battery_current_a": 8.56,
+        "duty_cycle": 0.742,
+        "erpm": 18450,
+        "speed_m_s": 8.333,
+        "battery_voltage_v": 48.1,
+        "battery_level": 0.873,
+        "charge_used_ah": 1.2345,
+        "charge_charged_ah": 0.0678,
+        "energy_used_wh": 59.4321,
+        "energy_charged_wh": 3.2109,
+        "distance_m": 1234.567,
+        "distance_abs_m": 1300.0,
+        "position": 123.456789,
+        "fault_code": 0,
+        "board_id": 42,
+        "board_count": 1,
+        "battery_capacity_wh": 480.0,
+        "odometer_m": 3000000000,
+        "board_uptime_ms": 3600000
+      }
+    },
+    {
+      "name": "reply-values-setup-negative",
+      "check": "decode",
+      "frame": "02462fffcbff87fffff7fefffffa0bff6afffff380fffffb1e01e1036900003039000002a60009119100007d6dfffff63c0013d620075bcd15032a0100075300b2d05e000036ee80963a03",
+      "message": {
+        "type": "values_setup",
+        "mosfet_temp_c": -5.3,
+        "motor_temp_c": -12.1,
+        "motor_current_a": -20.5,
+        "battery_current_a": -15.25,
+        "duty_cycle": -0.15,
+        "erpm": -3200,
+        "speed_m_s": -1.25,
+        "battery_voltage_v": 48.1,
+        "battery_level": 0.873,
+        "charge_used_ah": 1.2345,
+        "charge_charged_ah": 0.0678,
+        "energy_used_wh": 59.4321,
+        "energy_charged_wh": 3.2109,
+        "distance_m": -2.5,
+        "distance_abs_m": 1300.0,
+        "position": 123.456789,
+        "fault_code": 3,
+        "board_id": 42,
+        "board_count": 1,
+        "battery_capacity_wh": 480.0,
+        "odometer_m": 3000000000,
+        "board_uptime_ms": 3600000
+      }
+    },
+    {
+      "name": "reply-values-setup-short",
+      "check": "decode",
+      "frame": "023e2f016d019c000004d20000035802e6000048120000208d01e1036900003039000002a60009119100007d6d0012d6870013d620075bcd15002a0100075300e10c03",
+      "message": {
+        "type": "values_setup",
+        "mosfet_temp_c": 36.5,
+        "motor_temp_c": 41.2,
+        "motor_current_a": 12.34,
+        "battery_current_a": 8.56,
+        "duty_cycle": 0.742,
+        "erpm": 18450,
+        "speed_m_s": 8.333,
+        "battery_voltage_v": 48.1,
+        "battery_level": 0.873,
+        "charge_used_ah": 1.2345,
+        "charge_charged_ah": 0.0678,
+        "energy_used_wh": 59.4321,
+        "energy_charged_wh": 3.2109,
+        "distance_m": 1234.567,
+        "distance_abs_m": 1300.0,
+        "position": 123.456789,
+        "fault_code": 0,
+        "board_id": 42,
+        "board_count": 1,
+        "battery_capacity_wh": 480.0
+      }
+    },
+    {
+      "name": "reply-decoded-adc",
+      "check": "decode",
+      "frame": "0211200007d1590019cd78fffc2f7000000000306503",
+      "message": {
+        "type": "decoded_adc",
+        "adc_level1": 0.512345,
+        "adc_voltage1": 1.691,
+        "adc_level2": -0.25,
+        "adc_voltage2": 0.0
+      }
+    },
+    {
+      "name": "request-fw-version",
+      "check": "encode",
+      "frame": "020100000003",
+      "message": {
+        "type": "fw_version_request"
+      }
+    },
+    {
+      "name": "reply-fw-version",
+      "check": "decode",
+      "frame": "0217000606363000101112131415161718191a1b00000001001bc403",
+      "message": {
+        "type": "fw_version",
+        "fw_major": 6,
+        "fw_minor": 6
+      }
+    },
+    {
+      "name": "gps",
+      "check": "both",
+      "frame": "021c240117c6eb5913988ff800016e9a04d269af0030000001a0c4506c7bce0b03",
+      "message": {
+        "type": "gps",
+        "gps_lat_deg": 39.8912345,
+        "gps_lon_deg": 32.8765432,
+        "gps_alt_m": 938.5,
+        "gps_speed_m_s": 12.34,
+        "gps_heading_deg": 270.55,
+        "gps_accuracy_m": 4.8,
+        "gps_fix_time_utc": 1790000000123
+      }
+    },
+    {
+      "name": "gps-southern-western",
+      "check": "both",
+      "frame": "021c2401ebd1dd2ea5df4ab8fffffb1e000000000000000001a0c4506fe8a94203",
+      "message": {
+        "type": "gps",
+        "gps_lat_deg": -33.856789,
+        "gps_lon_deg": -151.2093,
+        "gps_alt_m": -12.5,
+        "gps_speed_m_s": 0.0,
+        "gps_heading_deg": 0.0,
+        "gps_accuracy_m": 0.0,
+        "gps_fix_time_utc": 1790000001000
+      }
+    },
+    {
+      "name": "gps-trailing-bytes",
+      "check": "decode",
+      "frame": "021f240117c6eb5913988ff800016e9a04d269af0030000001a0c4506c7bdeadbeb2ae03",
+      "message": {
+        "type": "gps",
+        "gps_lat_deg": 39.8912345,
+        "gps_lon_deg": 32.8765432,
+        "gps_alt_m": 938.5,
+        "gps_speed_m_s": 12.34,
+        "gps_heading_deg": 270.55,
+        "gps_accuracy_m": 4.8,
+        "gps_fix_time_utc": 1790000000123
+      }
+    },
+    {
+      "name": "lobby-request",
+      "check": "both",
+      "frame": "020a24023448543957513242c19103",
+      "message": {
+        "type": "lobby_request",
+        "token": "4HT9WQ2B"
+      }
+    },
+    {
+      "name": "lobby-request-short-token",
+      "check": "decode",
+      "frame": "0209240234485439575132f8c703",
+      "message": null
+    },
+    {
+      "name": "lobby-request-bad-alphabet",
+      "check": "decode",
+      "frame": "020a2402344854397751304921d603",
+      "message": null
+    },
+    {
+      "name": "heartbeat",
+      "check": "both",
+      "frame": "02022403fa4103",
+      "message": {
+        "type": "heartbeat"
+      }
+    },
+    {
+      "name": "status-answering",
+      "check": "both",
+      "frame": "020424040100124e03",
+      "message": {
+        "type": "status",
+        "protocol_version": 1,
+        "board_state": 0
+      }
+    },
+    {
+      "name": "status-unreachable",
+      "check": "both",
+      "frame": "020424040101026f03",
+      "message": {
+        "type": "status",
+        "protocol_version": 1,
+        "board_state": 1
+      }
+    },
+    {
+      "name": "status-trailing-bytes",
+      "check": "decode",
+      "frame": "0206240402007f004fa003",
+      "message": {
+        "type": "status",
+        "protocol_version": 2,
+        "board_state": 0
+      }
+    },
+    {
+      "name": "custom-unknown-type",
+      "check": "decode",
+      "frame": "020524c8010203d6e403",
+      "message": null
+    },
+    {
+      "name": "unknown-command",
+      "check": "decode",
+      "frame": "021504000102030405060708090a0b0c0d0e0f10111213cb7703",
+      "message": null
+    }
+  ],
+  "team_codes": [
+    {
+      "name": "code-valid",
+      "typed": "K7QM-3XPC",
+      "valid": true,
+      "code": "K7QM3XPC",
+      "lobby_id": "REDLINKK7QM3XPC",
+      "password": "K7QM3XPC",
+      "token": "4HT9WQ2B",
+      "viewer_id": "REDLINKK7QM3XPC4HT9WQ2B"
+    },
+    {
+      "name": "code-lower-case-and-spaces",
+      "typed": " k7qm 3xpc ",
+      "valid": true,
+      "code": "K7QM3XPC",
+      "lobby_id": "REDLINKK7QM3XPC",
+      "password": "K7QM3XPC",
+      "token": "4HT9WQ2B",
+      "viewer_id": "REDLINKK7QM3XPC4HT9WQ2B"
+    },
+    {
+      "name": "code-wrong-check-character",
+      "typed": "K7QM-3XPD",
+      "valid": false
+    },
+    {
+      "name": "code-one-wrong-character",
+      "typed": "K8QM-3XPC",
+      "valid": false
+    },
+    {
+      "name": "code-neighbours-swapped",
+      "typed": "7KQM-3XPC",
+      "valid": false
+    },
+    {
+      "name": "code-bad-alphabet",
+      "typed": "K7OM-3XPC",
+      "valid": false
+    },
+    {
+      "name": "code-too-short",
+      "typed": "K7QM-3XP",
+      "valid": false
+    },
+    {
+      "name": "code-check-character-last",
+      "typed": "Z222-222Z",
+      "valid": true,
+      "code": "Z222222Z",
+      "lobby_id": "REDLINKZ222222Z",
+      "password": "Z222222Z",
+      "token": "4HT9WQ2B",
+      "viewer_id": "REDLINKZ222222Z4HT9WQ2B"
+    }
+  ]
+}

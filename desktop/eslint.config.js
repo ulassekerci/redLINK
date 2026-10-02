@@ -4,6 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { globalIgnores } from 'eslint/config'
+import { builtinModules } from 'node:module'
 
 export default tseslint.config([
   globalIgnores(['dist']),
@@ -18,6 +19,25 @@ export default tseslint.config([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+    },
+  },
+  {
+    // The protocol module is shared by main and the renderer, so it may import
+    // nothing from Electron or Node. tsconfig.protocol.json keeps the DOM out.
+    files: ['src/protocol/**/*.ts'],
+    ignores: ['src/protocol/**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['electron', 'electron/*', 'node:*', ...builtinModules],
+              message: 'The protocol module imports nothing from Electron or Node.',
+            },
+          ],
+        },
+      ],
     },
   },
 ])
