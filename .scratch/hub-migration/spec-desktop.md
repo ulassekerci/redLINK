@@ -87,8 +87,8 @@ Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Rep
 The direct link connects the app to the board over Bluetooth with no bridge and no hub. It is for testing the vehicle. An app on a direct link is not a viewer.
 
 - **Where it runs:** Web Bluetooth in the renderer, on the Nordic UART service (`6e400001-b5a3-f393-e0a9-e50e24dcca9e`), writing to the RX characteristic (`6e400002-…`) and listening on the TX characteristic (`6e400003-…`), as `web/` does today. A native Bluetooth library in main is not used.
-- **Starting it:** the "connect to board directly" action (3.2, 3.4) calls `navigator.bluetooth.requestDevice()` for devices whose name starts with `redBLE`, which starts a scan.
-- **Picking the board:** the person picks. Electron has no built-in chooser, so the app draws its own: main receives Electron's `select-bluetooth-device` event, which repeats with the devices found so far, and passes the list to the renderer, which shows it in the middle section (3.2). Clicking an entry makes main answer the event with that device; cancelling makes main answer with none, which ends the scan. The list is shown even when it has one entry, and nothing is picked automatically. The scan has no time limit: it runs until a pick or a cancel. While the list is open the app stays on the hub as it was.
+- **Starting it:** the "connect to board directly" action (3.2, 3.4) calls `navigator.bluetooth.requestDevice()` with the Nordic UART service as its only filter, which starts a scan. Devices are not filtered by name, as the phone's picker does not: the car, the spare VESC and any other board offering the service all appear. Today's `redBLE` name filter is dropped.
+- **Picking the board:** the person picks. Electron has no built-in chooser, so the app draws its own: main receives Electron's `select-bluetooth-device` event, which repeats with the devices found so far, and passes the list to the renderer, which shows it in the middle section (3.2). Clicking an entry makes main answer the event with that device; cancelling makes main answer with none, which ends the scan. A device that reports no name is listed by its ID. The list is shown even when it has one entry, and nothing is picked automatically. The scan has no time limit: it runs until a pick or a cancel. While the list is open the app stays on the hub as it was.
 - **Hub and direct link are exclusive.** When a board has been picked, the renderer tells main, and main leaves the hub: it closes its socket and stops visiting the lobby. Heartbeats stop, so the bridge closes the registration by itself. From then on the store is written only by the direct link.
 - **Polling:** the renderer polls as the bridge does, with the cycle and the 250 ms and 2 s timeouts of the hub spec's "Polling and the stream": `COMM_GET_VALUES_SETUP`, then `COMM_GET_DECODED_ADC`, every 50 ms. It writes board samples and ADC samples into the same store, stamped on arrival. It does not send `COMM_FW_VERSION`.
 - **No GPS.** There are no GPS fixes on a direct link; the map says so (2.9).
@@ -98,7 +98,7 @@ The direct link connects the app to the board over Bluetooth with no bridge and 
 - **The seam:** the polling loop talks to a transport object (write bytes, receive bytes, connected or not). Web Bluetooth is one implementation; the tests in section 4 use a fake one. There is no selectable simulated board in the desktop app.
 - **Removed from `web/`:** the `Mock` device name that skipped the CRC check, and `bluetooth/test.ts`.
 
-Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Testing without the car](issues/16-testing-without-the-car.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md). The device list replaces that ticket's "first device whose name starts with `redBLE`", which picked wrongly with more than one board powered; it and staying on the hub until a board is picked were decided while writing this spec.
+Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Testing without the car](issues/16-testing-without-the-car.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md). The device list replaces that ticket's "first device whose name starts with `redBLE`", which picked wrongly with more than one board powered; it, the filter by service instead of by name, and staying on the hub until a board is picked were decided while writing this spec.
 
 ### 2.6 The team code
 
@@ -187,7 +187,7 @@ What is the app's own. The release workflow, the tags and the version scheme are
 - **macOS:** arm64 only, a `dmg`, ad-hoc signed and not notarized. `NSBluetoothAlwaysUsageDescription` is `redLINK, araca doğrudan bağlanmak için Bluetooth kullanır.`
 - **Windows:** x64 only, a zip that is unzipped anywhere and run in place. No installer and not the single-file portable target.
 - **First open:** `README.md` carries the steps for the unsigned app: "Open Anyway" in macOS System Settings, "Run anyway" on Windows SmartScreen.
-- **Not established.** None of this was built or run. Whether Electron's Web Bluetooth holds 20 Hz against the board on both systems, and whether reconnecting to the same device without a new scan works on Windows, are found out on the front page's desk checklist.
+- **Not established.** None of this was built or run. Whether the board advertises the Nordic UART service, which a Web Bluetooth service filter needs in order to list it; whether Electron's Web Bluetooth holds 20 Hz against the board on both systems, and whether reconnecting to the same device without a new scan works on Windows, are found out on the front page's desk checklist.
 
 Tickets: [Distribution](issues/15-distribution.md), [Repo layout and cutover](issues/12-repo-layout-and-cutover.md).
 
@@ -231,7 +231,7 @@ On and around a direct link:
 | direct link | the status line, the trip meter, the label `Doğrudan bağlantı` and the action `Bağlantıyı kes` |
 | the device list is open, in any state | the status line and the device list |
 
-**The device list:** the title `Araç seçin`; one row per device found, showing its Bluetooth name, added as the scan finds them; `Araç aranıyor` while the list is empty; and `Vazgeç`, which cancels. Pressing the action from settings returns to the gauges, where the list is. The gauges and bottom section keep showing the stream while the list is open.
+**The device list:** the title `Araç seçin`; one row per device found, showing its Bluetooth name (or its ID when it has none), added as the scan finds them; `Araç aranıyor` while the list is empty; and `Vazgeç`, which cancels. Pressing the action from settings returns to the gauges, where the list is. The gauges and bottom section keep showing the stream while the list is open.
 
 **The waiting screen:** the logo; the status line; the team code in use, `Takım kodu: K7QM-3XPC`; under it `host:port` when they are not the public hub's; the action `Araca doğrudan bağlan`; and, when there is one, the update line `Güncelleme var: 1.3.0`.
 
