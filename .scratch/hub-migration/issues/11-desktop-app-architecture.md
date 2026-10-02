@@ -45,3 +45,5 @@ Added to `CONTEXT.md`: **Direct link**.
 Amended 2026-10-02 by [Distribution](15-distribution.md): the state "protocol version newer than this app knows" becomes "version mismatch". It applies when the bridge's major version differs from the app's in either direction; the status line states both versions and recommends no action. The app still shows nothing from the stream in that state.
 
 Amended 2026-10-02 by [Testing without the car](16-testing-without-the-car.md): the app takes no single-instance lock, so several viewer windows can run on one laptop.
+
+Amended 2026-10-02 by [Write the desktop app spec](21-write-the-desktop-app-spec.md): main no longer picks the first device whose name starts with `redBLE`. The app draws its own device list from the `select-bluetooth-device` event and the person picks; "so there is no chooser" no longer holds.

@@ -43,6 +43,7 @@ Main sends the renderer parsed samples and one connection state. The preload scr
 - subscribe to samples;
 - subscribe to the connection state, and read it once on start;
 - read and write the settings (2.7);
+- subscribe to the list of Bluetooth devices found by a scan, and pick one or cancel (2.5);
 - tell main that a direct link has started or ended (2.5);
 - save the CSV (2.10);
 - read the app's version and the update line (2.11).
@@ -86,7 +87,8 @@ Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Rep
 The direct link connects the app to the board over Bluetooth with no bridge and no hub. It is for testing the vehicle. An app on a direct link is not a viewer.
 
 - **Where it runs:** Web Bluetooth in the renderer, on the Nordic UART service (`6e400001-b5a3-f393-e0a9-e50e24dcca9e`), writing to the RX characteristic (`6e400002-…`) and listening on the TX characteristic (`6e400003-…`), as `web/` does today. A native Bluetooth library in main is not used.
-- **Starting it:** the "connect to board directly" action (3.2, 3.4). There is no device chooser: main answers Electron's `select-bluetooth-device` event by picking the first device whose name starts with `redBLE`. If none is seen within 10 s main cancels the request and the app says the board was not found (3.1). While the scan runs the app stays on the hub as it was.
+- **Starting it:** the "connect to board directly" action (3.2, 3.4) calls `navigator.bluetooth.requestDevice()` for devices whose name starts with `redBLE`, which starts a scan.
+- **Picking the board:** the person picks. Electron has no built-in chooser, so the app draws its own: main receives Electron's `select-bluetooth-device` event, which repeats with the devices found so far, and passes the list to the renderer, which shows it in the middle section (3.2). Clicking an entry makes main answer the event with that device; cancelling makes main answer with none, which ends the scan. The list is shown even when it has one entry, and nothing is picked automatically. The scan has no time limit: it runs until a pick or a cancel. While the list is open the app stays on the hub as it was.
 - **Hub and direct link are exclusive.** When a board has been picked, the renderer tells main, and main leaves the hub: it closes its socket and stops visiting the lobby. Heartbeats stop, so the bridge closes the registration by itself. From then on the store is written only by the direct link.
 - **Polling:** the renderer polls as the bridge does, with the cycle and the 250 ms and 2 s timeouts of the hub spec's "Polling and the stream": `COMM_GET_VALUES_SETUP`, then `COMM_GET_DECODED_ADC`, every 50 ms. It writes board samples and ADC samples into the same store, stamped on arrival. It does not send `COMM_FW_VERSION`.
 - **No GPS.** There are no GPS fixes on a direct link; the map says so (2.9).
@@ -96,7 +98,7 @@ The direct link connects the app to the board over Bluetooth with no bridge and 
 - **The seam:** the polling loop talks to a transport object (write bytes, receive bytes, connected or not). Web Bluetooth is one implementation; the tests in section 4 use a fake one. There is no selectable simulated board in the desktop app.
 - **Removed from `web/`:** the `Mock` device name that skipped the CRC check, and `bluetooth/test.ts`.
 
-Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Testing without the car](issues/16-testing-without-the-car.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md). The 10 s scan limit, and staying on the hub until a board is picked, were decided while writing this spec.
+Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Testing without the car](issues/16-testing-without-the-car.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md). The device list replaces that ticket's "first device whose name starts with `redBLE`", which picked wrongly with more than one board powered; it and staying on the hub until a board is picked were decided while writing this spec.
 
 ### 2.6 The team code
 
@@ -214,8 +216,8 @@ On and around a direct link:
 
 | Condition | Text |
 |---|---|
-| scanning for the board | `Araç aranıyor` |
-| no board seen within 10 s | `Araç bulunamadı`, for 5 s, then the viewer's state again |
+| the device list is open | the viewer's state, unchanged |
+| a board was picked, connecting | `Araca bağlanılıyor` |
 | Bluetooth off or not permitted | `Bluetooth kullanılamıyor`, for 5 s, then the viewer's state again |
 | direct link, board answering | nothing |
 | direct link, board not answering | `Araç yanıt vermiyor, yeniden deneniyor` |
@@ -227,6 +229,9 @@ On and around a direct link:
 | no team code, hub unreachable, phone not found, joining, version mismatch | the waiting screen |
 | live, board unreachable, phone lost after having been live | the status line and the trip meter |
 | direct link | the status line, the trip meter, the label `Doğrudan bağlantı` and the action `Bağlantıyı kes` |
+| the device list is open, in any state | the status line and the device list |
+
+**The device list:** the title `Araç seçin`; one row per device found, showing its Bluetooth name, added as the scan finds them; `Araç aranıyor` while the list is empty; and `Vazgeç`, which cancels. Pressing the action from settings returns to the gauges, where the list is. The gauges and bottom section keep showing the stream while the list is open.
 
 **The waiting screen:** the logo; the status line; the team code in use, `Takım kodu: K7QM-3XPC`; under it `host:port` when they are not the public hub's; the action `Araca doğrudan bağlan`; and, when there is one, the update line `Güncelleme var: 1.3.0`.
 
@@ -276,7 +281,8 @@ Tickets: [Testing without the car](issues/16-testing-without-the-car.md), [Distr
 
 - New dashboard features beyond today's: gauges, ADC, map, trip meter, CSV export.
 - Sending anything to the board through the hub, and any control, configuration or firmware command. The dashboard is read-only.
-- A source picker, a connect button, a retry button and a Bluetooth device chooser.
+- A source picker, a connect button and a retry button for the hub.
+- Remembering the board picked for a direct link: every start shows the list.
 - A simulated board in the desktop app, and a fake bridge script. A viewer with no phone is tested against the Android debug build on an emulator.
 - GPS on a direct link, and reading the board's firmware version.
 - Generating a team code, a QR code or a config file for entering one, and keeping the code in the keychain.
