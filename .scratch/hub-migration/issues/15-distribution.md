@@ -32,3 +32,5 @@ Amends [What travels on the stream](05-what-travels-on-the-stream.md) (the proto
 No change to `CONTEXT.md`.
 
 Amended 2026-10-02 by [Testing without the car](16-testing-without-the-car.md): the tag workflow runs both test suites first, and a failing test blocks the release.
+
+Amended 2026-10-02 by [Write the hub usage spec](19-write-the-hub-usage-spec.md): a local build no longer shows `0.0.0-dev`. It takes its version from the latest version tag in git with `-dev` added, such as `1.2.0-dev`, and falls back to `0.0.0-dev` only when there is no tag to read. With the protocol version being the app's major version, a fixed `0.0.0-dev` made every local build a version mismatch against every released build of the other app, which is the usual situation when debugging from source. The cost: a local build with incompatible message changes, made before the next major is tagged, is not refused.
