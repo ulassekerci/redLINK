@@ -1,13 +1,27 @@
 # redLINK
 
-An end-to-end telemetry system for our Shell Eco-marathon vehicle  
-- **Mobile App (React Native)** → Captures data from vehicle via Bluetooth and GPS  
-- **Server (Node.js + Socket.IO)** → Relays real-time data between devices  
-- **Web Dashboard (React)** → Displays live vehicle data for monitoring and analysis
+An end-to-end telemetry system for our Shell Eco-marathon vehicle
+- **Android app** → Rides in the car, polls the vehicle's VESC over Bluetooth, adds GPS, logs every run and streams it to the pit
+- **Desktop app (Electron + React)** → Shows live vehicle data on the pit laptops, and can connect straight to the VESC over Bluetooth
+- **Protocol** → The wire format the two apps share
 
-<img src="https://github.com/user-attachments/assets/8b8db57c-dbb5-43e1-873e-c2d54d18e5df" alt="Web App Screenshot" width="70%" />  
+The apps reach each other through a [VESC TCP hub](protocol/tcp-hub.md), so there is no server of our own to run.
+
+<img src="https://github.com/user-attachments/assets/8b8db57c-dbb5-43e1-873e-c2d54d18e5df" alt="Desktop App Screenshot" width="70%" />
 
 ---
+
+## Repo layout
+
+| Path | What it is |
+|---|---|
+| `android/` | The Android app, a Gradle project (not in the repo yet) |
+| `desktop/` | The desktop app, a standalone pnpm package |
+| `protocol/` | The wire format in prose and notes on the hub |
+| `docs/` | Architecture decision records and agent docs |
+
+The stack is being rebuilt. The plan is in the [hub migration spec](.scratch/hub-migration/spec.md), and vocabulary is in [CONTEXT.md](CONTEXT.md).
+The previous stack is kept under the `legacy-stack` tag.
 
 ## Getting Started
 Clone and navigate into the repository:
@@ -15,38 +29,18 @@ Clone and navigate into the repository:
 git clone https://github.com/ulassekerci/redLINK.git
 cd redLINK
 ```
-### Server
-Build and run the server
+### Desktop App
+Navigate to the desktop folder and install dependencies with [pnpm](https://pnpm.io)
 ```bash
-cd server
-npm install
-npm run build
-npm run start
+cd desktop
+pnpm install
 ```
-### Web App
-Navigate to the web folder and install dependencies
+Run the dashboard in a browser
 ```bash
-cd web
-npm install
+pnpm dev
 ```
-Create .env file and enter your server url
+Or build it and serve the build
 ```bash
-VITE_SOCKET_URL="localhost:3000"
+pnpm build
+pnpm preview
 ```
-Build and run the web app
-```bash
-npm run build
-npm run preview
-```
-
-### Mobile App
-CD into mobile folder
-```bash
-cd redLINK/mobile
-```
-Create .env file and enter your server url
-```bash
-EXPO_PUBLIC_SOCKET_URL="192.168.1.72:3000"
-```
-Refer to expo docs for building the mobile app for your preferred platform  
-[https://docs.expo.dev/get-started/set-up-your-environment/](https://docs.expo.dev/get-started/set-up-your-environment/)
