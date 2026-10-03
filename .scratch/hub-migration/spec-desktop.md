@@ -87,7 +87,7 @@ Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Rep
 The direct link connects the app to the board over Bluetooth with no bridge and no hub. It is for testing the vehicle. An app on a direct link is not a viewer.
 
 - **Where it runs:** Web Bluetooth in the renderer, on the Nordic UART service (`6e400001-b5a3-f393-e0a9-e50e24dcca9e`), writing to the RX characteristic (`6e400002-…`) and listening on the TX characteristic (`6e400003-…`), as `web/` does today. A native Bluetooth library in main is not used.
-- **Starting it:** the "connect to board directly" action (3.2, 3.4) calls `navigator.bluetooth.requestDevice()` with the Nordic UART service as its only filter, which starts a scan. Devices are not filtered by name, as the phone's picker does not: the car, the spare VESC and any other board offering the service all appear. Today's `redBLE` name filter is dropped.
+- **Starting it:** the "connect to board directly" action, on the settings screen only (3.4), calls `navigator.bluetooth.requestDevice()` with the Nordic UART service as its only filter, which starts a scan. Devices are not filtered by name, as the phone's picker does not: the car, the spare VESC and any other board offering the service all appear. Today's `redBLE` name filter is dropped.
 - **Picking the board:** the person picks. Electron has no built-in chooser, so the app draws its own: main receives Electron's `select-bluetooth-device` event, which repeats with the devices found so far, and passes the list to the renderer, which shows it in the middle section (3.2). Clicking an entry makes main answer the event with that device; cancelling makes main answer with none, which ends the scan. A device that reports no name is listed by its ID. The list is shown even when it has one entry, and nothing is picked automatically. The scan has no time limit: it runs until a pick or a cancel. While the list is open the app stays on the hub as it was.
 - **Hub and direct link are exclusive.** When a board has been picked, the renderer tells main, and main leaves the hub: it closes its socket and stops visiting the lobby. Heartbeats stop, so the bridge closes the registration by itself. From then on the store is written only by the direct link.
 - **Polling:** the renderer polls as the bridge does, with the cycle and the 250 ms and 2 s timeouts of the hub spec's "Polling and the stream": `COMM_GET_VALUES_SETUP`, then `COMM_GET_DECODED_ADC`, every 50 ms. It writes board samples and ADC samples into the same store, stamped on arrival. It does not send `COMM_FW_VERSION`.
@@ -233,7 +233,7 @@ On and around a direct link:
 
 **The device list:** the title `Araç seçin`; one row per device found, showing its Bluetooth name (or its ID when it has none), added as the scan finds them; `Araç aranıyor` while the list is empty; and `Vazgeç`, which cancels. Pressing the action from settings returns to the gauges, where the list is. The gauges and bottom section keep showing the stream while the list is open.
 
-**The waiting screen:** the logo; the status line; the team code in use, `Takım kodu: K7QM-3XPC`; under it `host:port` when they are not the public hub's; the action `Doğrudan bağlan`; and, when there is one, the update line `Güncelleme var: 1.3.0`.
+**The waiting screen:** the logo; the status line; the team code in use, `Takım kodu: K7QM-3XPC`; under it `host:port` when they are not the public hub's; and, when there is one, the update line `Güncelleme var: 1.3.0`.
 
 **The trip meter's rows:** `Mesafe`, `Süre`, `Ort. Hız`, `Tüketim`, as today.
 
@@ -250,10 +250,10 @@ On and around a direct link:
 - `Takım kodu`: a text field. A rejected code: `Takım kodu hatalı. Telefondaki kodu kontrol edin.`
 - `Hub adresi` and `Port`: two fields.
 - `Kaydet` saves the three together.
-- `Doğrudan bağlan`, or `Bağlantıyı kes` while on a direct link: the same actions as in the middle section, here so they can be reached while live.
+- `Doğrudan bağlan`, or `Bağlantıyı kes` while on a direct link. Settings is the only place a direct link is started: it is rarely used, so it is kept off the waiting screen. `Bağlantıyı kes` is also in the middle section (3.2).
 - `Sürüm 1.2.0`. When a newer release exists: `Güncelleme var: 1.3.0`, which opens the Release page.
 
-`Uyarı`, `Harita`, `Göstergeler`, `Konum verisi yok`, the trip meter's rows and the gauge units are today's. The version mismatch line and the Bluetooth permission text are from [Distribution](issues/15-distribution.md). Every other string was written with this spec.
+`Uyarı`, `Harita`, `Göstergeler`, `Konum verisi yok`, the trip meter's rows and the gauge units are today's. Keeping `Doğrudan bağlan` off the waiting screen was decided after ticket 28, on seeing the app. The version mismatch line and the Bluetooth permission text are from [Distribution](issues/15-distribution.md). Every other string was written with this spec.
 
 ## 4. Required automated tests
 

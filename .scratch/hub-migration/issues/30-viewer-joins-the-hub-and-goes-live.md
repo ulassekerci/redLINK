@@ -21,7 +21,7 @@ Spec: [desktop app spec](../spec-desktop.md) 2.2, 2.3, 2.9 (map, middle section,
 - [ ] In version mismatch the client stays attached, keeps its heartbeat and hands on no samples
 - [ ] Unknown command IDs, unknown message types and trailing bytes are ignored
 - [ ] The status line shows the Turkish text of 3.1 for each state, and nothing when live
-- [ ] The waiting screen shows the logo, the status line, `Takım kodu: XXXX-XXXX`, `host:port` only when it is not the public hub's, and `Doğrudan bağlan`
+- [ ] The waiting screen shows the logo, the status line, `Takım kodu: XXXX-XXXX`, and `host:port` only when it is not the public hub's; `Doğrudan bağlan` is not on it
 - [ ] Once live the middle section is the trip meter; in board unreachable and phone lost the gauges and bottom section keep their last values dimmed
 - [ ] The map shows the latest GPS fix as a marker, and `Konum verisi yok` before the first
 - [ ] The `hub-client` suite drives the client with scripted bytes, a fake clock and a fixed random source, covers every case the spec lists except the two in ticket 31, and passes
