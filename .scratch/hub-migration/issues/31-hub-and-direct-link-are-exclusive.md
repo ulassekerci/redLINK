@@ -14,7 +14,7 @@ Spec: [desktop app spec](../spec-desktop.md) 2.5 ("Hub and direct link are exclu
 - [ ] A direct link that loses its board does not fall back to the hub
 - [ ] `Bağlantıyı kes` closes the Bluetooth link and tells main, which starts visiting the lobby again
 - [ ] After `Bluetooth kullanılamıyor` has shown for 5 s the status line returns to the viewer's state
-- [ ] `Doğrudan bağlan` and `Bağlantıyı kes` are also on the settings screen; pressing the first from settings returns to the gauges, where the list is
+- [ ] `Doğrudan bağlan` is on the settings screen only, and `Bağlantıyı kes` is there too; pressing the first returns to the gauges, where the list is
 - [ ] Saving a different team code makes main leave the hub and join with the new one
 - [ ] Saving a different host or port makes main leave the hub and join on the new host
 - [ ] The trip is kept across the switch in both directions
