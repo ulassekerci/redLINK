@@ -2,7 +2,7 @@ import { twMerge } from 'tailwind-merge'
 import { Gauge } from '../components/Gauge'
 import { useVehicleData } from '../hooks/useVehicleData'
 import { MiddleSection } from '../components/MiddleSection'
-import { useDimmed } from '../store/directLink'
+import { useDimmed } from '../hooks/useDimmed'
 
 export const HomeScreen = () => {
   const data = useVehicleData()

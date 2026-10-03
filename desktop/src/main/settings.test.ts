@@ -2,7 +2,8 @@ import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
-import { PUBLIC_HUB, readSettings, saveSettings } from './settings'
+import { PUBLIC_HUB } from '../protocol'
+import { readSettings, saveSettings } from './settings'
 
 const noSettings = { teamCode: null, hubHost: PUBLIC_HUB.host, hubPort: PUBLIC_HUB.port }
 

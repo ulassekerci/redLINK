@@ -97,7 +97,3 @@ export const directLinkStatus = ({ phase, bluetoothUnavailable }: DirectLinkStat
   if (bluetoothUnavailable) return 'Bluetooth kullanılamıyor'
   return null
 }
-
-// Gauges and the bottom section keep their last values, dimmed, while the
-// board is not answering.
-export const useDimmed = () => useDirectLinkStore((state) => state.phase === 'not_answering')
