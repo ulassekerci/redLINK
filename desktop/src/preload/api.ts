@@ -12,6 +12,26 @@ export interface RedlinkApi {
   // Opens the system's save dialog with the given default file name, and
   // writes the CSV where the person chooses. Resolves when the dialog closes.
   saveCsv: (defaultName: string, csv: string) => Promise<void>
+  // The settings this instance read on launch or last saved.
+  readSettings: () => Promise<Settings>
+  // Stores the three values together and resolves with them as stored.
+  // Resolves with null, and stores nothing, when the team code is not valid.
+  writeSettings: (typed: TypedSettings) => Promise<Settings | null>
+}
+
+// What the settings file holds. The team code is without its dash, and null
+// when there is none.
+export interface Settings {
+  teamCode: string | null
+  hubHost: string
+  hubPort: number
+}
+
+// The settings screen's three fields, as typed.
+export interface TypedSettings {
+  teamCode: string
+  hubHost: string
+  hubPort: string
 }
 
 // The name is empty when the device reports none.

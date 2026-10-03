@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import vectors from '../../../protocol/vectors.json'
-import { generateToken, hubPassword, isToken, lobbyId, normaliseTeamCode, viewerId } from '.'
+import { formatTeamCode, generateToken, hubPassword, isToken, lobbyId, normaliseTeamCode, viewerId } from '.'
 
 type TeamCodeCase =
   | { name: string; typed: string; valid: false }
@@ -19,6 +19,10 @@ describe('team-code', () => {
     expect(lobbyId(c.code)).toBe(c.lobby_id)
     expect(hubPassword(c.code)).toBe(c.password)
     expect(viewerId(c.code, c.token)).toBe(c.viewer_id)
+  })
+
+  test('a code is shown as XXXX-XXXX', () => {
+    expect(formatTeamCode('K7QM3XPC')).toBe('K7QM-3XPC')
   })
 
   test('a generated token is 8 characters of the alphabet', () => {

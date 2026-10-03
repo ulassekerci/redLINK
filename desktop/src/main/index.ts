@@ -2,9 +2,26 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'node:path'
 import { handleBluetoothChooser } from './bluetooth'
 import { handleCsvSave } from './csv'
+import { readSettings, saveSettings } from './settings'
 import { appVersion } from './version'
+import type { TypedSettings } from '../preload/api'
 
-const createWindow = () => {
+// This instance holds the settings it read on launch or last saved. A change
+// saved in another window reaches this one when it is restarted.
+const handleSettings = async () => {
+  const file = join(app.getPath('userData'), 'settings.json')
+  let settings = await readSettings(file)
+
+  ipcMain.handle('settings:read', () => settings)
+  ipcMain.handle('settings:write', async (_event, typed: TypedSettings) => {
+    const saved = await saveSettings(file, typed)
+    if (saved) settings = saved
+    return saved
+  })
+  return settings
+}
+
+const createWindow = (route: string) => {
   const window = new BrowserWindow({
     width: 1440,
     height: 900,
@@ -24,17 +41,19 @@ const createWindow = () => {
   handleBluetoothChooser(window)
 
   if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
-    window.loadURL(process.env.ELECTRON_RENDERER_URL)
+    window.loadURL(`${process.env.ELECTRON_RENDERER_URL}#${route}`)
   } else {
-    window.loadFile(join(import.meta.dirname, '../renderer/index.html'))
+    window.loadFile(join(import.meta.dirname, '../renderer/index.html'), { hash: route })
   }
 }
 
 // No single-instance lock: a second start is a second, independent viewer.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   ipcMain.handle('app:version', () => appVersion)
   handleCsvSave()
-  createWindow()
+  const settings = await handleSettings()
+  // With no team code stored the app opens on the settings screen.
+  createWindow(settings.teamCode ? '/' : '/settings')
 })
 
 // One window, and closing it quits the app on macOS as on Windows.
