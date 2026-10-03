@@ -6,7 +6,7 @@ Telemetry for a Shell Eco-marathon vehicle: data leaves the car's motor controll
 
 **Board**:
 The VESC motor controller in the vehicle, the origin of all motor and battery telemetry. The phone screen labels it "Vehicle"; everywhere else it is the board.
-_Avoid_: Device, vehicle, VESC (when the hub role is meant)
+_Avoid_: Vehicle, VESC (when the hub role is meant)
 
 **Hub**:
 The VESC TCP Hub, a third-party relay that joins one registration to one client and copies bytes between them.
@@ -39,6 +39,10 @@ _Avoid_: Client, dashboard (for the instance), listener
 **Direct link**:
 The desktop app connected straight to the board over Bluetooth, with no bridge or hub, used while testing the vehicle. An app on a direct link is not a viewer.
 _Avoid_: BLE mode, source, local
+
+**Device**:
+Anything a Bluetooth scan finds offering the board's serial service, such as the car's board, a spare VESC or another team's. The person picks one from the device list, and it is the board from then on.
+_Avoid_: Peripheral, board (before it is picked)
 
 **Simulated board**:
 A stand-in for the board inside the phone app's debug build, which answers the bridge's polls with generated values. A run on it is a simulated run.

@@ -8,10 +8,10 @@ export const useTripData = () => {
   const trip = useTripStore()
   const [, forceRender] = useState(0)
 
-  const distance = data.distance - trip.distanceBeforeTrip
+  const distance = data.distance_abs_m - trip.distanceBeforeTrip
   const avgSpeed = getAvgSpeed(distance, trip.timeStarted)
-  const whCharge = data.wattHours.charged - trip.whChargeBeforeTrip
-  const whConsume = data.wattHours.consumed - trip.whConsumeBeforeTrip
+  const whCharge = data.energy_charged_wh - trip.whChargeBeforeTrip
+  const whConsume = data.energy_used_wh - trip.whConsumeBeforeTrip
   const consumption = calculateConsumption(distance, whConsume, whCharge)
 
   const distanceString = Math.round(distance) + ' m'
