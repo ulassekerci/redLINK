@@ -86,11 +86,14 @@ const sameState = (a: ConnectionState, b: ConnectionState) =>
     (a.phoneMajor === b.phoneMajor && a.appMajor === b.appMajor))
 
 // Joins the hub and keeps trying for as long as the app is open. With no team
-// code it does nothing.
+// code it does nothing, and while a direct link is in use it is off the hub.
 export function startHubClient(settings: HubClientSettings, seams: HubClientSeams, events: HubClientEvents) {
-  const { teamCode, hubHost, hubPort, majorVersion } = settings
+  const { majorVersion } = settings
   const { connect, clock, random } = seams
-  let state: ConnectionState = { state: teamCode ? 'joining' : 'no_team_code' }
+  let { teamCode, hubHost, hubPort } = settings
+  let onDirectLink = false
+  const launchState = (): ConnectionState => ({ state: teamCode ? 'joining' : 'no_team_code' })
+  let state = launchState()
 
   // The client is in one step at a time. A step's sockets and timers end with
   // it, and a socket of an earlier step is no longer listened to.
@@ -291,10 +294,45 @@ export function startHubClient(settings: HubClientSettings, seams: HubClientSeam
     visitLobby()
   }
 
-  if (teamCode) start(teamCode)
+  // Closes the sockets, which ends the heartbeat, so the bridge closes the
+  // registration by itself. The state is then what it is on launch.
+  const leave = () => {
+    nextStep()
+    setState(launchState())
+  }
+
+  // Joins as on launch, with the settings as they now are, having left what
+  // it was on. Not while a direct link is in use.
+  const join = () => {
+    leave()
+    if (teamCode && !onDirectLink) start(teamCode)
+  }
+
+  join()
 
   return {
     // The state now, for a renderer that starts after it was last sent.
     state: () => state,
+    // A board was picked for a direct link: the client leaves the hub and
+    // visits the lobby no more until the direct link has ended.
+    directLinkStarted: () => {
+      if (onDirectLink) return
+      onDirectLink = true
+      leave()
+    },
+    directLinkEnded: () => {
+      if (!onDirectLink) return
+      onDirectLink = false
+      join()
+    },
+    // A different team code, host or port makes the client leave and join
+    // again with the new values. Saving what was stored leaves it alone.
+    settingsSaved: (saved: Settings) => {
+      if (saved.teamCode === teamCode && saved.hubHost === hubHost && saved.hubPort === hubPort) return
+      teamCode = saved.teamCode
+      hubHost = saved.hubHost
+      hubPort = saved.hubPort
+      join()
+    },
   }
 }

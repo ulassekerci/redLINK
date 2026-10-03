@@ -4,6 +4,7 @@ import { twMerge } from 'tailwind-merge'
 import type { Settings, TypedSettings } from '../../preload/api'
 import { formatTeamCode } from '../../protocol'
 import { onDirectLink, useDirectLinkStore } from '../store/directLink'
+import { saveSettings } from '../store/hub'
 
 const actionClass = 'self-start cursor-pointer text-rose-100/80 hover:text-rose-500/80'
 const fieldClass =
@@ -59,7 +60,7 @@ export const SettingsScreen = () => {
   const save = async (event: FormEvent) => {
     event.preventDefault()
     if (!typed || !changed) return
-    const saved = await window.redlink.writeSettings(typed)
+    const saved = await saveSettings(typed)
     setRejected(!saved)
     if (saved) show(saved)
   }

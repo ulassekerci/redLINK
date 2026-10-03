@@ -19,6 +19,8 @@ const api: RedlinkApi = {
   onBluetoothDevices: subscribe('bluetooth:devices'),
   pickBluetoothDevice: (id) => ipcRenderer.send('bluetooth:pick', id),
   cancelBluetoothScan: () => ipcRenderer.send('bluetooth:cancel'),
+  directLinkStarted: () => ipcRenderer.send('direct-link:started'),
+  directLinkEnded: () => ipcRenderer.send('direct-link:ended'),
   saveCsv: (defaultName, csv) => ipcRenderer.invoke('csv:save', defaultName, csv),
   readSettings: () => ipcRenderer.invoke('settings:read'),
   writeSettings: (typed) => ipcRenderer.invoke('settings:write', typed),

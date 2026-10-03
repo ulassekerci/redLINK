@@ -19,12 +19,17 @@ export interface RedlinkApi {
   pickBluetoothDevice: (id: string) => void
   // Ends the scan with no device.
   cancelBluetoothScan: () => void
+  // Tells main that a board was picked for a direct link, which takes this
+  // laptop off the hub, or that the direct link has ended, which puts it back.
+  directLinkStarted: () => void
+  directLinkEnded: () => void
   // Opens the system's save dialog with the given default file name, and
   // writes the CSV where the person chooses. Resolves when the dialog closes.
   saveCsv: (defaultName: string, csv: string) => Promise<void>
   // The settings this instance read on launch or last saved.
   readSettings: () => Promise<Settings>
-  // Stores the three values together and resolves with them as stored.
+  // Stores the three values together and resolves with them as stored; main
+  // then joins the hub with them if they differ from what it was running on.
   // Resolves with null, and stores nothing, when the team code is not valid.
   writeSettings: (typed: TypedSettings) => Promise<Settings | null>
 }

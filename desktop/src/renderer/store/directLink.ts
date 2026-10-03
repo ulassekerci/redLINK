@@ -19,7 +19,7 @@ interface DirectLinkState {
   start: () => void
   pick: (id: string) => void
   cancel: () => void
-  // Closes the link.
+  // Closes the link and puts this laptop back on the hub.
   stop: () => void
 }
 
@@ -42,6 +42,9 @@ export const useDirectLinkStore = create<DirectLinkState>()((set, get) => {
 
   const connect = (device: BluetoothDevice) => {
     set({ phase: 'connecting', devices: [] })
+    // A board was picked: main leaves the hub, and from here on only the
+    // direct link writes the store.
+    window.redlink.directLinkStarted()
     // A direct link has no GPS. A fix left from the hub is dropped, so the
     // map shows none and the CSV's GPS cells are empty.
     useVehicleStore.setState({ gps: null })
@@ -83,6 +86,7 @@ export const useDirectLinkStore = create<DirectLinkState>()((set, get) => {
       polling?.stop()
       polling = null
       set({ phase: 'off' })
+      window.redlink.directLinkEnded()
     },
   }
 })
