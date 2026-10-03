@@ -58,7 +58,7 @@ Main sends the renderer parsed samples and one connection state. The preload scr
 
 - A field missing from a short setup reply is absent from the sample, not zero.
 - Position, board ID, number of boards and battery capacity are parsed and not handed on.
-- In version mismatch main hands the renderer no samples.
+- Main hands the renderer samples only while the state is live or board unreachable: none before the first status message, and none in version mismatch.
 
 **Connection state:** one value, sent whenever it changes: one of the eight states in the hub spec's section 3, with the two version numbers when the state is version mismatch.
 
@@ -71,7 +71,7 @@ Main sends the renderer parsed samples and one connection state. The preload scr
 
 Speed and distance are the board's own figures. The wheel, gear and pole constants in `utils/erpm.ts` are gone, and the app computes neither from ERPM or tachometer counts.
 
-Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md).
+Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md). Handing on nothing before the first status message was decided in ticket 30.
 
 ### 2.4 The protocol module
 
@@ -140,12 +140,12 @@ Today's dashboard is the feature bar. Kept as they are: the two gauges with thei
 - **Fault warning:** a non-zero fault code shows the warning banner with the fault's name: the firmware 6.06 fault code name without the `FAULT_CODE_` prefix, as on the phone. A code the app has no name for is shown as its number.
 - **Map:** the latest GPS fix as a marker on the existing map style. With no fix yet, and always on a direct link, the map says there is no location (3.3). The style, tiles, sprites and glyphs are fetched from `tiles.openfreemap.org`, so the map needs internet; a viewer has it by definition.
 - **Middle section:** while the app is not live it is the waiting screen. Once live it is the trip meter. Section 3.2 has the detail.
-- **Dimming:** in board unreachable and phone lost, and on a direct link whose board is not answering, the gauges and the bottom section keep their last values at reduced opacity, and the trip meter stays up. In version mismatch nothing from the stream is shown.
+- **Dimming:** in board unreachable and phone lost, and on a direct link whose board is not answering, the gauges and the bottom section keep their last values at reduced opacity, and the trip meter stays up. As a viewer they stay dimmed in every state but live for as long as they hold values, so after the phone is lost the last speed is not at full brightness beside the waiting screen. In version mismatch nothing from the stream is shown: entering it clears the vehicle store, and everything reads zero.
 - **Before the first sample** everything reads zero, as today.
 
 **Dropped from `web/`:** `socket.io-client`, `services/socket`, `store/socket.ts`, `components/MiddleSection/Sources.tsx`, `utils/erpm.ts`, `services/bluetooth/commands/get-values.ts` (a setup-values parser in the protocol module replaces it), `services/bluetooth/test.ts`, the `Mock` device CRC bypass, and the `VITE_SOCKET_URL` setting.
 
-Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md). Keeping the Aspilsan percentage, and showing fault names without their prefix, were decided while writing this spec.
+Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md). Keeping the Aspilsan percentage, and showing fault names without their prefix, were decided while writing this spec. Dimming in every state but live, and clearing the store on version mismatch, were decided in ticket 30, on seeing the app.
 
 ### 2.10 The trip meter and the CSV export
 

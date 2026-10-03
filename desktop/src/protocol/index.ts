@@ -1,8 +1,9 @@
 // The wire format of protocol/README.md: framing, the board commands, our
-// messages and the team code. Plain TypeScript with no Electron, Node or DOM
+// messages and the team code, with the public hub's address. Plain TypeScript with no Electron, Node or DOM
 // imports, so main uses it for the hub and the renderer for the direct link.
 export { crc16 } from './crc'
 export { FrameDecoder, encodeFrame } from './framing'
+export { PUBLIC_HUB } from './hub'
 export {
   COMM_CUSTOM_APP_DATA,
   COMM_FW_VERSION,
@@ -20,7 +21,7 @@ export {
   type Status,
   type ValuesSetup,
 } from './messages'
-export { adcSample, boardSample, type AdcSample, type BoardSample, type GpsFix } from './samples'
+export { adcSample, boardSample, gpsFix, type AdcSample, type BoardSample, type GpsFix } from './samples'
 export {
   ALPHABET,
   formatTeamCode,

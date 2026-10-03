@@ -3,22 +3,28 @@ import { TEKLogo } from './Logo'
 import { TripMeter } from './TripMeter'
 import { DeviceList } from './DeviceList'
 import { StatusLine } from './StatusLine'
+import { WaitingScreen } from './WaitingScreen'
 import { onDirectLink, useDirectLinkStore } from '../../store/directLink'
+import { useHubStore } from '../../store/hub'
 
 const actionClass = 'cursor-pointer text-rose-100/80 hover:text-rose-500/80'
 
 export const MiddleSection = () => {
   const { phase, stop } = useDirectLinkStore()
+  const watching = useHubStore((state) => state.watching)
+  const waiting = phase === 'off' && !watching
 
-  // Until the waiting screen (ticket 30), the app off a direct link shows the
-  // logo. A direct link is started from settings.
+  // As a viewer the middle is the waiting screen until the stream is on the
+  // dashboard, then the trip meter. A direct link is started from settings.
   return (
     <div className='flex flex-col relative items-center text-xl w-[360px]'>
-      <AnimatePresence>{phase === 'off' && <TEKLogo />}</AnimatePresence>
-      {phase === 'off' && (
-        <div className='absolute top-24 flex flex-col items-center gap-4'>
+      <AnimatePresence>{waiting && <TEKLogo />}</AnimatePresence>
+      {waiting && <WaitingScreen />}
+      {phase === 'off' && watching && (
+        <>
           <StatusLine />
-        </div>
+          <TripMeter />
+        </>
       )}
       {phase === 'choosing' && (
         <>

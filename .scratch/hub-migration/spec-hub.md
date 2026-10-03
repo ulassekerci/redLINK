@@ -113,30 +113,30 @@ A viewer with a team code joins by itself and keeps trying for as long as the ap
 
 **One lobby visit:**
 
-1. `PING` the lobby ID. If the hub cannot be reached, the state is hub unreachable. On `NULL` the state is phone not found. On `PONG` continue; the state is joining.
+1. `PING` the lobby ID. If the hub cannot be reached, or has not answered within 5 s, the state is hub unreachable. On `NULL` the state is phone not found. On `PONG` continue; the state is joining.
 2. Make a fresh token.
-3. Connect and write the login line `VESCTOOL:<lobby ID>:<password>\n`.
-4. Write the lobby request as its own write, never in the same write as the login line, and repeat it every 100 ms for about 500 ms. Then close.
+3. Connect and write the login line `VESCTOOL:<lobby ID>:<password>\n`. If the connection is not made within 5 s, wait and visit again.
+4. Write the lobby request as its own write, never in the same write as the login line: the first 100 ms after the login line, then every 100 ms, five writes in all. Then close. If the hub closes the connection first, another viewer's visit has displaced this one; continue with step 5, because a request may have got through.
 5. `PING` the viewer's own ID every 250 ms for 2 s.
 6. On `PONG`, attach with `VESCTOOL:<viewer ID>:<password>\n` and start the heartbeat. On no `PONG`, wait and visit again.
 
 The repeats in step 4 ride out the short windows in which the hub discards bytes. The visit is kept short because the lobby holds one viewer at a time: two viewers can displace each other only there, and the retry covers the one that lost.
 
-**Waiting between visits:** a random 1 to 2 s, so that viewers returning together do not displace each other round after round. After a minute with no `PONG` from the lobby, every 5 s. A `PONG` from the lobby restores the 1 to 2 s pace. There is no give-up.
+**Waiting between visits:** a random 1 to 2 s, so that viewers returning together do not displace each other round after round. After a minute with no `PONG` from the lobby, every 5 s. The minute is counted from the lobby's last `PONG`, or from launch or from the moment the phone was lost when there has been none since. A `PONG` from the lobby restores the 1 to 2 s pace. There is no give-up.
 
 **Attached:**
 
-- The viewer sends a heartbeat once a second, as its own write. A heartbeat lost to the hub is covered by the next.
+- The viewer sends a heartbeat once a second, as its own write. The first follows the login line by 100 ms. A heartbeat lost to the hub is covered by the next.
 - The first status message makes the viewer live, board unreachable or version mismatch, by its two bytes.
-- After 3 s without a status message the state is phone lost: the viewer closes its socket and visits the lobby with a fresh token. It does not `PING` its old registration, which the hub may answer `PONG` for long after the bridge is gone.
-- If the hub closes the viewer's socket, the viewer visits the lobby with a fresh token.
+- After 3 s without a status message, counted from attaching while none has arrived, the state is phone lost: the viewer closes its socket and visits the lobby at once, without the wait between visits, with a fresh token. It does not `PING` its old registration, which the hub may answer `PONG` for long after the bridge is gone.
+- If the hub closes the viewer's socket, the state is phone lost and the viewer visits the lobby at once with a fresh token.
 - A viewer that is watching cannot be kicked by another laptop, because no other laptop knows its ID.
 
 **Leaving:** a viewer leaves by closing its socket. The bridge closes the registration 10 s after the last heartbeat. The desktop app leaves when a board is picked for a direct link.
 
 **A code from the wrong phone** is an unknown ID to the hub, so the viewer sees phone not found and cannot tell it from the phone not running.
 
-Tickets: [How several pit laptops watch at once](issues/04-how-several-pit-laptops-watch-at-once.md), [What travels on the stream](issues/05-what-travels-on-the-stream.md), [Desktop app architecture](issues/11-desktop-app-architecture.md), [Stale re-registration on the public hub](issues/13-stale-re-registration-on-the-public-hub.md).
+Tickets: [How several pit laptops watch at once](issues/04-how-several-pit-laptops-watch-at-once.md), [What travels on the stream](issues/05-what-travels-on-the-stream.md), [Desktop app architecture](issues/11-desktop-app-architecture.md), [Stale re-registration on the public hub](issues/13-stale-re-registration-on-the-public-hub.md), [Viewer joins the hub and goes live](issues/30-viewer-joins-the-hub-and-goes-live.md). The 5 s limits, the 100 ms pause after a login line, carrying on after being displaced in the lobby, where the minute is counted from, where the 3 s are counted from, and phone lost when the hub closes the socket were decided in ticket 30, while building the desktop hub client.
 
 ### 2.10 Host, port and the self-hosted hub
 
@@ -157,13 +157,13 @@ This spec shows nothing to a user. It names the states a viewer can be in on the
 | State | Condition |
 |---|---|
 | no team code | no code is stored |
-| hub unreachable | a connection to the host and port cannot be made |
+| hub unreachable | a connection to the host and port cannot be made, or a `PING` of the lobby is not answered within 5 s |
 | phone not found | `PING` on the lobby ID answers `NULL` |
-| joining | the lobby answered `PONG` and the viewer is not yet receiving status |
+| joining | from launch with a code stored until the lobby first answers; and once the lobby answered `PONG`, until status arrives |
 | live | status arriving, same major version, board state 0 |
 | board unreachable | status arriving, same major version, board state 1 |
 | version mismatch | status arriving, different major version |
-| phone lost | attached, and no status for 3 s |
+| phone lost | attached, and no status for 3 s or the hub closed the socket; until the lobby answers |
 
 Board states, in the status message: **answering** (0) and **unreachable** (1).
 

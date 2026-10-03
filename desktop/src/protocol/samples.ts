@@ -25,3 +25,9 @@ export function adcSample(message: DecodedAdc, receivedAt: number): AdcSample {
   const { type, ...fields } = message
   return { ...fields, received_at: receivedAt }
 }
+
+export function gpsFix(message: Gps, receivedAt: number): GpsFix {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { type, ...fields } = message
+  return { ...fields, received_at: receivedAt }
+}

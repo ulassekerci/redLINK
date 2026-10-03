@@ -2,9 +2,11 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'node:path'
 import { handleBluetoothChooser } from './bluetooth'
 import { handleCsvSave } from './csv'
+import { startHubClient } from './hub-client'
+import { connectToHub } from './hub-socket'
 import { readSettings, saveSettings } from './settings'
-import { appVersion } from './version'
-import type { TypedSettings } from '../preload/api'
+import { appMajorVersion, appVersion } from './version'
+import type { Settings, TypedSettings } from '../preload/api'
 
 // This instance holds the settings it read on launch or last saved. A change
 // saved in another window reaches this one when it is restarted.
@@ -19,6 +21,27 @@ const handleSettings = async () => {
     return saved
   })
   return settings
+}
+
+// The hub client lives here and not in the renderer, whose timers a hidden
+// window may slow, which would starve the heartbeat. With a team code stored
+// it starts its first lobby visit now, with no click. The renderer is sent
+// each sample and each change of the connection state, and reads the state
+// once when it starts, having missed what was sent before.
+const handleHub = (window: BrowserWindow, settings: Settings) => {
+  const send = (channel: string, value: unknown) => {
+    if (!window.isDestroyed()) window.webContents.send(channel, value)
+  }
+  const client = startHubClient(
+    { ...settings, majorVersion: appMajorVersion },
+    {
+      connect: connectToHub,
+      clock: { now: Date.now, setTimeout, clearTimeout: (timer) => clearTimeout(timer as NodeJS.Timeout) },
+      random: Math.random,
+    },
+    { state: (state) => send('hub:state', state), sample: (sample) => send('hub:sample', sample) },
+  )
+  ipcMain.handle('hub:state', () => client.state())
 }
 
 const createWindow = (route: string) => {
@@ -45,6 +68,7 @@ const createWindow = (route: string) => {
   } else {
     window.loadFile(join(import.meta.dirname, '../renderer/index.html'), { hash: route })
   }
+  return window
 }
 
 // No single-instance lock: a second start is a second, independent viewer.
@@ -53,7 +77,8 @@ app.whenReady().then(async () => {
   handleCsvSave()
   const settings = await handleSettings()
   // With no team code stored the app opens on the settings screen.
-  createWindow(settings.teamCode ? '/' : '/settings')
+  const window = createWindow(settings.teamCode ? '/' : '/settings')
+  handleHub(window, settings)
 })
 
 // One window, and closing it quits the app on macOS as on Windows.

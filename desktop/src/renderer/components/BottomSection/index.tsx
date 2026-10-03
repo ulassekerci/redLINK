@@ -3,7 +3,7 @@ import { Battery } from './Battery'
 import { NavLink, useLocation } from 'react-router'
 import { Mosfet } from './Mosfet'
 import { twMerge } from 'tailwind-merge'
-import { useDimmed } from '../../store/directLink'
+import { useDimmed } from '../../hooks/useDimmed'
 
 export const BottomSection = () => {
   const location = useLocation()

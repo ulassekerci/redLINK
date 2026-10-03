@@ -1,13 +1,11 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import type { Settings, TypedSettings } from '../preload/api'
-import { normaliseTeamCode } from '../protocol'
+import { PUBLIC_HUB, normaliseTeamCode } from '../protocol'
 
 // The settings file (desktop spec 2.7): one plain-text JSON file that main
 // alone reads and writes, holding the team code without its dash, the hub host
 // and the hub port.
-
-export const PUBLIC_HUB = { host: 'veschub.vedder.se', port: 65101 }
 
 const isPort = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 65535

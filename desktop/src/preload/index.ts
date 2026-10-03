@@ -1,13 +1,22 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { BluetoothDeviceEntry, RedlinkApi } from './api'
+import type { RedlinkApi } from './api'
+
+// Subscribes a listener to what main sends on a channel, and returns a
+// function that unsubscribes.
+const subscribe =
+  <T>(channel: string) =>
+  (listener: (value: T) => void) => {
+    const handler = (_event: IpcRendererEvent, value: T) => listener(value)
+    ipcRenderer.on(channel, handler)
+    return () => ipcRenderer.off(channel, handler)
+  }
 
 const api: RedlinkApi = {
   version: () => ipcRenderer.invoke('app:version'),
-  onBluetoothDevices: (listener) => {
-    const handler = (_event: IpcRendererEvent, devices: BluetoothDeviceEntry[]) => listener(devices)
-    ipcRenderer.on('bluetooth:devices', handler)
-    return () => ipcRenderer.off('bluetooth:devices', handler)
-  },
+  onSample: subscribe('hub:sample'),
+  onConnectionState: subscribe('hub:state'),
+  readConnectionState: () => ipcRenderer.invoke('hub:state'),
+  onBluetoothDevices: subscribe('bluetooth:devices'),
   pickBluetoothDevice: (id) => ipcRenderer.send('bluetooth:pick', id),
   cancelBluetoothScan: () => ipcRenderer.send('bluetooth:cancel'),
   saveCsv: (defaultName, csv) => ipcRenderer.invoke('csv:save', defaultName, csv),
