@@ -3,13 +3,17 @@ import { useVehicleData } from '../hooks/useVehicleData'
 import Map, { Marker } from 'react-map-gl/maplibre'
 import type { StyleSpecification } from 'maplibre-gl'
 import mapStyle from '../assets/mapstyle.json'
+import { onDirectLink, useDirectLinkStore } from '../store/directLink'
 
 export const MapScreen = () => {
-  const { location } = useVehicleData()
+  const data = useVehicleData()
+  // A direct link has no GPS; a fix left from before it is not shown.
+  const directLink = useDirectLinkStore((state) => onDirectLink(state.phase))
+  const gps = directLink ? null : data.gps
 
   const initialState = {
-    latitude: location?.coords.latitude,
-    longitude: location?.coords.longitude,
+    latitude: gps?.gps_lat_deg,
+    longitude: gps?.gps_lon_deg,
     zoom: 17.5,
   }
 
@@ -21,15 +25,15 @@ export const MapScreen = () => {
         transition={{ type: 'spring', damping: 20, stiffness: 200 }}
         className='w-full mx-18 min-h-[80vh] border-4 border-neutral-800 rounded-4xl bg-neutral-950'
       >
-        {initialState.latitude ? (
+        {gps ? (
           <Map
             initialViewState={initialState}
             style={{ width: '100%', height: '80vh', borderRadius: 32 }}
             mapStyle={mapStyle as StyleSpecification}
             attributionControl={false}
           >
-            {location && (
-              <Marker latitude={location.coords.latitude} longitude={location.coords.longitude}>
+            {gps && (
+              <Marker latitude={gps.gps_lat_deg} longitude={gps.gps_lon_deg}>
                 <div className='bg-rose-600 w-4 h-4 rounded-full' />
               </Marker>
             )}

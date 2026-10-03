@@ -20,4 +20,5 @@ export {
   type Status,
   type ValuesSetup,
 } from './messages'
+export { adcSample, boardSample, type AdcSample, type BoardSample, type GpsFix } from './samples'
 export { ALPHABET, generateToken, hubPassword, isToken, lobbyId, normaliseTeamCode, viewerId } from './team-code'

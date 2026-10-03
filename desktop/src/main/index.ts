@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'node:path'
+import { handleBluetoothChooser } from './bluetooth'
 import { appVersion } from './version'
 
 const createWindow = () => {
@@ -13,8 +14,13 @@ const createWindow = () => {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      // The direct link polls the board from the renderer every 50 ms, which
+      // a hidden or minimised window would otherwise slow to once a second.
+      backgroundThrottling: false,
     },
   })
+
+  handleBluetoothChooser(window)
 
   if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
     window.loadURL(process.env.ELECTRON_RENDERER_URL)

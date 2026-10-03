@@ -1,0 +1,4 @@
+# Packaging is set up in full by ticket 32; this holds what earlier tickets need.
+mac:
+  extendInfo:
+    NSBluetoothAlwaysUsageDescription: redLINK, araca doğrudan bağlanmak için Bluetooth kullanır.

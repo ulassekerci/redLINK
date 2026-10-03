@@ -1,13 +1,14 @@
 import { LucideTriangleAlert } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useVehicleData } from '../hooks/useVehicleData'
+import { faultName } from '../utils/faults'
 
 export const Warning = () => {
-  const { faultCode } = useVehicleData()
+  const { fault_code } = useVehicleData()
 
   return (
     <AnimatePresence>
-      {faultCode !== 0 && (
+      {fault_code !== 0 && (
         <motion.div
           initial={{ y: -200 }}
           animate={{ y: 0 }}
@@ -16,7 +17,7 @@ export const Warning = () => {
         >
           <div className='flex flex-col justify-center gap-2'>
             <span className='text-xl font-medium'>Uyarı</span>
-            <span>{FaultCode[faultCode]}</span>
+            <span>{faultName(fault_code)}</span>
           </div>
           <LucideTriangleAlert className='text-rose-500/80' size={48} />
         </motion.div>
@@ -25,33 +26,3 @@ export const Warning = () => {
   )
 }
 
-enum FaultCode {
-  FAULT_CODE_NONE = 0,
-  FAULT_CODE_OVER_VOLTAGE,
-  FAULT_CODE_UNDER_VOLTAGE,
-  FAULT_CODE_DRV,
-  FAULT_CODE_ABS_OVER_CURRENT,
-  FAULT_CODE_OVER_TEMP_FET,
-  FAULT_CODE_OVER_TEMP_MOTOR,
-  FAULT_CODE_GATE_DRIVER_OVER_VOLTAGE,
-  FAULT_CODE_GATE_DRIVER_UNDER_VOLTAGE,
-  FAULT_CODE_MCU_UNDER_VOLTAGE,
-  FAULT_CODE_BOOTING_FROM_WATCHDOG_RESET,
-  FAULT_CODE_ENCODER_SPI,
-  FAULT_CODE_ENCODER_SINCOS_BELOW_MIN_AMPLITUDE,
-  FAULT_CODE_ENCODER_SINCOS_ABOVE_MAX_AMPLITUDE,
-  FAULT_CODE_FLASH_CORRUPTION,
-  FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_1,
-  FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_2,
-  FAULT_CODE_HIGH_OFFSET_CURRENT_SENSOR_3,
-  FAULT_CODE_UNBALANCED_CURRENTS,
-  FAULT_CODE_BRK,
-  FAULT_CODE_RESOLVER_LOT,
-  FAULT_CODE_RESOLVER_DOS,
-  FAULT_CODE_RESOLVER_LOS,
-  FAULT_CODE_FLASH_CORRUPTION_APP_CFG,
-  FAULT_CODE_FLASH_CORRUPTION_MC_CFG,
-  FAULT_CODE_ENCODER_NO_MAGNET,
-  FAULT_CODE_ENCODER_MAGNET_TOO_STRONG,
-  FAULT_CODE_PHASE_FILTER,
-}
