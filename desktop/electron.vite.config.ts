@@ -2,9 +2,9 @@ import { defineConfig } from 'electron-vite'
 import react from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
 import svgr from 'vite-plugin-svgr'
-import { latestVersionTag, localVersion } from './scripts/version'
+import { buildVersion } from './scripts/version'
 
-const version = localVersion(latestVersionTag(import.meta.dirname))
+const version = buildVersion(import.meta.dirname)
 
 // https://electron-vite.org/config/
 export default defineConfig({

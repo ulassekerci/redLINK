@@ -35,12 +35,37 @@ Navigate to the desktop folder and install dependencies with [pnpm](https://pnpm
 cd desktop
 pnpm install
 ```
-Run the dashboard in a browser
+Run the app from source
 ```bash
 pnpm dev
 ```
-Or build it and serve the build
+Or package it for the system you are on
 ```bash
-pnpm build
-pnpm preview
+pnpm package
 ```
+A Mac gets `dist/redLINK-<version>-mac-arm64.dmg` and a Windows machine gets `dist/redLINK-<version>-win-x64.zip`. A Mac can build the Windows zip too, with `pnpm package --win`.
+
+## Opening the desktop app for the first time
+
+The packages are not signed with a paid certificate, so each system has to be told once that the app may run.
+
+### macOS (Apple silicon)
+
+1. Open the `dmg` and drag redLINK into Applications.
+2. Open redLINK. macOS says it could not verify the app. Click **Done**.
+3. Open System Settings, go to **Privacy & Security** and scroll down to **Security**.
+4. Click **Open Anyway** beside the line about redLINK, click **Open Anyway** again and enter your password.
+
+From then on redLINK opens like any other app.
+
+**Open Anyway** is offered for about an hour after step 2. If it is not there, open redLINK again and go back to step 3. On macOS 14 and older there is no trip to System Settings: right-click redLINK in Applications, choose **Open**, then **Open** again.
+
+### Windows (64-bit)
+
+1. Right-click the zip, choose **Extract All** and pick any folder. The app does not run from inside the zip.
+2. Open the folder and run `redLINK.exe`.
+3. SmartScreen says "Windows protected your PC". Click **More info**, then **Run anyway**.
+
+There is no installer. To remove the app, delete the folder.
+
+On a Windows 11 laptop with Smart App Control turned on there is no **Run anyway**: Smart App Control blocks unsigned apps outright, and redLINK runs only where it is off.

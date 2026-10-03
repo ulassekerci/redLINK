@@ -1,6 +1,7 @@
 {
   "name": "redlink-desktop",
   "private": true,
+  "author": "METU CET",
   "version": "0.0.0",
   "type": "module",
   "main": "out/main/index.js",
@@ -10,6 +11,7 @@
     "build": "tsc -b && electron-vite build",
     "lint": "eslint .",
     "preview": "electron-vite preview",
+    "package": "pnpm build && electron-builder",
     "test": "vitest run",
     "postinstall": "install-electron"
   },
@@ -37,6 +39,7 @@
     "@types/web-bluetooth": "^0.0.21",
     "@vitejs/plugin-react-swc": "^3.10.2",
     "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "eslint": "^9.29.0",
     "eslint-plugin-react-hooks": "^5.2.0",
