@@ -132,11 +132,11 @@ The repeats in step 4 ride out the short windows in which the hub discards bytes
 - If the hub closes the viewer's socket, the state is phone lost and the viewer visits the lobby at once with a fresh token.
 - A viewer that is watching cannot be kicked by another laptop, because no other laptop knows its ID.
 
-**Leaving:** a viewer leaves by closing its socket. The bridge closes the registration 10 s after the last heartbeat. The desktop app leaves when a board is picked for a direct link.
+**Leaving:** a viewer leaves by closing its socket. The bridge closes the registration 10 s after the last heartbeat. The desktop app leaves when a board is picked for a direct link, and when a different team code, host or port is saved. When it joins again it does so as on launch: the state is joining, the first lobby visit is made at once, and the minute before the 5 s pace is counted from that moment.
 
 **A code from the wrong phone** is an unknown ID to the hub, so the viewer sees phone not found and cannot tell it from the phone not running.
 
-Tickets: [How several pit laptops watch at once](issues/04-how-several-pit-laptops-watch-at-once.md), [What travels on the stream](issues/05-what-travels-on-the-stream.md), [Desktop app architecture](issues/11-desktop-app-architecture.md), [Stale re-registration on the public hub](issues/13-stale-re-registration-on-the-public-hub.md), [Viewer joins the hub and goes live](issues/30-viewer-joins-the-hub-and-goes-live.md). The 5 s limits, the 100 ms pause after a login line, carrying on after being displaced in the lobby, where the minute is counted from, where the 3 s are counted from, and phone lost when the hub closes the socket were decided in ticket 30, while building the desktop hub client.
+Tickets: [How several pit laptops watch at once](issues/04-how-several-pit-laptops-watch-at-once.md), [What travels on the stream](issues/05-what-travels-on-the-stream.md), [Desktop app architecture](issues/11-desktop-app-architecture.md), [Stale re-registration on the public hub](issues/13-stale-re-registration-on-the-public-hub.md), [Viewer joins the hub and goes live](issues/30-viewer-joins-the-hub-and-goes-live.md). The 5 s limits, the 100 ms pause after a login line, carrying on after being displaced in the lobby, where the minute is counted from, where the 3 s are counted from, and phone lost when the hub closes the socket were decided in ticket 30, while building the desktop hub client. Joining again as on launch was decided in ticket 31.
 
 ### 2.10 Host, port and the self-hosted hub
 
@@ -159,7 +159,7 @@ This spec shows nothing to a user. It names the states a viewer can be in on the
 | no team code | no code is stored |
 | hub unreachable | a connection to the host and port cannot be made, or a `PING` of the lobby is not answered within 5 s |
 | phone not found | `PING` on the lobby ID answers `NULL` |
-| joining | from launch with a code stored until the lobby first answers; and once the lobby answered `PONG`, until status arrives |
+| joining | from launch, or from joining again after leaving, with a code stored until the lobby first answers; and once the lobby answered `PONG`, until status arrives |
 | live | status arriving, same major version, board state 0 |
 | board unreachable | status arriving, same major version, board state 1 |
 | version mismatch | status arriving, different major version |

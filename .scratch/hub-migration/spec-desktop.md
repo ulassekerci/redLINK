@@ -89,23 +89,23 @@ The direct link connects the app to the board over Bluetooth with no bridge and 
 - **Where it runs:** Web Bluetooth in the renderer, on the Nordic UART service (`6e400001-b5a3-f393-e0a9-e50e24dcca9e`), writing to the RX characteristic (`6e400002-…`) and listening on the TX characteristic (`6e400003-…`), as `web/` does today. A native Bluetooth library in main is not used.
 - **Starting it:** the "connect to board directly" action, on the settings screen only (3.4), calls `navigator.bluetooth.requestDevice()` with the Nordic UART service as its only filter, which starts a scan. Devices are not filtered by name, as the phone's picker does not: the car, the spare VESC and any other board offering the service all appear. Today's `redBLE` name filter is dropped.
 - **Picking the board:** the person picks. Electron has no built-in chooser, so the app draws its own: main receives Electron's `select-bluetooth-device` event, which repeats with the devices found so far, and passes the list to the renderer, which shows it in the middle section (3.2). Clicking an entry makes main answer the event with that device; cancelling makes main answer with none, which ends the scan. A device that reports no name is listed by its ID. The list is shown even when it has one entry, and nothing is picked automatically. The scan has no time limit: it runs until a pick or a cancel. While the list is open the app stays on the hub as it was.
-- **Hub and direct link are exclusive.** When a board has been picked, the renderer tells main, and main leaves the hub: it closes its socket and stops visiting the lobby. Heartbeats stop, so the bridge closes the registration by itself. From then on the store is written only by the direct link.
+- **Hub and direct link are exclusive.** When a board has been picked, the renderer tells main, and main leaves the hub: it closes its socket and stops visiting the lobby. Heartbeats stop, so the bridge closes the registration by itself. From then on the store is written only by the direct link. Off the hub the connection state is what it is on launch, joining with a team code stored and no team code without; it is not shown, because the status line carries the direct link's own lines (3.1).
 - **Polling:** the renderer polls as the bridge does, with the cycle and the 250 ms and 2 s timeouts of the hub spec's "Polling and the stream": `COMM_GET_VALUES_SETUP`, then `COMM_GET_DECODED_ADC`, every 50 ms. It writes board samples and ADC samples into the same store, stamped on arrival. It does not send `COMM_FW_VERSION`.
 - **No GPS.** There are no GPS fixes on a direct link; the map says so (2.9).
 - **No protocol version.** The direct link talks to the board, not the bridge, so no version is compared.
 - **When the Bluetooth link drops by itself,** or the board stops answering for 2 s, the app stays on the direct link: the gauges keep their last values, dimmed, the status line says the board is not answering (3.1), and the renderer reconnects to the same device every 2 s. It does not fall back to the hub.
-- **Ending it:** the disconnect action (3.2). The renderer closes the Bluetooth link and tells main, which starts visiting the lobby again.
+- **Ending it:** the disconnect action (3.2). The renderer closes the Bluetooth link and tells main, which starts visiting the lobby again as on launch: at once, with a fresh token and at the 1 to 2 s pace. A window that is reloaded has no direct link, so a reload during one ends it too.
 - **The seam:** the polling loop talks to a transport object (write bytes, receive bytes, connected or not). Web Bluetooth is one implementation; the tests in section 4 use a fake one. There is no selectable simulated board in the desktop app.
 - **Removed from `web/`:** the `Mock` device name that skipped the CRC check, and `bluetooth/test.ts`.
 
-Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Testing without the car](issues/16-testing-without-the-car.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md). The device list replaces that ticket's "first device whose name starts with `redBLE`", which picked wrongly with more than one board powered; it, the filter by service instead of by name, and staying on the hub until a board is picked were decided while writing this spec.
+Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [Testing without the car](issues/16-testing-without-the-car.md), [What the phone log contains](issues/08-what-the-phone-log-contains.md). The device list replaces that ticket's "first device whose name starts with `redBLE`", which picked wrongly with more than one board powered; it, the filter by service instead of by name, and staying on the hub until a board is picked were decided while writing this spec. The state while off the hub, and a reload ending the direct link, were decided in ticket 31.
 
 ### 2.6 The team code
 
 - The phone generates the team code; the pit crew types it into each laptop once. This app never generates one.
 - **First launch:** with no code stored, the app opens on the settings screen.
 - **Typing:** lower case is accepted, dashes and spaces are ignored, and a code whose check character is wrong is rejected with a message (3.4) and not stored. The rules and the check character are the hub spec's "Team code and hub identities".
-- **Changing it:** on the settings screen, at any time. Saving a different code makes main leave the hub and join with the new one.
+- **Changing it:** on the settings screen, at any time. Saving a different code makes main leave the hub and join with the new one, or during a direct link, join with it when the direct link ends (2.7).
 - **Where it is shown:** on the waiting screen (3.2) as `XXXX-XXXX`, so a laptop set up with another phone's code can be spotted. A valid code from the wrong phone looks the same as the phone not running.
 - **Derived values:** the lobby ID, the viewer ID, the password and the token are built as the hub spec says, in the protocol module.
 
@@ -117,14 +117,15 @@ Tickets: [How hub credentials are set and shared](issues/10-how-hub-credentials-
 - It is plain text. The keychain and the Windows credential store are not used: the code crosses the internet in clear text on every connection.
 - A missing or unreadable file is treated as no settings: no team code, and the public hub's host and port.
 - Several instances share the file. An instance reads it on launch and when it saves; a change saved in one window reaches the others when they are restarted.
+- A save that changes none of the three leaves the viewer attached as it is. A change saved during a direct link is used when the direct link ends.
 - The gauge style toggle (`uiState`) stays where it is, in the renderer's local storage.
 
-Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [How hub credentials are set and shared](issues/10-how-hub-credentials-are-set-and-shared.md). The file's name, and that other windows see a change only on restart, were decided while writing this spec.
+Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [How hub credentials are set and shared](issues/10-how-hub-credentials-are-set-and-shared.md). The file's name, and that other windows see a change only on restart, were decided while writing this spec. Leaving the viewer alone on an unchanged save, and holding a change until a direct link ends, were decided in ticket 31.
 
 ### 2.8 Hub host and port
 
 - Settings has a host and a port, pre-filled with the public hub's from the hub spec, edited by hand. Moving to a self-hosted hub is typing its host on each laptop.
-- They can be changed at any time, unlike on the phone. Saving a change makes main leave the hub and join on the new host.
+- They can be changed at any time, unlike on the phone. Saving a change makes main leave the hub and join on the new host, or during a direct link, join there when it ends (2.7).
 - A host field left empty, or a port that is not a number from 1 to 65535, is saved as the public hub's, and the field then shows it. There is no message: clearing the host is how a laptop is put back on the public hub.
 - When they differ from the public hub's, the waiting screen shows `host:port` beside the team code (3.2). A laptop left on the old host otherwise looks the same as the phone not running. When they are the public hub's they are shown only in settings.
 - The team code is unaffected by a change of host.

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ConnectionState, Settings } from '../../preload/api'
+import type { ConnectionState, Settings, TypedSettings } from '../../preload/api'
 import { onDirectLink, useDirectLinkStore } from './directLink'
 import { useVehicleStore } from './vehicle'
 
@@ -10,8 +10,8 @@ interface HubState {
   // The stream is on the dashboard: live or board unreachable, and phone lost
   // when it follows one of those.
   watching: boolean
-  // The settings the hub client runs on: those read on launch. Null until
-  // main has answered.
+  // The settings the hub client runs on: those read on launch or last saved.
+  // Null until main has answered.
   settings: Settings | null
 }
 
@@ -23,8 +23,8 @@ export const useHubStore = create<HubState>()(() => ({
 
 const showsStream = ({ state }: ConnectionState) => state === 'live' || state === 'board_unreachable'
 
-// Until main leaves the hub for a direct link (ticket 31), the hub is kept
-// out of the vehicle store here while one is on.
+// Main leaves the hub when a board is picked for a direct link, but what it
+// sent just before may arrive after. That is kept out of the vehicle store.
 const fillsStore = () => !onDirectLink(useDirectLinkStore.getState().phase)
 
 const setConnection = (connection: ConnectionState) => {
@@ -49,6 +49,15 @@ window.redlink.readConnectionState().then((connection) => {
   if (!heard) setConnection(connection)
 })
 window.redlink.readSettings().then((settings) => useHubStore.setState({ settings }))
+
+// Stores the settings screen's three fields through main, which joins the hub
+// with them if they differ. Resolves with them as stored, or with null when
+// the team code is not valid.
+export const saveSettings = async (typed: TypedSettings) => {
+  const settings = await window.redlink.writeSettings(typed)
+  if (settings) useHubStore.setState({ settings })
+  return settings
+}
 
 // The stream fills the store the direct link fills.
 window.redlink.onSample((sample) => {

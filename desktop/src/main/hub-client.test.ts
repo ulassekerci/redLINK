@@ -10,6 +10,8 @@ const ascii = (text: string) => new TextEncoder().encode(text)
 
 const HOST = 'hub.example.org'
 const PORT = 65101
+const OTHER_HOST = 'other.example.org'
+const OTHER_PORT = 65102
 const START = 1_000_000
 
 class FakeClock implements Clock {
@@ -111,6 +113,9 @@ const LOBBY_LOGIN = 'VESCTOOL:REDLINKK7QM3XPC:K7QM3XPC\n'
 const TOKEN = '4HT9WQ2B'
 const VIEWER_PING = 'PING:REDLINKK7QM3XPC4HT9WQ2B:0\n'
 const VIEWER_LOGIN = 'VESCTOOL:REDLINKK7QM3XPC4HT9WQ2B:K7QM3XPC\n'
+// A second team code, and its lobby PING.
+const OTHER_CODE = 'ABCDEFGH'
+const OTHER_LOBBY_PING = 'PING:REDLINKABCDEFGH:0\n'
 const LOBBY_REQUEST = frameOf('lobby-request')
 const HEARTBEAT = frameOf('heartbeat')
 // Status from a phone on major version 1.
@@ -683,6 +688,210 @@ describe('hub-client', () => {
         viewer.receive(frameOf('custom-unknown-type'))
       }
       expect(client.state()).toEqual({ state: 'phone_lost' })
+    })
+  })
+
+  describe('a direct link', () => {
+    test('takes the viewer off the hub: it closes its socket, stops its heartbeat and visits no more', () => {
+      const { clock, sockets, samples, client, attach } = setup()
+      const viewer = attach()
+      viewer.receive(ANSWERING)
+      clock.advance(1000)
+      const opened = sockets.length
+      const written = viewer.writes.length
+
+      client.directLinkStarted()
+      expect(viewer.closed).toBe(true)
+      // What the hub still delivers on the closed socket is not handed on.
+      viewer.receive(frameOf('reply-values-setup'))
+      viewer.drop()
+      clock.advance(600_000)
+      expect(sockets).toHaveLength(opened)
+      expect(viewer.writes).toHaveLength(written)
+      expect(samples).toEqual([])
+    })
+
+    test('stops the wait for the next visit when the phone was not found', () => {
+      const { clock, sockets, client } = setup()
+      sockets[0].answer('NULL')
+      client.directLinkStarted()
+      clock.advance(600_000)
+      expect(sockets).toHaveLength(1)
+    })
+
+    test('stops a visit under way', () => {
+      const { clock, sockets, client } = setup()
+      client.directLinkStarted()
+      expect(sockets[0].closed).toBe(true)
+      sockets[0].answer('PONG')
+      clock.advance(600_000)
+      expect(sockets).toHaveLength(1)
+    })
+
+    test('leaves the state as it is on launch', () => {
+      const { states, client, attach } = setup()
+      attach().receive(ANSWERING)
+      client.directLinkStarted()
+      expect(client.state()).toEqual({ state: 'joining' })
+      expect(states.slice(-2)).toEqual([{ state: 'live' }, { state: 'joining' }])
+    })
+
+    test('visits the lobby again when it ends, at once and with a fresh token', () => {
+      const { clock, sockets, random, client, last, attach } = setup()
+      attach().receive(ANSWERING)
+      client.directLinkStarted()
+      clock.advance(600_000)
+      const opened = sockets.length
+
+      client.directLinkEnded()
+      expect(sockets).toHaveLength(opened + 1)
+      last().connect()
+      expect(last().login).toBe(LOBBY_PING)
+
+      random.token('ZZZZZZZZ')
+      last().answer('PONG')
+      last().connect()
+      clock.advance(500)
+      last().answer('PONG')
+      const viewer = last()
+      viewer.connect()
+      expect(viewer.login).toBe('VESCTOOL:REDLINKK7QM3XPCZZZZZZZZ:K7QM3XPC\n')
+      viewer.receive(ANSWERING)
+      expect(client.state()).toEqual({ state: 'live' })
+    })
+
+    test('looks for the phone at the 1 to 2 s pace when it ends, however long it lasted', () => {
+      const { clock, sockets, client, last } = setup()
+      client.directLinkStarted()
+      clock.advance(600_000)
+      client.directLinkEnded()
+      last().answer('NULL')
+      const opened = sockets.length
+      clock.advance(1500)
+      expect(sockets).toHaveLength(opened + 1)
+    })
+
+    test('with no team code changes nothing, when it starts or when it ends', () => {
+      const { clock, sockets, states, client } = setup(null)
+      client.directLinkStarted()
+      expect(client.state()).toEqual({ state: 'no_team_code' })
+      client.directLinkEnded()
+      clock.advance(600_000)
+      expect(sockets).toEqual([])
+      expect(states).toEqual([])
+    })
+
+    test('leaves a viewer alone when one ends that never started', () => {
+      const { sockets, client, attach } = setup()
+      const viewer = attach()
+      viewer.receive(ANSWERING)
+      const opened = sockets.length
+
+      client.directLinkEnded()
+      expect(viewer.closed).toBe(false)
+      expect(sockets).toHaveLength(opened)
+      expect(client.state()).toEqual({ state: 'live' })
+    })
+  })
+
+  describe('saved settings', () => {
+    test('with a different team code make the viewer leave and join with the new one', () => {
+      const { clock, sockets, random, client, last, attach } = setup()
+      const viewer = attach()
+      viewer.receive(ANSWERING)
+      const opened = sockets.length
+
+      client.settingsSaved({ teamCode: OTHER_CODE, hubHost: HOST, hubPort: PORT })
+      expect(viewer.closed).toBe(true)
+      expect(client.state()).toEqual({ state: 'joining' })
+      expect(sockets).toHaveLength(opened + 1)
+      last().connect()
+      expect(last().login).toBe(OTHER_LOBBY_PING)
+
+      random.token(TOKEN)
+      last().answer('PONG')
+      const lobby = last()
+      lobby.connect()
+      expect(lobby.login).toBe('VESCTOOL:REDLINKABCDEFGH:ABCDEFGH\n')
+      clock.advance(500)
+      last().answer('PONG')
+      last().connect()
+      expect(last().login).toBe('VESCTOOL:REDLINKABCDEFGH4HT9WQ2B:ABCDEFGH\n')
+
+      // The old registration is left behind: nothing more is written to it.
+      const written = viewer.writes.length
+      clock.advance(10_000)
+      expect(viewer.writes).toHaveLength(written)
+    })
+
+    test('with a different host or port make the viewer leave and join there', () => {
+      const { sockets, destinations, client, last, attach } = setup()
+      let viewer = attach()
+      viewer.receive(ANSWERING)
+
+      client.settingsSaved({ teamCode: 'K7QM3XPC', hubHost: OTHER_HOST, hubPort: PORT })
+      expect(viewer.closed).toBe(true)
+      expect(client.state()).toEqual({ state: 'joining' })
+      expect(destinations[destinations.length - 1]).toBe(`${OTHER_HOST}:${PORT}`)
+      last().connect()
+      expect(last().login).toBe(LOBBY_PING)
+
+      viewer = attach()
+      const opened = sockets.length
+      client.settingsSaved({ teamCode: 'K7QM3XPC', hubHost: OTHER_HOST, hubPort: OTHER_PORT })
+      expect(viewer.closed).toBe(true)
+      expect(sockets).toHaveLength(opened + 1)
+      expect(destinations.slice(opened)).toEqual([`${OTHER_HOST}:${OTHER_PORT}`])
+    })
+
+    test('that are the same as before leave the viewer alone', () => {
+      const { sockets, client, attach } = setup()
+      const viewer = attach()
+      viewer.receive(ANSWERING)
+      const opened = sockets.length
+
+      client.settingsSaved({ teamCode: 'K7QM3XPC', hubHost: HOST, hubPort: PORT })
+      expect(viewer.closed).toBe(false)
+      expect(sockets).toHaveLength(opened)
+      expect(client.state()).toEqual({ state: 'live' })
+    })
+
+    test('with no team code make the viewer leave and do nothing more', () => {
+      const { clock, sockets, client, attach } = setup()
+      const viewer = attach()
+      viewer.receive(ANSWERING)
+      const opened = sockets.length
+
+      client.settingsSaved({ teamCode: null, hubHost: HOST, hubPort: PORT })
+      expect(viewer.closed).toBe(true)
+      expect(client.state()).toEqual({ state: 'no_team_code' })
+      clock.advance(600_000)
+      expect(sockets).toHaveLength(opened)
+    })
+
+    test('with a first team code make it join', () => {
+      const { sockets, states, client } = setup(null)
+      client.settingsSaved({ teamCode: 'K7QM3XPC', hubHost: HOST, hubPort: PORT })
+      expect(states).toEqual([{ state: 'joining' }])
+      expect(sockets).toHaveLength(1)
+      sockets[0].connect()
+      expect(sockets[0].login).toBe(LOBBY_PING)
+    })
+
+    test('on a direct link are kept for when it ends', () => {
+      const { clock, sockets, destinations, client, last, attach } = setup()
+      attach().receive(ANSWERING)
+      client.directLinkStarted()
+      const opened = sockets.length
+
+      client.settingsSaved({ teamCode: OTHER_CODE, hubHost: OTHER_HOST, hubPort: OTHER_PORT })
+      clock.advance(600_000)
+      expect(sockets).toHaveLength(opened)
+
+      client.directLinkEnded()
+      expect(destinations.slice(opened)).toEqual([`${OTHER_HOST}:${OTHER_PORT}`])
+      last().connect()
+      expect(last().login).toBe(OTHER_LOBBY_PING)
     })
   })
 })

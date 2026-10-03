@@ -10,24 +10,27 @@ import type { Settings, TypedSettings } from '../preload/api'
 
 // This instance holds the settings it read on launch or last saved. A change
 // saved in another window reaches this one when it is restarted.
-const handleSettings = async () => {
-  const file = join(app.getPath('userData'), 'settings.json')
-  let settings = await readSettings(file)
+const handleSettings = (file: string, launched: Settings, onSaved: (settings: Settings) => void) => {
+  let settings = launched
 
   ipcMain.handle('settings:read', () => settings)
   ipcMain.handle('settings:write', async (_event, typed: TypedSettings) => {
-    const saved = await saveSettings(file, typed)
-    if (saved) settings = saved
-    return saved
+    const stored = await saveSettings(file, typed)
+    if (stored) {
+      settings = stored
+      onSaved(stored)
+    }
+    return stored
   })
-  return settings
 }
 
 // The hub client lives here and not in the renderer, whose timers a hidden
 // window may slow, which would starve the heartbeat. With a team code stored
 // it starts its first lobby visit now, with no click. The renderer is sent
 // each sample and each change of the connection state, and reads the state
-// once when it starts, having missed what was sent before.
+// once when it starts, having missed what was sent before. The renderer owns
+// the direct link and says when one starts and ends: the app is a viewer or on
+// a direct link, never both.
 const handleHub = (window: BrowserWindow, settings: Settings) => {
   const send = (channel: string, value: unknown) => {
     if (!window.isDestroyed()) window.webContents.send(channel, value)
@@ -42,6 +45,12 @@ const handleHub = (window: BrowserWindow, settings: Settings) => {
     { state: (state) => send('hub:state', state), sample: (sample) => send('hub:sample', sample) },
   )
   ipcMain.handle('hub:state', () => client.state())
+  ipcMain.on('direct-link:started', client.directLinkStarted)
+  ipcMain.on('direct-link:ended', client.directLinkEnded)
+  // A renderer that loads has no direct link. One reloaded in the middle of a
+  // direct link never said it ended.
+  window.webContents.on('did-finish-load', client.directLinkEnded)
+  return client
 }
 
 const createWindow = (route: string) => {
@@ -75,10 +84,14 @@ const createWindow = (route: string) => {
 app.whenReady().then(async () => {
   ipcMain.handle('app:version', () => appVersion)
   handleCsvSave()
-  const settings = await handleSettings()
+  const file = join(app.getPath('userData'), 'settings.json')
+  const settings = await readSettings(file)
   // With no team code stored the app opens on the settings screen.
   const window = createWindow(settings.teamCode ? '/' : '/settings')
-  handleHub(window, settings)
+  const hub = handleHub(window, settings)
+  // Saving a different team code, host or port makes the hub client leave and
+  // join again with the new values.
+  handleSettings(file, settings, hub.settingsSaved)
 })
 
 // One window, and closing it quits the app on macOS as on Windows.
