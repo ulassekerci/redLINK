@@ -125,10 +125,11 @@ Tickets: [Desktop app architecture](issues/11-desktop-app-architecture.md), [How
 
 - Settings has a host and a port, pre-filled with the public hub's from the hub spec, edited by hand. Moving to a self-hosted hub is typing its host on each laptop.
 - They can be changed at any time, unlike on the phone. Saving a change makes main leave the hub and join on the new host.
+- A host field left empty, or a port that is not a number from 1 to 65535, is saved as the public hub's, and the field then shows it. There is no message: clearing the host is how a laptop is put back on the public hub.
 - When they differ from the public hub's, the waiting screen shows `host:port` beside the team code (3.2). A laptop left on the old host otherwise looks the same as the phone not running. When they are the public hub's they are shown only in settings.
 - The team code is unaffected by a change of host.
 
-Tickets: [Self-run hub fallback](issues/17-self-run-hub-fallback.md), [How hub credentials are set and shared](issues/10-how-hub-credentials-are-set-and-shared.md).
+Tickets: [Self-run hub fallback](issues/17-self-run-hub-fallback.md), [How hub credentials are set and shared](issues/10-how-hub-credentials-are-set-and-shared.md). Saving an empty host as the public hub's was decided after ticket 29, on seeing the app.
 
 ### 2.9 The dashboard
 

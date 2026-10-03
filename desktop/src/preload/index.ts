@@ -11,6 +11,8 @@ const api: RedlinkApi = {
   pickBluetoothDevice: (id) => ipcRenderer.send('bluetooth:pick', id),
   cancelBluetoothScan: () => ipcRenderer.send('bluetooth:cancel'),
   saveCsv: (defaultName, csv) => ipcRenderer.invoke('csv:save', defaultName, csv),
+  readSettings: () => ipcRenderer.invoke('settings:read'),
+  writeSettings: (typed) => ipcRenderer.invoke('settings:write', typed),
 }
 
 contextBridge.exposeInMainWorld('redlink', api)

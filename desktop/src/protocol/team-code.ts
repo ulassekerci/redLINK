@@ -25,6 +25,9 @@ export function normaliseTeamCode(typed: string) {
   return code
 }
 
+// A code as it is shown: XXXX-XXXX.
+export const formatTeamCode = (code: string) => `${code.slice(0, 4)}-${code.slice(4)}`
+
 export const lobbyId = (code: string) => LOBBY_PREFIX + code
 
 export const viewerId = (code: string, token: string) => lobbyId(code) + token
