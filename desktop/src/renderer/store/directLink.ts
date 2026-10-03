@@ -42,6 +42,9 @@ export const useDirectLinkStore = create<DirectLinkState>()((set, get) => {
 
   const connect = (device: BluetoothDevice) => {
     set({ phase: 'connecting', devices: [] })
+    // A direct link has no GPS. A fix left from the hub is dropped, so the
+    // map shows none and the CSV's GPS cells are empty.
+    useVehicleStore.setState({ gps: null })
     polling = startPolling(new WebBluetoothTransport(device), clock, {
       boardSample: (board) => useVehicleStore.setState({ board }),
       adcSample: (adc) => useVehicleStore.setState({ adc }),

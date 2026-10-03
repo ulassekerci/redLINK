@@ -1,57 +1,25 @@
-import { DateTime } from 'luxon'
+import { Duration } from 'luxon'
+import { useEffect, useState } from 'react'
 import { useTripStore } from '../store/trip'
-import { useVehicleData } from './useVehicleData'
-import { useCallback, useEffect, useState } from 'react'
+import { tripRows } from '../services/trip/trip'
 
+// The trip meter's rows as shown, refreshed at least once a second for the
+// time row.
 export const useTripData = () => {
-  const data = useVehicleData()
-  const trip = useTripStore()
+  const { trip, counters } = useTripStore()
   const [, forceRender] = useState(0)
 
-  const distance = data.distance_abs_m - trip.distanceBeforeTrip
-  const avgSpeed = getAvgSpeed(distance, trip.timeStarted)
-  const whCharge = data.energy_charged_wh - trip.whChargeBeforeTrip
-  const whConsume = data.energy_used_wh - trip.whConsumeBeforeTrip
-  const consumption = calculateConsumption(distance, whConsume, whCharge)
-
-  const distanceString = Math.round(distance) + ' m'
-  const timeString = getTimeString(trip.timeStarted)
-  const avgSpeedString = avgSpeed.toFixed(1) + ' km/h'
-  const consumptionString = Math.round(consumption) + ' km/kWh'
-
-  const handleSpace = useCallback((e: KeyboardEvent) => {
-    if (e.code !== 'Space') return
-    trip.newTrip()
-  }, [trip])
-
   useEffect(() => {
-    addEventListener('keydown', handleSpace)
     const timer = setInterval(() => forceRender(Date.now()), 1000)
-    return () => {
-      removeEventListener('keydown', handleSpace)
-      clearInterval(timer)
-    }
-  }, [handleSpace])
+    return () => clearInterval(timer)
+  }, [])
 
-  return { distanceString, timeString, avgSpeedString, consumptionString }
-}
+  const rows = tripRows(trip, counters, Date.now())
 
-const getTimeString = (tripStart: DateTime | null) => {
-  if (!tripStart) return '00:00:00'
-  const diff = DateTime.now().diff(tripStart).shiftTo('hours', 'minutes', 'seconds')
-  return diff.toFormat('hh:mm:ss')
-}
-
-const getAvgSpeed = (distance: number, tripStart: DateTime | null) => {
-  if (!tripStart) return 0
-  const diffHr = DateTime.now().diff(tripStart, 'hours').hours
-  if (diffHr === 0) return 0 // prevent divison by zero
-  const distanceKm = distance / 1000
-  return distanceKm / diffHr
-}
-
-const calculateConsumption = (distance: number, whConsume: number, whCharge: number) => {
-  const whAbs = whConsume - whCharge
-  if (whAbs === 0) return 0
-  return distance / whAbs // m/wh or km/kwh - same result
+  return {
+    distanceString: Math.round(rows.distance_m) + ' m',
+    timeString: Duration.fromMillis(rows.elapsed_ms).toFormat('hh:mm:ss'),
+    avgSpeedString: rows.avg_speed_kmh.toFixed(1) + ' km/h',
+    consumptionString: Math.round(rows.consumption_km_kwh) + ' km/kWh',
+  }
 }

@@ -6,15 +6,15 @@ Spec: [desktop app spec](../spec-desktop.md) 2.10, 3.2 (trip meter rows) and the
 
 **Blocked by:** 27 (Direct link on the new protocol).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] A trip is a baseline of absolute distance, energy used and energy charged plus a start time; the rows are the current values minus the baseline
-- [ ] Space sets the baseline to the current values and the start time to now, and does nothing while a text field has the focus
-- [ ] Before the first Space the baseline is zero and the time row reads `00:00:00`
-- [ ] When a value falls below its baseline (the board was power-cycled) that baseline moves to the new value, and no row goes negative
-- [ ] The trip is kept across phone lost, rejoining and a switch between the hub and a direct link, and is lost when the app quits
-- [ ] One CSV row is held in memory per board sample; a new trip clears them
-- [ ] The columns are the log of record's names, units and order, with the differences 2.10 lists: arrival time as `time_utc`, no `elapsed_s`, latest ADC and GPS values repeated, `power_w` computed on the laptop
-- [ ] GPS cells are empty when there is no fix
-- [ ] Cmd+S on macOS and Ctrl+S on Windows open the system's save dialog through main with the default name `redLINK_<local time>.csv`; with no rows nothing happens; saving does not clear the rows
-- [ ] The `trip-and-csv` suite covers the cases the spec lists and passes
+- [x] A trip is a baseline of absolute distance, energy used and energy charged plus a start time; the rows are the current values minus the baseline
+- [x] Space sets the baseline to the current values and the start time to now, and does nothing while a text field has the focus
+- [x] Before the first Space the baseline is zero and the time row reads `00:00:00`
+- [x] When a value falls below its baseline (the board was power-cycled) that baseline moves to the new value, and no row goes negative
+- [x] The trip is kept across phone lost, rejoining and a switch between the hub and a direct link, and is lost when the app quits
+- [x] One CSV row is held in memory per board sample; a new trip clears them
+- [x] The columns are the log of record's names, units and order, with the differences 2.10 lists: arrival time as `time_utc`, no `elapsed_s`, latest ADC and GPS values repeated, `power_w` computed on the laptop
+- [x] GPS cells are empty when there is no fix
+- [x] Cmd+S on macOS and Ctrl+S on Windows open the system's save dialog through main with the default name `redLINK_<local time>.csv`; with no rows nothing happens; saving does not clear the rows
+- [x] The `trip-and-csv` suite covers the cases the spec lists and passes

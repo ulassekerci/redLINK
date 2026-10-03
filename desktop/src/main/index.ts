@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'node:path'
 import { handleBluetoothChooser } from './bluetooth'
+import { handleCsvSave } from './csv'
 import { appVersion } from './version'
 
 const createWindow = () => {
@@ -32,6 +33,7 @@ const createWindow = () => {
 // No single-instance lock: a second start is a second, independent viewer.
 app.whenReady().then(() => {
   ipcMain.handle('app:version', () => appVersion)
+  handleCsvSave()
   createWindow()
 })
 
