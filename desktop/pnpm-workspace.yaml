@@ -1,5 +1,6 @@
 allowBuilds:
   '@swc/core': true
   '@tailwindcss/oxide': true
-  electron: true
+  # Comes with electron-builder, for the Squirrel installer, which is not used.
+  electron-winstaller: false
   esbuild: true

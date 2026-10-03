@@ -22,7 +22,7 @@ export default tseslint.config([
     },
   },
   {
-    files: ['electron.vite.config.ts', 'scripts/**/*.ts', 'src/main/**/*.ts', 'src/preload/**/*.ts'],
+    files: ['electron.vite.config.ts', 'electron-builder.ts', 'scripts/**/*.ts', 'src/main/**/*.ts', 'src/preload/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
   {

@@ -20,3 +20,7 @@ export const latestVersionTag = (cwd: string) => {
     return null
   }
 }
+
+// The version stamped into a build made from this checkout: into the app by
+// electron.vite.config.ts and into its package by electron-builder.ts.
+export const buildVersion = (cwd: string) => localVersion(latestVersionTag(cwd))

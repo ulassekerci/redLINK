@@ -184,14 +184,16 @@ Tickets: [Distribution](issues/15-distribution.md). Showing the line on the wait
 What is the app's own. The release workflow, the tags and the version scheme are on the front page.
 
 - **Stack:** Electron with `electron-vite` and electron-builder; the renderer keeps React, Zustand, Tailwind, `motion`, MapLibre and `react-router`. Electron Forge is not used.
-- **Project:** `desktop/` in this repo, a standalone package on pnpm with no workspace and no tooling at the repo root. `desktop/package.json` pins pnpm in `packageManager` and allows Electron's install script; `desktop/.npmrc` sets `node-linker=hoisted`. These two pnpm settings were written from memory and must be checked on the first build.
-- **Names:** the product name is `redLINK`; the bundle ID is `org.metucet.redlink`.
-- **macOS:** arm64 only, a `dmg`, ad-hoc signed and not notarized. `NSBluetoothAlwaysUsageDescription` is `redLINK, araca doğrudan bağlanmak için Bluetooth kullanır.`
-- **Windows:** x64 only, a zip that is unzipped anywhere and run in place. No installer and not the single-file portable target.
+- **Project:** `desktop/` in this repo, a standalone package on pnpm with no workspace and no tooling at the repo root. `desktop/package.json` pins pnpm in `packageManager`, and its `postinstall` runs Electron's own installer, which fetches the binary. `desktop/pnpm-workspace.yaml` is there only to hold pnpm's list of dependencies that may run build scripts. Electron is not on it, having no install script to allow, and pnpm's default linker is kept: electron-vite bundles every dependency into `out/`, so the package carries no `node_modules` and electron-builder needs no hoisted layout.
+- **Building:** `pnpm package` builds the app and packages it for the system it runs on, into `desktop/dist/`. The package is stamped with the same version as the app (2.11).
+- **Names:** the product name is `redLINK`; the bundle ID is `org.metucet.redlink`; the author is `METU CET`.
+- **Icon:** the old React Native app's, kept in `desktop/build/`: `icon.icon` (an Icon Composer file) on macOS and `icon.png` on Windows.
+- **macOS:** arm64 only, a `dmg` named `redLINK-<version>-mac-arm64.dmg`, ad-hoc signed and not notarized. The hardened runtime is off: only notarization needs it, and under it Bluetooth would need an entitlement. `NSBluetoothAlwaysUsageDescription` is `redLINK, araca doğrudan bağlanmak için Bluetooth kullanır.`
+- **Windows:** x64 only, a zip named `redLINK-<version>-win-x64.zip` that is unzipped anywhere and run in place. No installer and not the single-file portable target.
 - **First open:** `README.md` carries the steps for the unsigned app: "Open Anyway" in macOS System Settings, "Run anyway" on Windows SmartScreen.
-- **Not established.** None of this was built or run. Whether the board advertises the Nordic UART service, which a Web Bluetooth service filter needs in order to list it; whether Electron's Web Bluetooth holds 20 Hz against the board on both systems, and whether reconnecting to the same device without a new scan works on Windows, are found out on the front page's desk checklist.
+- **Not established.** Both packages were built on a Mac and the macOS one was opened; the Windows zip has not been run. Whether the board advertises the Nordic UART service, which a Web Bluetooth service filter needs in order to list it; whether Electron's Web Bluetooth holds 20 Hz against the board on both systems, and whether reconnecting to the same device without a new scan works on Windows, are found out on the front page's desk checklist.
 
-Tickets: [Distribution](issues/15-distribution.md), [Repo layout and cutover](issues/12-repo-layout-and-cutover.md).
+Tickets: [Distribution](issues/15-distribution.md), [Repo layout and cutover](issues/12-repo-layout-and-cutover.md). Distribution wrote two pnpm settings from memory, allowing Electron's install script and `node-linker=hoisted`; the first packaged build, in ticket 32, found neither was needed. Turning the hardened runtime off, the package names, the icon and the author were decided there too.
 
 ## 3. States and messages shown to the user
 
