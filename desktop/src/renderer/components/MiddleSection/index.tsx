@@ -4,27 +4,11 @@ import { TripMeter } from './TripMeter'
 import { DeviceList } from './DeviceList'
 import { StatusLine } from './StatusLine'
 import { onDirectLink, useDirectLinkStore } from '../../store/directLink'
-import { useCallback, useEffect } from 'react'
-import { downloadCSV } from '../../utils/csv'
 
 const actionClass = 'cursor-pointer text-rose-100/80 hover:text-rose-500/80'
 
 export const MiddleSection = () => {
   const { phase, start, stop } = useDirectLinkStore()
-
-  const handleSave = useCallback((e: KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault()
-      downloadCSV()
-    }
-  }, [])
-
-  useEffect(() => {
-    addEventListener('keydown', handleSave)
-    return () => {
-      window.removeEventListener('keydown', handleSave)
-    }
-  }, [handleSave])
 
   // Until the waiting screen (ticket 30), the app off a direct link shows the
   // logo and the action that starts one.

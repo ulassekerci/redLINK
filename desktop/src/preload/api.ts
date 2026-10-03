@@ -9,6 +9,9 @@ export interface RedlinkApi {
   pickBluetoothDevice: (id: string) => void
   // Ends the scan with no device.
   cancelBluetoothScan: () => void
+  // Opens the system's save dialog with the given default file name, and
+  // writes the CSV where the person chooses. Resolves when the dialog closes.
+  saveCsv: (defaultName: string, csv: string) => Promise<void>
 }
 
 // The name is empty when the device reports none.
