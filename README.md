@@ -15,7 +15,7 @@ The apps reach each other through a [VESC TCP hub](protocol/tcp-hub.md), so ther
 
 | Path | What it is |
 |---|---|
-| `android/` | The Android app, a Gradle project (not in the repo yet) |
+| `android/` | The Android app, a Gradle project |
 | `desktop/` | The desktop app, a standalone pnpm package |
 | `protocol/` | The wire format in prose and notes on the hub |
 | `docs/` | Architecture decision records and agent docs |
@@ -44,6 +44,20 @@ Or package it for the system you are on
 pnpm package
 ```
 A Mac gets `dist/redLINK-<version>-mac-arm64.dmg` and a Windows machine gets `dist/redLINK-<version>-win-x64.zip`. A Mac can build the Windows zip too, with `pnpm package --win`.
+
+### Android App
+Open the `android` folder in [Android Studio](https://developer.android.com/studio) and run `app`. A build from source installs as **redLINK dev**, beside the release app and with its own settings.
+
+Or build from a terminal. Gradle needs a JDK, and the one inside Android Studio will do (the path is a Mac's)
+```bash
+cd android
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+./gradlew installDebug
+```
+Run the tests, which need no phone or emulator
+```bash
+./gradlew testDebugUnitTest
+```
 
 ## Opening the desktop app for the first time
 

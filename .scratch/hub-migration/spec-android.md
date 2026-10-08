@@ -197,7 +197,7 @@ Tickets: [Testing without the car](issues/16-testing-without-the-car.md), [Distr
 ### 2.13 Version and the update line
 
 - The app's version is stamped at build time: from the tag in the release workflow, and from the latest version tag with `-dev` added in a local build (the hub spec's "Protocol version" has the rule). Setup shows it.
-- The version code is major x 10000 + minor x 100 + patch.
+- The version code is major x 10000 + minor x 100 + patch. Android refuses a version code of 0, so a build with no version tag to read, `0.0.0-dev`, has version code 1.
 - The release app's application ID is `org.metucet.redlink`. It is installed by sideloading the APK from the GitHub Release, and a newer APK installs over an older one. Uninstalling discards the team code.
 - **Update line:** when the app is opened with no run active, it asks GitHub for the repo's latest release (`https://api.github.com/repos/ulassekerci/redLINK/releases/latest`, which leaves out pre-releases). When that version is newer than its own, Setup shows one line that opens the Release page in the browser (3.3). It is never a notification and never on the main screen. A failed check says nothing. Nothing is checked during a run.
 
