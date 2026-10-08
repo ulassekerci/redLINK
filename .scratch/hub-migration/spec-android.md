@@ -273,7 +273,7 @@ All strings are English and are given verbatim. Dot colours: green is working, a
 
 **Notices,** above the rows:
 
-- Setup incomplete, tapping opens Setup: `Setup incomplete: 2 grants missing. Start is disabled. Open setup →` or `Setup incomplete: no vehicle picked. Start is disabled. Open setup →`.
+- Setup incomplete, tapping opens Setup: `Setup incomplete: 2 grants missing. Start is disabled. Open setup →` (`1 grant missing`) or `Setup incomplete: no vehicle picked. Start is disabled. Open setup →`.
 - After a phone restart ended a run, shown once: `The last run ended when the phone restarted.` with `Dismiss`.
 
 **Button:** `Start` (red, disabled while setup is incomplete) or `Stop` (dark).
