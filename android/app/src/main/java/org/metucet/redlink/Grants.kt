@@ -53,6 +53,12 @@ private fun Context.inPlace(grant: Grant) = when (grant) {
 // this is read again whenever a screen is shown.
 fun Context.grantsInPlace(): Set<Grant> = Grant.entries.filterTo(mutableSetOf(), ::inPlace)
 
+// The grants a run on this board needs. The simulated board has no Bluetooth
+// link, so with it picked the Bluetooth grant is not asked for and does not
+// block Start.
+fun grantsNeeded(board: PickedBoard?): Set<Grant> =
+    if (board == PickedBoard.Simulated) Grant.entries.toSet() - Grant.BLUETOOTH else Grant.entries.toSet()
+
 // What a Grant button does: Android's own dialog where the grant has one, and
 // the system screen that holds the switch where it has none or Android no
 // longer shows it. Made before the activity starts, as Android requires of

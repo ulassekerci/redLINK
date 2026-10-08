@@ -23,6 +23,7 @@ Tickets: [Android runtime and stack](issues/07-android-runtime-and-stack.md).
 ### 2.2 The foreground service
 
 - A run is one lifetime of a single foreground service, typed `connectedDevice|location`, started from the visible activity when Start is pressed.
+- Android refuses the `connectedDevice` type to an app without the Bluetooth grant. A run started without it, which only the simulated board allows (2.4), is typed `location` alone.
 - The service owns the board link, the hub sockets, location updates and the log. The activity only observes it: closing the activity, or swiping the app out of recents, changes nothing about the run.
 - The service holds a partial wake lock for the whole run.
 - Manifest permissions: `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CONNECTED_DEVICE`, `FOREGROUND_SERVICE_LOCATION`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `ACCESS_BACKGROUND_LOCATION`, `POST_NOTIFICATIONS`, `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`, `WAKE_LOCK`, `INTERNET`, `ACCESS_NETWORK_STATE`. The `dataSync` service type is not used: Android caps it at 6 hours a day.
@@ -55,7 +56,7 @@ Six grants, each a row on the Setup screen with its state and a Grant button. St
 | Notifications | `POST_NOTIFICATIONS` on Android 13 and later; on Android 12, notifications not blocked for the app |
 
 - The app re-reads all six whenever the Setup or main screen is shown, since any can be taken away in system settings.
-- With the simulated board selected (2.12) the Bluetooth row is not asked for and does not block Start. The other five behave as on a phone.
+- With the simulated board selected (2.12) the Bluetooth row is not asked for and does not block Start: where it is not granted it reads `Not needed` and counts as in place. The other five behave as on a phone.
 - Settings the app cannot read, such as a manufacturer's list of apps that are never put to sleep, are not rows. They are the written checklist in 2.14.
 
 Tickets: [Android runtime and stack](issues/07-android-runtime-and-stack.md), [Android headless operation constraints](issues/02-android-headless-operation-constraints.md), [Testing without the car](issues/16-testing-without-the-car.md).
@@ -291,8 +292,8 @@ All strings are English and are given verbatim. Dot colours: green is working, a
 ### 3.3 Setup screen
 
 - Title `Setup`.
-- **Grants,** headed `Grants (4 of 6)`: `Bluetooth`, `Precise location`, `Location "all the time"`, `Location services on`, `Battery optimisation exemption`, `Notifications`. Each shows `Granted` or a `Grant` button.
-- **Board:** the board's Bluetooth name with its address under it and `Change vehicle`; or `No vehicle picked` and `Pick vehicle`. Once a version has been read: `Firmware 6.06`. In debug builds the picker also lists `Simulated board`.
+- **Grants,** headed `Grants (4 of 6)`: `Bluetooth`, `Precise location`, `Location "all the time"`, `Location services on`, `Battery optimisation exemption`, `Notifications`. Each shows `Granted` or a `Grant` button. With the simulated board picked, a Bluetooth row that is not granted shows `Not needed` and is counted.
+- **Board,** headed `Vehicle`: the board's Bluetooth name with its address under it and `Change vehicle`; or `No vehicle picked` and `Pick vehicle`. Once a version has been read: `Firmware 6.06`. The picker is titled `Pick vehicle` and has a `Cancel` button. In debug builds it also lists `Simulated board`, which once picked is shown as `Simulated board` with no address.
 - **Hub:** `veschub.vedder.se:65101` with `Edit`.
 - **Team code:** `K7QM-3XPC` with `New code`.
 - **Version:** `Version 1.2.0`. When a newer release exists: `Update available: 1.3.0`, which opens the Release page.
@@ -322,6 +323,8 @@ Four suites of local unit tests in `android/`, run with `./gradlew testDebugUnit
 - **`TeamCodeTest`:** runs every team-code case from the same file (validity, normalised code, lobby ID, password, viewer ID). Also: a generated code is 8 characters of the alphabet and passes its own check.
 - **`BridgeLobbyTest`:** drives the bridge's hub logic against a fake socket seam and a fake clock, and covers the hub spec's list for the bridge: a lobby request opens a registration; a repeated request for the same token is a no-op; a malformed request is ignored; nothing is written before the first heartbeat; writing stops at 3 s and the registration closes at 10 s without a heartbeat; status is sent on the first heartbeat and on a board state change. Also: after the hub connection drops, only the lobby is registered again.
 - **`LogWriterTest`:** runs the log writer on the simulated board with a fake clock and a fixed GPS fix for a set span, and compares the output with a fixed expected file byte for byte. Further cases: a missing reply leaves empty cells; with the board unreachable there is one row per fix; a resumed run appends without a second line of column names.
+
+Tickets add suites beside these four, such as `BoardPollerTest` for the poll cycle and `SimulatedBoardTest` for the lap.
 
 Not automated: the foreground service, the Bluetooth link, the grants and the screens. They are exercised by the emulator requirement in 2.12 and by the front page's desk checklist.
 

@@ -2,10 +2,10 @@ package org.metucet.redlink.protocol
 
 import java.nio.ByteBuffer
 
-private const val COMM_FW_VERSION = 0
-private const val COMM_GET_DECODED_ADC = 32
+internal const val COMM_FW_VERSION = 0
+internal const val COMM_GET_DECODED_ADC = 32
 private const val COMM_CUSTOM_APP_DATA = 36
-private const val COMM_GET_VALUES_SETUP = 47
+internal const val COMM_GET_VALUES_SETUP = 47
 
 private const val GPS = 1
 private const val LOBBY_REQUEST = 2
