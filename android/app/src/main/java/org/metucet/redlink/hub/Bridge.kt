@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
@@ -18,11 +19,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import org.metucet.redlink.board.BoardState
+import org.metucet.redlink.location.Fix
+import org.metucet.redlink.protocol.COMM_GET_DECODED_ADC
+import org.metucet.redlink.protocol.COMM_GET_VALUES_SETUP
 import org.metucet.redlink.protocol.FrameDecoder
+import org.metucet.redlink.protocol.Gps
 import org.metucet.redlink.protocol.Heartbeat
 import org.metucet.redlink.protocol.LobbyRequest
 import org.metucet.redlink.protocol.Status
 import org.metucet.redlink.protocol.decodeMessage
+import org.metucet.redlink.protocol.encodeFrame
 import org.metucet.redlink.protocol.encodeMessage
 import org.metucet.redlink.protocol.hubPassword
 import org.metucet.redlink.protocol.lobbyId
@@ -81,13 +87,17 @@ private class Registration(val socket: HubSocket) {
 }
 
 // The bridge's side of the hub usage spec, "The lobby, bridge side" and
-// "Polling and the stream", for as long as run() runs. Its hub is the socket
-// seam it is given. Its clock is a monotonic one in milliseconds, with the
-// coroutine dispatcher's for waiting, which tests replace with a virtual one.
+// "Polling and the stream", for as long as run() runs. `replies` is every reply
+// the board gives, a frame's payload each, and `fixes` every fix. Its hub is
+// the socket seam it is given. Its clock is a monotonic one in milliseconds,
+// with the coroutine dispatcher's for waiting, which tests replace with a
+// virtual one.
 class Bridge(
     private val teamCode: String,
     private val protocolVersion: Int,
     private val board: StateFlow<BoardState>,
+    private val replies: Flow<ByteArray>,
+    private val fixes: Flow<Fix>,
     private val sockets: HubSockets,
     private val now: () -> Long,
 ) {
@@ -111,6 +121,14 @@ class Bridge(
         }
         launch {
             board.map(::boardState).distinctUntilChanged().drop(1).collect { sendStatus() }
+        }
+        // Framing a payload again gives back the bytes the board sent, because
+        // the decoder takes only a frame that frames so.
+        launch {
+            replies.collect { payload -> if (isStreamed(payload)) sendToActive(encodeFrame(payload)) }
+        }
+        launch {
+            fixes.collect { fix -> gpsFrame(fix)?.let(::sendToActive) }
         }
         holdLobby(this)
         // Re-registering a lost lobby is ticket 41. Until then the viewers
@@ -199,11 +217,17 @@ class Bridge(
         }
     }
 
-    // A registration that becomes active is sent status at once.
+    // A registration that becomes active is sent status at once. One that
+    // stops being active loses what was waiting for it, so nothing from before
+    // a silence follows the status that ends it.
     private fun setActive(registration: Registration, active: Boolean) {
         if (registration.active == active) return
         registration.active = active
-        if (active) registration.outbox.trySend(statusFrame())
+        if (active) {
+            registration.outbox.trySend(statusFrame())
+        } else {
+            while (registration.outbox.tryReceive().isSuccess) Unit
+        }
         countViewers()
     }
 
@@ -211,8 +235,9 @@ class Bridge(
 
     private fun statusFrame() = encodeMessage(Status(protocolVersion, boardState(board.value)))
 
-    private fun sendStatus() {
-        val frame = statusFrame()
+    private fun sendStatus() = sendToActive(statusFrame())
+
+    private fun sendToActive(frame: ByteArray) {
         for (registration in registrations) if (registration.active) registration.outbox.trySend(frame)
     }
 
@@ -261,6 +286,29 @@ class Bridge(
             }
         }
     }
+}
+
+// Only the replies to polls are copied: not the firmware version's, nor
+// anything else the board says.
+private fun isStreamed(payload: ByteArray) =
+    payload[0].toInt() == COMM_GET_VALUES_SETUP || payload[0].toInt() == COMM_GET_DECODED_ADC
+
+// A fix as a GPS message, with 0 for a field it lacks, or null for one whose
+// values the message cannot carry, which is not sent.
+private fun gpsFrame(fix: Fix): ByteArray? = try {
+    encodeMessage(
+        Gps(
+            gpsLatDeg = fix.latDeg,
+            gpsLonDeg = fix.lonDeg,
+            gpsAltM = fix.altM ?: 0.0,
+            gpsSpeedMS = fix.speedMS ?: 0.0,
+            gpsHeadingDeg = fix.headingDeg ?: 0.0,
+            gpsAccuracyM = fix.accuracyM ?: 0.0,
+            gpsFixTimeUtc = fix.timeUtc,
+        ),
+    )
+} catch (_: IllegalArgumentException) {
+    null
 }
 
 // The board state as the status message carries it.

@@ -148,6 +148,8 @@ class RunService : Service() {
             settings.teamCode,
             majorVersion(version),
             poller.state,
+            poller.replies,
+            location.fixes,
             TcpHubSockets(PUBLIC_HUB_HOST, PUBLIC_HUB_PORT),
             SystemClock::elapsedRealtime,
         )

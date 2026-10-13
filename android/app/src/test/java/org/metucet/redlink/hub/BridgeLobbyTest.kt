@@ -2,6 +2,7 @@ package org.metucet.redlink.hub
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -15,16 +16,22 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.metucet.redlink.board.BoardState
+import org.metucet.redlink.board.DECODED_ADC
+import org.metucet.redlink.board.VALUES_SETUP
+import org.metucet.redlink.location.Fix
 import org.metucet.redlink.protocol.ALPHABET
+import org.metucet.redlink.protocol.Gps
 import org.metucet.redlink.protocol.Heartbeat
 import org.metucet.redlink.protocol.LobbyRequest
 import org.metucet.redlink.protocol.Status
 import org.metucet.redlink.protocol.encodeFrame
+import org.metucet.redlink.protocol.encodeMessage
 
 private const val CODE = "K7QM3XPC"
 private const val LOBBY = "REDLINKK7QM3XPC"
 private const val TOKEN = "4HT9WQ2B"
 private const val VIEWER = LOBBY + TOKEN
+private const val FW_VERSION = 0
 
 // A COMM_CUSTOM_APP_DATA frame of any type and content, well-formed or not.
 private fun customAppData(type: Int, content: ByteArray) = encodeFrame(byteArrayOf(36, type.toByte()) + content)
@@ -34,6 +41,8 @@ class BridgeLobbyTest {
     private class Bridging(
         val hub: FakeHub,
         val board: MutableStateFlow<BoardState>,
+        val replies: MutableSharedFlow<ByteArray>,
+        val fixes: MutableSharedFlow<Fix>,
         val bridge: Bridge,
         val running: Job,
     )
@@ -45,9 +54,11 @@ class BridgeLobbyTest {
     ): Bridging {
         val hub = FakeHub { currentTime }
         val boardState = MutableStateFlow(board)
-        val bridge = Bridge(CODE, protocolVersion, boardState, hub) { currentTime }
+        val replies = MutableSharedFlow<ByteArray>(extraBufferCapacity = 1000)
+        val fixes = MutableSharedFlow<Fix>(extraBufferCapacity = 1000)
+        val bridge = Bridge(CODE, protocolVersion, boardState, replies, fixes, hub) { currentTime }
         val running = backgroundScope.launch { bridge.run() }
-        return Bridging(hub, boardState, bridge, running)
+        return Bridging(hub, boardState, replies, fixes, bridge, running)
     }
 
     // Lets the clock reach a time, and everything due at it happen.
@@ -375,5 +386,183 @@ class BridgeLobbyTest {
         runUntil(1000)
 
         assertEquals(BridgeState(HubState.Lost, viewers = 0), bridging.bridge.state.value)
+    }
+
+    // The board's replies as they come, each a frame's payload.
+    private val setupReply = ByteArray(74) { (it * 7).toByte() }.also { it[0] = VALUES_SETUP.toByte() }
+    private val adcReply = ByteArray(17) { (it * 13).toByte() }.also { it[0] = DECODED_ADC.toByte() }
+
+    private fun FakeHub.FakeSocket.frames() = rawWrites.map { it.toList() }
+
+    @Test
+    fun `setup and ADC replies are copied unchanged to active registrations only`() = runTest {
+        val bridging = bridging()
+        val watching = viewer(bridging)
+        val quiet = viewer(bridging, token = "22222222")
+        watching.heartbeatAt(2500, this)
+
+        runUntil(2600)
+        bridging.replies.emit(setupReply)
+        bridging.replies.emit(adcReply)
+        runCurrent()
+
+        assertEquals(
+            listOf(encodeMessage(answering), encodeFrame(setupReply), encodeFrame(adcReply)).map { it.toList() },
+            watching.frames(),
+        )
+        assertEquals(emptyList<Any>(), quiet.rawWrites)
+    }
+
+    @Test
+    fun `the firmware version reply and other frames from the board are not copied`() = runTest {
+        val bridging = bridging()
+        val viewer = viewer(bridging)
+        viewer.heartbeatAt(2500, this)
+
+        runUntil(2600)
+        bridging.replies.emit(byteArrayOf(FW_VERSION.toByte(), 6, 6))
+        bridging.replies.emit(byteArrayOf(99, 1, 2))
+        runCurrent()
+
+        assertEquals(listOf(2500L to answering), viewer.written)
+    }
+
+    @Test
+    fun `replies stop at 3 s without a heartbeat and start again with the next`() = runTest {
+        val bridging = bridging()
+        val viewer = viewer(bridging)
+        viewer.heartbeatAt(2500, this)
+
+        runUntil(5600)
+        bridging.replies.emit(setupReply)
+        viewer.heartbeatAt(5700, this)
+        bridging.replies.emit(adcReply)
+        runCurrent()
+
+        assertEquals(
+            listOf(answering, answering, answering, answering, answering).map(::encodeMessage).map { it.toList() } +
+                listOf(encodeFrame(adcReply).toList()),
+            viewer.frames(),
+        )
+    }
+
+    private val fix = Fix(
+        latDeg = 39.5, lonDeg = 32.75, altM = 950.5, speedMS = 12.25, headingDeg = 271.5, accuracyM = 3.5,
+        timeUtc = 1_790_000_000_000, at = 2600,
+    )
+
+    // The fix above, as its GPS message reads.
+    private val fixAsGps = Gps(39.5, 32.75, 950.5, 12.25, 271.5, 3.5, 1_790_000_000_000)
+
+    @Test
+    fun `each fix is sent as a GPS message to active registrations only, with 0 for what it lacks`() = runTest {
+        val bridging = bridging()
+        val watching = viewer(bridging)
+        val quiet = viewer(bridging, token = "22222222")
+        watching.heartbeatAt(2500, this)
+
+        runUntil(2600)
+        bridging.fixes.emit(fix)
+        runUntil(2700)
+        bridging.fixes.emit(fix.copy(altM = null, speedMS = null, headingDeg = null, accuracyM = null))
+        runCurrent()
+
+        assertEquals(
+            listOf(
+                2500L to answering,
+                2600L to fixAsGps,
+                2700L to Gps(39.5, 32.75, 0.0, 0.0, 0.0, 0.0, 1_790_000_000_000),
+            ),
+            watching.written,
+        )
+        assertEquals(emptyList<Any>(), quiet.rawWrites)
+    }
+
+    @Test
+    fun `GPS keeps flowing while the board is unreachable`() = runTest {
+        val bridging = bridging(board = BoardState.Unreachable)
+        val viewer = viewer(bridging)
+        viewer.heartbeatAt(2500, this)
+
+        runUntil(2600)
+        bridging.fixes.emit(fix)
+        runCurrent()
+
+        assertEquals(
+            listOf(2500L to unreachable, 2600L to fixAsGps),
+            viewer.written,
+        )
+    }
+
+    @Test
+    fun `a fix the GPS message cannot carry is not sent, and the next one is`() = runTest {
+        val bridging = bridging()
+        val viewer = viewer(bridging)
+        viewer.heartbeatAt(2500, this)
+
+        runUntil(2600)
+        bridging.fixes.emit(fix.copy(speedMS = 700.0))
+        runUntil(2700)
+        bridging.fixes.emit(fix)
+        runCurrent()
+
+        assertEquals(
+            listOf(2500L to answering, 2700L to fixAsGps),
+            viewer.written,
+        )
+    }
+
+    @Test
+    fun `a full queue drops its oldest for that viewer only`() = runTest {
+        val bridging = bridging()
+        val slow = viewer(bridging)
+        val fast = viewer(bridging, token = "22222222")
+        slow.heartbeatAt(2500, this)
+        fast.heartbeatAt(2500, this)
+
+        // The slow viewer's hub connection takes nothing for a while.
+        runUntil(2600)
+        slow.stalled = true
+        val replies = List(200) { n ->
+            ByteArray(74).also {
+                it[0] = VALUES_SETUP.toByte()
+                it[1] = (n / 100).toByte()
+                it[2] = (n % 100).toByte()
+            }
+        }
+        for (reply in replies) {
+            bridging.replies.emit(reply)
+            runCurrent()
+        }
+        slow.stalled = false
+        runUntil(2700)
+
+        val frames = replies.map { encodeFrame(it).toList() }
+        val status = encodeMessage(answering).toList()
+        assertEquals(listOf(status) + frames, fast.frames())
+        // The one already being written, then the newest the queue holds.
+        assertEquals(listOf(status, frames.first()) + frames.takeLast(64), slow.frames())
+    }
+
+    @Test
+    fun `frames waiting when a registration stops being active are not written when it comes back`() = runTest {
+        val bridging = bridging()
+        val viewer = viewer(bridging)
+        viewer.heartbeatAt(2500, this)
+
+        // Stuck on a write until after the viewer is back, with a reply and
+        // statuses from before its silence waiting behind it.
+        runUntil(2600)
+        viewer.stalled = true
+        bridging.replies.emit(setupReply)
+        runCurrent()
+        bridging.replies.emit(adcReply)
+        viewer.heartbeatAt(8000, this)
+        runUntil(8100)
+        viewer.stalled = false
+        runCurrent()
+
+        val status = encodeMessage(answering).toList()
+        assertEquals(listOf(status, encodeFrame(setupReply).toList(), status), viewer.frames())
     }
 }

@@ -1,6 +1,8 @@
 package org.metucet.redlink.hub
 
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.metucet.redlink.protocol.DecodedMessage
 import org.metucet.redlink.protocol.EncodableMessage
@@ -47,13 +49,26 @@ class FakeHub(private val now: () -> Long) : HubSockets {
         var closed = false
             private set
 
-        // What the bridge wrote after its login line, decoded, with the time.
+        // What the bridge wrote after its login line, decoded, with the time,
+        // and each write as it came.
         val written = mutableListOf<Pair<Long, DecodedMessage?>>()
+        val rawWrites = mutableListOf<ByteArray>()
         private val decoder = FrameDecoder()
+
+        // While true, a write waits, as one to a connection that takes nothing
+        // does.
+        var stalled: Boolean
+            get() = stall.value
+            set(value) {
+                stall.value = value
+            }
+        private val stall = MutableStateFlow(false)
 
         override suspend fun write(bytes: ByteArray) {
             if (closed) return
+            stall.first { !it }
             if (type != null) {
+                rawWrites += bytes
                 for (payload in decoder.push(bytes)) written += now() to decodeMessage(payload)
                 return
             }

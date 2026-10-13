@@ -249,4 +249,32 @@ class BoardPollerTest {
 
         assertEquals(BoardState.Answering(faultCode = 0), polling.poller.state.value)
     }
+
+    @Test
+    fun `every reply the board gives is published as it came, late ones and pieces included`() = runTest {
+        val polling = polling()
+        val late = valuesSetupReply(faultCode = 7)
+        val unknown = byteArrayOf(99, 1, 2)
+        polling.board.answer = { command ->
+            if (command == VALUES_SETUP) {
+                val reply = encodeFrame(valuesSetupReply(faultCode = 5))
+                polling.board.write(reply.copyOfRange(0, 20))
+                polling.board.write(reply.copyOfRange(20, reply.size))
+            }
+        }
+        val replies = mutableListOf<List<Byte>>()
+        backgroundScope.launch { polling.poller.replies.collect { replies += it.toList() } }
+        runCurrent()
+
+        // The first cycle's ADC request is still waiting at 100 ms.
+        runUntil(100)
+        polling.board.reply(late)
+        polling.board.reply(unknown)
+        runCurrent()
+
+        assertEquals(
+            listOf(valuesSetupReply(faultCode = 5), late, unknown).map { it.toList() },
+            replies,
+        )
+    }
 }

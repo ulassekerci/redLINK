@@ -28,6 +28,9 @@ private const val UNREACHABLE_MS = 2000L
 // Five seconds of cycles.
 private const val CYCLE_BUFFER = 100
 
+// Two and a half seconds of replies, at two a cycle.
+private const val REPLY_BUFFER = 100
+
 // What the bridge knows of the board during a run.
 sealed interface BoardState {
     // No reply yet, or none for a while.
@@ -44,7 +47,7 @@ data class Cycle(val values: ValuesSetup?, val adc: DecodedAdc?, val at: Long)
 // Polls the board through its link for as long as run() runs. The clock is a
 // monotonic one, in milliseconds.
 class BoardPoller(private val link: BoardLink, private val now: () -> Long) {
-    private val replies = Channel<DecodedMessage>(Channel.UNLIMITED)
+    private val decodedReplies = Channel<DecodedMessage>(Channel.UNLIMITED)
     private val anyReply = Channel<Unit>(Channel.CONFLATED)
 
     private val _state = MutableStateFlow<BoardState>(BoardState.Unreachable)
@@ -56,6 +59,14 @@ class BoardPoller(private val link: BoardLink, private val now: () -> Long) {
     // one, such as the log. A collector may fall five seconds behind before
     // cycles are lost.
     val cycles: SharedFlow<Cycle> = _cycles
+
+    private val _replies = MutableSharedFlow<ByteArray>(extraBufferCapacity = REPLY_BUFFER)
+
+    // Every frame the board sends, its payload, as it comes: late replies and
+    // ones this app cannot read included. For the stream, which picks what it
+    // copies. A collector may fall two and a half seconds behind before replies
+    // are lost.
+    val replies: SharedFlow<ByteArray> = _replies
 
     suspend fun run(): Unit = coroutineScope {
         launch { receive() }
@@ -77,7 +88,10 @@ class BoardPoller(private val link: BoardLink, private val now: () -> Long) {
     private suspend fun receive() {
         val decoder = FrameDecoder()
         link.received.collect { bytes ->
-            for (payload in decoder.push(bytes)) decodeMessage(payload)?.let { heard(it) }
+            for (payload in decoder.push(bytes)) {
+                _replies.tryEmit(payload)
+                decodeMessage(payload)?.let { heard(it) }
+            }
         }
     }
 
@@ -89,7 +103,7 @@ class BoardPoller(private val link: BoardLink, private val now: () -> Long) {
             ?: 0
         _state.value = BoardState.Answering(faultCode)
         anyReply.send(Unit)
-        replies.send(reply)
+        decodedReplies.send(reply)
     }
 
     // Every reply starts the wait again.
@@ -102,11 +116,11 @@ class BoardPoller(private val link: BoardLink, private val now: () -> Long) {
     // reply that came before the request went out is to an earlier one, and is
     // passed over.
     private suspend inline fun <reified Reply : DecodedMessage> ask(request: EncodableMessage): Reply? {
-        while (replies.tryReceive().isSuccess) Unit
+        while (decodedReplies.tryReceive().isSuccess) Unit
         link.send(encodeMessage(request))
         return withTimeoutOrNull(REPLY_TIMEOUT_MS) {
             var reply: Reply? = null
-            while (reply == null) reply = replies.receive() as? Reply
+            while (reply == null) reply = decodedReplies.receive() as? Reply
             reply
         }
     }
