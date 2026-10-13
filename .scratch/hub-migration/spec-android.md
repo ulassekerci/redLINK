@@ -244,6 +244,7 @@ All strings are English and are given verbatim. Dot colours: green is working, a
 | Condition | Text | Dot |
 |---|---|---|
 | no run | `Not connected` | grey |
+| run, registering the lobby | `Connecting` | amber |
 | run, lobby registered | `Connected` | green |
 | run, lobby lost, waiting to retry | `Reconnecting in 4 s` (the wait left) | red |
 | run, Android reports no network | `No network` | red |
@@ -305,7 +306,7 @@ The accuracy is rounded up to whole metres, so the row never claims better than 
 
 ### 3.4 Notifications
 
-- **During a run:** title `redLINK` with the run's duration counting beside it, text `Vehicle connected · 3 viewers` (the Vehicle row's text in lower case, then the Viewers row's text), and one action, `Stop`. Tapping `Stop` opens the app's main screen with the stop dialog showing; it does not stop the run by itself. Tapping the notification opens the main screen.
+- **During a run:** title `redLINK` with the run's duration counting beside it, text `Vehicle connected · 3 viewers` (the Vehicle row's text with its first letter in lower case, so a fault's name keeps its case, then the Viewers row's text), and one action, `Stop`. Tapping `Stop` opens the app's main screen with the stop dialog showing; it does not stop the run by itself. Tapping the notification opens the main screen.
 - **Log not being written:** title `redLINK is not logging`, text `The log file cannot be written. Viewers are not affected.` It is removed when writing works again.
 - **Restart limit reached:** title `redLINK stopped`, text `The app restarted 3 times in a minute. The run has ended and the log is saved.`
 

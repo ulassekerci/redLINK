@@ -47,6 +47,8 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) follow(intent)
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
         val settings = SavedSettings(this)
+        // Made here on first launch, and the same ever after.
+        val teamCode = settings.teamCode
         val logs = LogFolder(this)
         setContent {
             RedLinkTheme {
@@ -80,6 +82,7 @@ class MainActivity : ComponentActivity() {
                         granted = granted,
                         board = board,
                         running = run != null,
+                        teamCode = teamCode,
                         version = version,
                         onGrant = grantRequests::request,
                         onPick = {

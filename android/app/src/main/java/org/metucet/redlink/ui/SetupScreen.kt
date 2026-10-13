@@ -25,6 +25,7 @@ import org.metucet.redlink.Grant
 import org.metucet.redlink.PickedBoard
 import org.metucet.redlink.board.simulation
 import org.metucet.redlink.grantsNeeded
+import org.metucet.redlink.protocol.formatTeamCode
 
 // The boards the picker offers. A debug build offers the simulated board.
 private val pickable = listOfNotNull<PickedBoard>(PickedBoard.Simulated.takeIf { simulation != null })
@@ -40,6 +41,7 @@ fun SetupScreen(
     granted: Set<Grant>,
     board: PickedBoard?,
     running: Boolean,
+    teamCode: String,
     version: String,
     onGrant: (Grant) -> Unit,
     onPick: (PickedBoard) -> Unit,
@@ -70,6 +72,8 @@ fun SetupScreen(
                     }
                 }
             }
+            Heading("Team code")
+            Group { ListRow(formatTeamCode(teamCode)) }
             Group { ListRow("Version $version") }
             simulation?.let {
                 val stopAnswering by it.stopAnswering.collectAsState()

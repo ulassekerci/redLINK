@@ -20,6 +20,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,12 +31,20 @@ import org.metucet.redlink.board.BoardLink
 import org.metucet.redlink.board.BoardPoller
 import org.metucet.redlink.board.BoardState
 import org.metucet.redlink.board.simulation
+import org.metucet.redlink.hub.Bridge
+import org.metucet.redlink.hub.BridgeState
+import org.metucet.redlink.hub.PUBLIC_HUB_HOST
+import org.metucet.redlink.hub.PUBLIC_HUB_PORT
+import org.metucet.redlink.hub.TcpHubSockets
 import org.metucet.redlink.location.Fix
 import org.metucet.redlink.location.LocationUpdates
 import org.metucet.redlink.log.LogState
 import org.metucet.redlink.log.LogWriter
 import org.metucet.redlink.log.MediaStoreLogFile
 import org.metucet.redlink.log.logFileName
+import org.metucet.redlink.ui.notificationText
+import org.metucet.redlink.ui.vehicleRow
+import org.metucet.redlink.ui.viewersRow
 
 // A run in progress, as the screens see it. `startedAt` is on the phone's
 // monotonic clock, SystemClock.elapsedRealtime, in milliseconds. `logName` is
@@ -47,6 +56,7 @@ data class Run(
     val board: BoardState,
     val fix: Fix? = null,
     val log: LogState = LogState.Writing(0),
+    val bridge: BridgeState = BridgeState(),
 )
 
 private const val CHANNEL = "run"
@@ -55,10 +65,10 @@ private const val LOG_CHANNEL = "log"
 private const val NOT_LOGGING_NOTIFICATION = 2
 
 // A run is one lifetime of this service: it begins when the service is made
-// and ends when it is destroyed. The service owns the board link, location
-// updates, the log and the wake lock, so outside a run the app holds none of
-// them. The activity only watches `run`: closing it, or swiping the app out of
-// recents, changes nothing here.
+// and ends when it is destroyed. The service owns the board link, the hub
+// connections, location updates, the log and the wake lock, so outside a run
+// the app holds none of them. The activity only watches `run`: closing it, or
+// swiping the app out of recents, changes nothing here.
 class RunService : Service() {
     companion object {
         private val _run = MutableStateFlow<Run?>(null)
@@ -94,6 +104,9 @@ class RunService : Service() {
     // When the run started on the wall clock, for the notification's count.
     private var startedAtWallClock = 0L
 
+    // The notification's text, once the run has one.
+    private var notificationText: String? = null
+
     override fun onBind(intent: Intent?) = null
 
     override fun onCreate() {
@@ -107,7 +120,8 @@ class RunService : Service() {
             NotificationChannel(LOG_CHANNEL, "Log problems", NotificationManager.IMPORTANCE_DEFAULT),
         )
         // Start is disabled until a board is picked.
-        val board = SavedSettings(this).board ?: return
+        val settings = SavedSettings(this)
+        val board = settings.board ?: return
         val startedAt = SystemClock.elapsedRealtime()
         startedAtWallClock = System.currentTimeMillis()
 
@@ -129,11 +143,25 @@ class RunService : Service() {
         val logName = logFileName(startedAtLocal, simulated)
         val file = MediaStoreLogFile(this, logName)
         val log = LogWriter(file, startedAt, SystemClock::elapsedRealtime, System::currentTimeMillis)
+        val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        val bridge = Bridge(
+            settings.teamCode,
+            majorVersion(version),
+            poller.state,
+            TcpHubSockets(PUBLIC_HUB_HOST, PUBLIC_HUB_PORT),
+            SystemClock::elapsedRealtime,
+        )
         _run.value = Run(startedAt, simulated, logName, poller.state.value)
         scope.launch {
-            combine(poller.state, location.latest, log.state) { board, fix, logState ->
-                Run(startedAt, simulated, logName, board, fix, logState)
+            combine(poller.state, location.latest, log.state, bridge.state) { board, fix, logState, bridging ->
+                Run(startedAt, simulated, logName, board, fix, logState, bridging)
             }.collect { _run.value = it }
+        }
+        scope.launch {
+            run.filterNotNull().map { notificationText(vehicleRow(true, it), viewersRow(it)) }.distinctUntilChanged().collect {
+                notificationText = it
+                notifications.notify(NOTIFICATION, notification())
+            }
         }
         scope.launch {
             log.state.map { it == LogState.NotWriting }.distinctUntilChanged().collect { failing ->
@@ -157,6 +185,9 @@ class RunService : Service() {
             logListening.await()
             poller.run()
         }
+        // A thread of its own, for the same reason. Cancelling it closes every
+        // hub connection, so the hub closes each viewer's socket.
+        scope.launch(Dispatchers.Default.limitedParallelism(1)) { bridge.run() }
     }
 
     // Android gives a service started as a foreground one a few seconds to
@@ -186,6 +217,7 @@ class RunService : Service() {
     private fun notification(): Notification = Notification.Builder(this, CHANNEL)
         .setSmallIcon(R.drawable.notification)
         .setContentTitle("redLINK")
+        .setContentText(notificationText)
         // The run's duration, counting beside the title.
         .setWhen(startedAtWallClock)
         .setShowWhen(true)

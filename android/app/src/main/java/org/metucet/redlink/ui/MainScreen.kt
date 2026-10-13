@@ -46,6 +46,7 @@ import org.metucet.redlink.R
 import org.metucet.redlink.Run
 import org.metucet.redlink.board.BoardState
 import org.metucet.redlink.board.faultName
+import org.metucet.redlink.hub.HubState
 import org.metucet.redlink.location.Fix
 import org.metucet.redlink.log.LogState
 
@@ -76,6 +77,32 @@ internal fun vehicleRow(boardPicked: Boolean, run: Run?): RowState {
         }
     }
 }
+
+// The Hub row. Re-registering a lost lobby, and the wait before it, are
+// ticket 41's.
+internal fun hubRow(run: Run?): RowState = when (run?.bridge?.hub) {
+    null -> RowState("Not connected", Dot.GREY)
+    HubState.Connecting -> RowState("Connecting", Dot.AMBER)
+    HubState.Connected -> RowState("Connected", Dot.GREEN)
+    HubState.Lost -> RowState("Not connected", Dot.RED)
+}
+
+// The Viewers row: the active registrations, which count only while the lobby
+// is registered.
+internal fun viewersRow(run: Run?): RowState {
+    val bridge = run?.bridge ?: return RowState("–", Dot.GREY)
+    return when {
+        bridge.hub != HubState.Connected -> RowState("0 (hub down)", Dot.AMBER)
+        bridge.viewers == 0 -> RowState("0 viewers", Dot.AMBER)
+        bridge.viewers == 1 -> RowState("1 viewer", Dot.GREEN)
+        else -> RowState("${bridge.viewers} viewers", Dot.GREEN)
+    }
+}
+
+// The run notification's text: Vehicle connected · 3 viewers. Only the
+// Vehicle row's first letter is lowered, so a fault keeps its name.
+internal fun notificationText(vehicle: RowState, viewers: RowState) =
+    "Vehicle ${vehicle.text.replaceFirstChar { it.lowercase() }} · ${viewers.text}"
 
 // How long a fix keeps the GPS row green.
 private const val FIX_FRESH_MS = 3000L
@@ -155,9 +182,8 @@ fun MainScreen(
             notice?.let { Notice(it, onSetup) }
             Group {
                 StateRow("Vehicle", vehicleRow(boardPicked, run))
-                // Nothing joins the hub during a run yet.
-                StateRow("Hub", RowState("Not connected", Dot.GREY))
-                StateRow("Viewers", RowState("–", Dot.GREY))
+                StateRow("Hub", hubRow(run))
+                StateRow("Viewers", viewersRow(run))
                 run?.let { GpsRow(it.fix) }
                 StateRow("Log", logRow(run?.log))
             }

@@ -4,6 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.metucet.redlink.Run
 import org.metucet.redlink.board.BoardState
+import org.metucet.redlink.hub.BridgeState
+import org.metucet.redlink.hub.HubState
 import org.metucet.redlink.location.Fix
 import org.metucet.redlink.log.LogState
 
@@ -32,6 +34,44 @@ class MainScreenTest {
         assertEquals(RowState("Connected · fault OVER_TEMP_FET", Dot.RED), vehicleRow(true, run(faulty)))
         assertEquals(RowState("Connected · fault OVER_TEMP_FET", Dot.RED), vehicleRow(true, run(faulty, simulated = true)))
         assertEquals(RowState("Connected · fault 77", Dot.RED), vehicleRow(true, run(BoardState.Answering(faultCode = 77))))
+    }
+
+    private fun bridging(hub: HubState, viewers: Int = 0) =
+        run(BoardState.Answering(faultCode = 0)).copy(bridge = BridgeState(hub, viewers))
+
+    @Test
+    fun `the Hub row says whether the lobby is registered`() {
+        assertEquals(RowState("Not connected", Dot.GREY), hubRow(null))
+        assertEquals(RowState("Connecting", Dot.AMBER), hubRow(bridging(HubState.Connecting)))
+        assertEquals(RowState("Connected", Dot.GREEN), hubRow(bridging(HubState.Connected)))
+        assertEquals(RowState("Not connected", Dot.RED), hubRow(bridging(HubState.Lost)))
+    }
+
+    @Test
+    fun `the Viewers row counts the active registrations while the lobby is registered`() {
+        assertEquals(RowState("–", Dot.GREY), viewersRow(null))
+        assertEquals(RowState("0 (hub down)", Dot.AMBER), viewersRow(bridging(HubState.Connecting)))
+        assertEquals(RowState("0 (hub down)", Dot.AMBER), viewersRow(bridging(HubState.Lost, viewers = 2)))
+        assertEquals(RowState("0 viewers", Dot.AMBER), viewersRow(bridging(HubState.Connected)))
+        assertEquals(RowState("1 viewer", Dot.GREEN), viewersRow(bridging(HubState.Connected, viewers = 1)))
+        assertEquals(RowState("3 viewers", Dot.GREEN), viewersRow(bridging(HubState.Connected, viewers = 3)))
+    }
+
+    @Test
+    fun `the notification's text is the Vehicle row's then the Viewers row's`() {
+        assertEquals(
+            "Vehicle connected · 3 viewers",
+            notificationText(RowState("Connected", Dot.GREEN), RowState("3 viewers", Dot.GREEN)),
+        )
+        assertEquals(
+            "Vehicle reconnecting · 0 (hub down)",
+            notificationText(RowState("Reconnecting", Dot.RED), RowState("0 (hub down)", Dot.AMBER)),
+        )
+        // A fault's name keeps its case.
+        assertEquals(
+            "Vehicle connected · fault OVER_TEMP_FET · 1 viewer",
+            notificationText(RowState("Connected · fault OVER_TEMP_FET", Dot.RED), RowState("1 viewer", Dot.GREEN)),
+        )
     }
 
     private fun fixAt(at: Long, accuracyM: Double?) =
