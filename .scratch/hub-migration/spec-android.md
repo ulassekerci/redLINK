@@ -92,7 +92,7 @@ Tickets: [How several pit laptops watch at once](issues/04-how-several-pit-lapto
 - A field the fix does not carry (altitude, speed, heading or accuracy) is sent as 0, as the hub spec's "Our messages" says, and left empty in the log.
 - A fix whose accuracy is worse than 6,553.5 m, the most the GPS message carries, is not a fix: it is not sent, not kept for the log and not shown on the screen as one.
 - With no fix, nothing is sent and the log's GPS cells stay empty until the first one. Location services switched off during a run is the same as no fix; the run continues.
-- Which location API is used (the platform's or Google Play services') is left to implementation, under one condition: it gives fixes on a stock Android Studio emulator image playing a route, and on the reference phone with the screen off.
+- Location comes from the platform's GPS provider through `LocationManager`, not from Google Play services, as [ADR 0003](../../docs/adr/0003-location-from-the-platform-gps-provider.md) says. Whatever is used must give fixes on a stock Android Studio emulator image playing a route, and on the reference phone with the screen off.
 - The simulated board does not touch location: GPS always comes from the real provider.
 
 Tickets: [What travels on the stream](issues/05-what-travels-on-the-stream.md), [Testing without the car](issues/16-testing-without-the-car.md). Sending 0 for a field the fix lacks was decided while writing this spec.
@@ -263,6 +263,8 @@ All strings are English and are given verbatim. Dot colours: green is working, a
 |---|---|---|
 | a fix in the last 3 s | `Fix, ±4 m` (the fix's accuracy) | green |
 | otherwise | `No fix` | amber |
+
+The accuracy is rounded up to whole metres, so the row never claims better than the fix. A fix that carries no accuracy reads `Fix`.
 
 **Log row**
 

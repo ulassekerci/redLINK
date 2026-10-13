@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.metucet.redlink.Run
 import org.metucet.redlink.board.BoardState
+import org.metucet.redlink.location.Fix
 
 class MainScreenTest {
     private fun run(board: BoardState, simulated: Boolean = false) = Run(startedAt = 0, simulated = simulated, board = board)
@@ -29,6 +30,27 @@ class MainScreenTest {
         assertEquals(RowState("Connected · fault OVER_TEMP_FET", Dot.RED), vehicleRow(true, run(faulty)))
         assertEquals(RowState("Connected · fault OVER_TEMP_FET", Dot.RED), vehicleRow(true, run(faulty, simulated = true)))
         assertEquals(RowState("Connected · fault 77", Dot.RED), vehicleRow(true, run(BoardState.Answering(faultCode = 77))))
+    }
+
+    private fun fixAt(at: Long, accuracyM: Double?) =
+        Fix(39.8875, 32.7811, null, null, null, accuracyM, timeUtc = 1_790_000_000_000, at = at)
+
+    @Test
+    fun `the GPS row gives the accuracy of a fix in the last 3 s`() {
+        assertEquals(RowState("Fix, ±4 m", Dot.GREEN), gpsRow(fixAt(10_000, 4.0), now = 10_000))
+        assertEquals(RowState("Fix, ±4 m", Dot.GREEN), gpsRow(fixAt(10_000, 4.0), now = 12_999))
+        // Rounded up, so the row never claims better than the fix.
+        assertEquals(RowState("Fix, ±4 m", Dot.GREEN), gpsRow(fixAt(10_000, 3.2), now = 10_500))
+        assertEquals(RowState("Fix, ±1 m", Dot.GREEN), gpsRow(fixAt(10_000, 0.3), now = 10_500))
+        assertEquals(RowState("Fix, ±6554 m", Dot.GREEN), gpsRow(fixAt(10_000, 6553.5), now = 10_500))
+        assertEquals(RowState("Fix", Dot.GREEN), gpsRow(fixAt(10_000, null), now = 10_500))
+    }
+
+    @Test
+    fun `the GPS row has no fix before the first one or once the latest is 3 s old`() {
+        assertEquals(RowState("No fix", Dot.AMBER), gpsRow(null, now = 10_000))
+        assertEquals(RowState("No fix", Dot.AMBER), gpsRow(fixAt(10_000, 4.0), now = 13_000))
+        assertEquals(RowState("No fix", Dot.AMBER), gpsRow(fixAt(10_000, 4.0), now = 600_000))
     }
 
     @Test

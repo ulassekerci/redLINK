@@ -14,6 +14,7 @@ import android.os.SystemClock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -21,18 +22,22 @@ import org.metucet.redlink.board.BoardLink
 import org.metucet.redlink.board.BoardPoller
 import org.metucet.redlink.board.BoardState
 import org.metucet.redlink.board.simulation
+import org.metucet.redlink.location.Fix
+import org.metucet.redlink.location.LocationUpdates
 
 // A run in progress, as the screens see it. `startedAt` is on the phone's
-// monotonic clock, SystemClock.elapsedRealtime, in milliseconds.
-data class Run(val startedAt: Long, val simulated: Boolean, val board: BoardState)
+// monotonic clock, SystemClock.elapsedRealtime, in milliseconds. `fix` is the
+// latest, or null before the first.
+data class Run(val startedAt: Long, val simulated: Boolean, val board: BoardState, val fix: Fix? = null)
 
 private const val CHANNEL = "run"
 private const val NOTIFICATION = 1
 
 // A run is one lifetime of this service: it begins when the service is made
-// and ends when it is destroyed. The service owns the board link and the wake
-// lock, so outside a run the app holds neither. The activity only watches
-// `run`: closing it, or swiping the app out of recents, changes nothing here.
+// and ends when it is destroyed. The service owns the board link, location
+// updates and the wake lock, so outside a run the app holds none of them. The
+// activity only watches `run`: closing it, or swiping the app out of recents,
+// changes nothing here.
 class RunService : Service() {
     companion object {
         private val _run = MutableStateFlow<Run?>(null)
@@ -56,6 +61,7 @@ class RunService : Service() {
     private val scope = MainScope()
 
     private var link: BoardLink? = null
+    private var location: LocationUpdates? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
     // When the run started on the wall clock, for the notification's count.
@@ -81,8 +87,14 @@ class RunService : Service() {
         this.link = link
         val simulated = board == PickedBoard.Simulated
         val poller = BoardPoller(link, SystemClock::elapsedRealtime)
+        // GPS comes from the phone whichever board is picked.
+        val location = LocationUpdates(this)
+        this.location = location
         _run.value = Run(startedAt, simulated, poller.state.value)
-        scope.launch { poller.state.collect { _run.value = Run(startedAt, simulated, it) } }
+        scope.launch {
+            combine(poller.state, location.latest) { board, fix -> Run(startedAt, simulated, board, fix) }
+                .collect { _run.value = it }
+        }
         // One thread, so the poller's parts take turns.
         scope.launch(Dispatchers.Default.limitedParallelism(1)) { poller.run() }
     }
@@ -107,6 +119,7 @@ class RunService : Service() {
         scope.cancel()
         _run.value = null
         link?.close()
+        location?.close()
         wakeLock?.release()
         super.onDestroy()
     }

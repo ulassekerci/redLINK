@@ -39,11 +39,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.ceil
 import kotlinx.coroutines.delay
 import org.metucet.redlink.R
 import org.metucet.redlink.Run
 import org.metucet.redlink.board.BoardState
 import org.metucet.redlink.board.faultName
+import org.metucet.redlink.location.Fix
 
 // Why Start is disabled, or null when setup is complete.
 internal fun setupNotice(missingGrants: Int, boardPicked: Boolean): String? {
@@ -71,6 +73,18 @@ internal fun vehicleRow(boardPicked: Boolean, run: Run?): RowState {
             else -> RowState("Connected", Dot.GREEN)
         }
     }
+}
+
+// How long a fix keeps the GPS row green.
+private const val FIX_FRESH_MS = 3000L
+
+// The GPS row during a run, from the latest fix and the monotonic clock's
+// time now, both in milliseconds.
+internal fun gpsRow(fix: Fix?, now: Long): RowState {
+    if (fix == null || now - fix.at >= FIX_FRESH_MS) return RowState("No fix", Dot.AMBER)
+    // Rounded up, so the row never claims better than the fix.
+    val accuracy = fix.accuracyM?.let { ", ±${ceil(it).toInt()} m" }.orEmpty()
+    return RowState("Fix$accuracy", Dot.GREEN)
 }
 
 // A run's duration as it is shown: 12:44, and 1:02:44 from one hour.
@@ -134,6 +148,7 @@ fun MainScreen(
                 // Nothing joins the hub or writes a log during a run yet.
                 StateRow("Hub", RowState("Not connected", Dot.GREY))
                 StateRow("Viewers", RowState("–", Dot.GREY))
+                run?.let { GpsRow(it.fix) }
                 StateRow("Log", RowState("Idle", Dot.GREY))
             }
             Group {
@@ -163,6 +178,20 @@ private fun RunClock(run: Run) {
         // Digits of one width, so the count does not shift as it changes.
         style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
     )
+}
+
+// The GPS row, which turns amber when the latest fix grows old with no new
+// one to replace it.
+@Composable
+private fun GpsRow(fix: Fix?) {
+    var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    LaunchedEffect(fix) {
+        now = SystemClock.elapsedRealtime()
+        if (fix == null) return@LaunchedEffect
+        delay(fix.at + FIX_FRESH_MS - now)
+        now = SystemClock.elapsedRealtime()
+    }
+    StateRow("GPS", gpsRow(fix, now))
 }
 
 @Composable
