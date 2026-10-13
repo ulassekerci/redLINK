@@ -1,10 +1,10 @@
 package org.metucet.redlink.hub
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.awaitCancellation
+import kotlin.random.Random
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -45,6 +45,12 @@ private const val AFTER_LOGIN_MS = 100L
 // log in back to back while the hub is discarding what it is sent.
 private const val AGAIN_MS = 250L
 
+// The waits between attempts to register a lost lobby: the first doubled
+// after each failed attempt up to the last, each randomised by 20% either way.
+private const val RETRY_FIRST_MS = 250L
+private const val RETRY_CAP_MS = 10_000L
+private const val RETRY_SPREAD = 0.2
+
 private const val STATUS_MS = 1000L
 
 // A registration is active for this long after a heartbeat, and closed this
@@ -64,8 +70,9 @@ sealed interface HubState {
     // The lobby is registered.
     data object Connected : HubState
 
-    // The lobby could not be registered, or its connection dropped.
-    data object Lost : HubState
+    // The lobby could not be registered, or its connection dropped, and the
+    // next attempt is at `at`, on the bridge's clock.
+    data class Reconnecting(val at: Long) : HubState
 }
 
 // What the screens show of the bridge. `viewers` counts the active
@@ -88,17 +95,20 @@ private class Registration(val socket: HubSocket) {
 
 // The bridge's side of the hub usage spec, "The lobby, bridge side" and
 // "Polling and the stream", for as long as run() runs. `replies` is every reply
-// the board gives, a frame's payload each, and `fixes` every fix. Its hub is
-// the socket seam it is given. Its clock is a monotonic one in milliseconds,
-// with the coroutine dispatcher's for waiting, which tests replace with a
-// virtual one.
+// the board gives, a frame's payload each, `fixes` every fix, and `networks`
+// each newly available network. Its hub is the socket seam it is given, and
+// `random` spreads its waits to register a lost lobby. Its clock is a
+// monotonic one in milliseconds, with the coroutine dispatcher's for waiting,
+// which tests replace with a virtual one.
 class Bridge(
     private val teamCode: String,
     private val protocolVersion: Int,
     private val board: StateFlow<BoardState>,
     private val replies: Flow<ByteArray>,
     private val fixes: Flow<Fix>,
+    private val networks: Flow<Unit>,
     private val sockets: HubSockets,
+    private val random: Random,
     private val now: () -> Long,
 ) {
     private val password = hubPassword(teamCode)
@@ -130,34 +140,57 @@ class Bridge(
         launch {
             fixes.collect { fix -> gpsFrame(fix)?.let(::sendToActive) }
         }
-        holdLobby(this)
-        // Re-registering a lost lobby is ticket 41. Until then the viewers
-        // already registered stay, as the spec says they do.
-        awaitCancellation()
+        // A new network ends a held lobby as a drop does, and cuts short the
+        // wait after a failed attempt it came during.
+        val newNetwork = Channel<Unit>(Channel.CONFLATED)
+        launch { networks.collect { newNetwork.trySend(Unit) } }
+        // The first attempt is at once: at the start, after a drop and on a
+        // new network.
+        var failed = 0
+        while (true) {
+            _state.update { it.copy(hub = HubState.Connecting) }
+            if (holdLobby(newNetwork)) {
+                failed = 0
+                continue
+            }
+            val wait = (retryWait(failed++) * random.nextDouble(1 - RETRY_SPREAD, 1 + RETRY_SPREAD)).toLong()
+            _state.update { it.copy(hub = HubState.Reconnecting(now() + wait)) }
+            if (withTimeoutOrNull(wait) { newNetwork.receive() } != null) failed = 0
+        }
     }
 
     // Registers the lobby and opens a registration for each lobby request
     // that arrives there, until the lobby's connection drops. The lobby is
-    // never written to.
-    private suspend fun holdLobby(scope: CoroutineScope) {
-        val lobby = register(lobbyId(teamCode))?.socket
-        if (lobby == null) {
-            _state.update { it.copy(hub = HubState.Lost) }
-            return
-        }
+    // never written to. A drop closes every registration opened through it:
+    // the bridge does not open them again, and closes their sockets itself,
+    // because the hub may leave them open. A new network is a drop: the
+    // connections on the old one may be dead with nothing to tell, and
+    // registering the same ID again replaces a lobby the hub still holds.
+    // False when the lobby could not be registered.
+    private suspend fun holdLobby(newNetwork: ReceiveChannel<Unit>): Boolean {
+        val lobby = register(lobbyId(teamCode))?.socket ?: return false
+        // A network that came while registering is the one registered on.
+        newNetwork.tryReceive()
         _state.update { it.copy(hub = HubState.Connected) }
         lobby.use {
-            val decoder = FrameDecoder()
-            // Anything but a well-formed lobby request is discarded. A request
-            // for a token that has a registration is a no-op.
-            it.received.collect { bytes ->
-                for (payload in decoder.push(bytes)) {
-                    val request = decodeMessage(payload) as? LobbyRequest ?: continue
-                    if (tokens.add(request.token)) scope.launch { serve(request.token) }
+            coroutineScope {
+                launch {
+                    newNetwork.receive()
+                    it.close()
                 }
+                val decoder = FrameDecoder()
+                // Anything but a well-formed lobby request is discarded. A
+                // request for a token that has a registration is a no-op.
+                it.received.collect { bytes ->
+                    for (payload in decoder.push(bytes)) {
+                        val request = decodeMessage(payload) as? LobbyRequest ?: continue
+                        if (tokens.add(request.token)) launch { serve(request.token) }
+                    }
+                }
+                coroutineContext.cancelChildren()
             }
         }
-        _state.update { it.copy(hub = HubState.Lost) }
+        return true
     }
 
     // One viewer's registration, from opening until it is closed.
@@ -287,6 +320,9 @@ class Bridge(
         }
     }
 }
+
+// The wait after a number of failed attempts, before it is randomised.
+private fun retryWait(failed: Int) = (RETRY_FIRST_MS shl minOf(failed, 30)).coerceAtMost(RETRY_CAP_MS)
 
 // Only the replies to polls are copied: not the firmware version's, nor
 // anything else the board says.

@@ -46,7 +46,9 @@ import org.metucet.redlink.R
 import org.metucet.redlink.Run
 import org.metucet.redlink.board.BoardState
 import org.metucet.redlink.board.faultName
+import org.metucet.redlink.hub.HubAddress
 import org.metucet.redlink.hub.HubState
+import org.metucet.redlink.hub.PUBLIC_HUB
 import org.metucet.redlink.location.Fix
 import org.metucet.redlink.log.LogState
 
@@ -78,14 +80,24 @@ internal fun vehicleRow(boardPicked: Boolean, run: Run?): RowState {
     }
 }
 
-// The Hub row. Re-registering a lost lobby, and the wait before it, are
-// ticket 41's.
-internal fun hubRow(run: Run?): RowState = when (run?.bridge?.hub) {
-    null -> RowState("Not connected", Dot.GREY)
-    HubState.Connecting -> RowState("Connecting", Dot.AMBER)
-    HubState.Connected -> RowState("Connected", Dot.GREEN)
-    HubState.Lost -> RowState("Not connected", Dot.RED)
+// The whole seconds left until the bridge's next attempt at `at`, from `now`,
+// both on the monotonic clock in milliseconds. Rounded up, so the Hub row
+// never claims an attempt sooner than it comes, and never less than one.
+private fun secondsLeft(at: Long, now: Long) = ((at - now + 999) / 1000).coerceAtLeast(1)
+
+// The Hub row, with the monotonic clock's time now in milliseconds.
+internal fun hubRow(run: Run?, now: Long): RowState {
+    if (run == null) return RowState("Not connected", Dot.GREY)
+    if (!run.networkAvailable) return RowState("No network", Dot.RED)
+    return when (val hub = run.bridge.hub) {
+        HubState.Connecting -> RowState("Connecting", Dot.AMBER)
+        HubState.Connected -> RowState("Connected", Dot.GREEN)
+        is HubState.Reconnecting -> RowState("Reconnecting in ${secondsLeft(hub.at, now)} s", Dot.RED)
+    }
 }
+
+// The Hub row's second line: the hub, when it is not the public one.
+internal fun hubLine(hub: HubAddress): String? = hub.takeIf { it != PUBLIC_HUB }?.toString()
 
 // The Viewers row: the active registrations, which count only while the lobby
 // is registered.
@@ -134,12 +146,13 @@ internal fun runDuration(seconds: Long): String {
 
 // The main screen. It shows whether each link is up and never a telemetry
 // value: nobody reads the phone while driving. Stop only asks; StopDialog is
-// what ends a run.
+// what ends a run. `hub` is the one Setup holds, which a run uses.
 @Composable
 fun MainScreen(
     run: Run?,
     missingGrants: Int,
     boardPicked: Boolean,
+    hub: HubAddress,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onLogs: () -> Unit,
@@ -182,7 +195,7 @@ fun MainScreen(
             notice?.let { Notice(it, onSetup) }
             Group {
                 StateRow("Vehicle", vehicleRow(boardPicked, run))
-                StateRow("Hub", hubRow(run))
+                HubRow(run, hub)
                 StateRow("Viewers", viewersRow(run))
                 run?.let { GpsRow(it.fix) }
                 StateRow("Log", logRow(run?.log))
@@ -235,6 +248,23 @@ private fun GpsRow(fix: Fix?) {
     StateRow("GPS", gpsRow(fix, now))
 }
 
+// The Hub row, which counts down the wait before the bridge's next attempt.
+@Composable
+private fun HubRow(run: Run?, hub: HubAddress) {
+    var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    val retryAt = (run?.bridge?.hub as? HubState.Reconnecting)?.at
+    LaunchedEffect(retryAt) {
+        now = SystemClock.elapsedRealtime()
+        if (retryAt == null) return@LaunchedEffect
+        while (now < retryAt) {
+            // Until the count shown goes down a second.
+            delay(retryAt - now - (secondsLeft(retryAt, now) - 1) * 1000)
+            now = SystemClock.elapsedRealtime()
+        }
+    }
+    StateRow("Hub", hubRow(run, now), supporting = hubLine(hub))
+}
+
 @Composable
 fun StopDialog(onKeepRunning: () -> Unit, onStop: () -> Unit) = AlertDialog(
     onDismissRequest = onKeepRunning,
@@ -262,9 +292,10 @@ private fun Notice(text: String, onClick: () -> Unit) = Surface(
 }
 
 @Composable
-private fun StateRow(label: String, state: RowState) = ListRow(label, dot = state.dot) {
-    Text(state.text, style = MaterialTheme.typography.bodyMedium)
-}
+private fun StateRow(label: String, state: RowState, supporting: String? = null) =
+    ListRow(label, dot = state.dot, supporting = supporting) {
+        Text(state.text, style = MaterialTheme.typography.bodyMedium)
+    }
 
 @Composable
 private fun NavRow(label: String, onClick: () -> Unit) = ListRow(label, Modifier.clickable(onClick = onClick)) {

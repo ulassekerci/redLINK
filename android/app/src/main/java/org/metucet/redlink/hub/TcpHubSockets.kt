@@ -15,16 +15,12 @@ import kotlinx.coroutines.future.await
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withTimeoutOrNull
 
-// The public hub, from the hub usage spec's "The hub".
-const val PUBLIC_HUB_HOST = "veschub.vedder.se"
-const val PUBLIC_HUB_PORT = 65101
-
 private const val CONNECT_TIMEOUT_MS = 5000L
 
 // The hub's connections in the app: plain TCP. Blocking calls run on the IO
 // threads and are interrupted when the coroutine waiting on them is
 // cancelled, which closes the connection, so Stop never waits on the network.
-class TcpHubSockets(private val host: String, private val port: Int) : HubSockets {
+class TcpHubSockets(private val hub: HubAddress) : HubSockets {
     override suspend fun open(): HubSocket? {
         val channel = SocketChannel.open()
         try {
@@ -36,7 +32,7 @@ class TcpHubSockets(private val host: String, private val port: Int) : HubSocket
                 // A name lookup cannot be interrupted, so it is left to finish
                 // on its own rather than waited for.
                 val address = CompletableFuture.supplyAsync(
-                    { InetSocketAddress(host, port) },
+                    { InetSocketAddress(hub.host, hub.port) },
                     Dispatchers.IO.asExecutor(),
                 ).await()
                 // No network, or no such host.

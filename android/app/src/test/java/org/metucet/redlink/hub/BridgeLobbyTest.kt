@@ -1,5 +1,6 @@
 package org.metucet.redlink.hub
 
+import kotlin.random.Random
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -33,6 +34,14 @@ private const val TOKEN = "4HT9WQ2B"
 private const val VIEWER = LOBBY + TOKEN
 private const val FW_VERSION = 0
 
+// A random source whose every draw between two values is the same fraction of
+// the way from one to the other.
+private class FixedRandom(private val fraction: Double) : Random() {
+    override fun nextBits(bitCount: Int) = error("not drawn")
+
+    override fun nextDouble(from: Double, until: Double) = from + (until - from) * fraction
+}
+
 // A COMM_CUSTOM_APP_DATA frame of any type and content, well-formed or not.
 private fun customAppData(type: Int, content: ByteArray) = encodeFrame(byteArrayOf(36, type.toByte()) + content)
 
@@ -43,6 +52,7 @@ class BridgeLobbyTest {
         val board: MutableStateFlow<BoardState>,
         val replies: MutableSharedFlow<ByteArray>,
         val fixes: MutableSharedFlow<Fix>,
+        val networks: MutableSharedFlow<Unit>,
         val bridge: Bridge,
         val running: Job,
     )
@@ -51,14 +61,16 @@ class BridgeLobbyTest {
     private fun TestScope.bridging(
         protocolVersion: Int = 1,
         board: BoardState = BoardState.Answering(faultCode = 0),
+        random: Random = FixedRandom(0.5),
     ): Bridging {
         val hub = FakeHub { currentTime }
         val boardState = MutableStateFlow(board)
         val replies = MutableSharedFlow<ByteArray>(extraBufferCapacity = 1000)
         val fixes = MutableSharedFlow<Fix>(extraBufferCapacity = 1000)
-        val bridge = Bridge(CODE, protocolVersion, boardState, replies, fixes, hub) { currentTime }
+        val networks = MutableSharedFlow<Unit>(extraBufferCapacity = 1000)
+        val bridge = Bridge(CODE, protocolVersion, boardState, replies, fixes, networks, hub, random) { currentTime }
         val running = backgroundScope.launch { bridge.run() }
-        return Bridging(hub, boardState, replies, fixes, bridge, running)
+        return Bridging(hub, boardState, replies, fixes, networks, bridge, running)
     }
 
     // Lets the clock reach a time, and everything due at it happen.
@@ -379,13 +391,122 @@ class BridgeLobbyTest {
     }
 
     @Test
-    fun `the lobby is lost when the hub cannot be reached`() = runTest {
+    fun `a lobby that cannot be registered is tried again after 250 ms, doubling to 10 s`() = runTest {
         val bridging = bridging()
         bridging.hub.reachable = false
 
-        runUntil(1000)
+        runUntil(60_000)
 
-        assertEquals(BridgeState(HubState.Lost, viewers = 0), bridging.bridge.state.value)
+        assertEquals(
+            listOf(0L, 250, 750, 1750, 3750, 7750, 15_750, 25_750, 35_750, 45_750, 55_750),
+            bridging.hub.attempts,
+        )
+    }
+
+    @Test
+    fun `each wait is randomised by 20% either way`() = runTest {
+        val early = bridging(random = FixedRandom(0.0))
+        early.hub.reachable = false
+        runUntil(30_000)
+        assertEquals(listOf(0L, 200, 600, 1400, 3000, 6200, 12_600, 20_600, 28_600), early.hub.attempts)
+    }
+
+    @Test
+    fun `a new network is tried at once, and the waits start again from 250 ms`() = runTest {
+        val bridging = bridging()
+        bridging.hub.reachable = false
+
+        runUntil(3000)
+        bridging.networks.emit(Unit)
+        runUntil(4000)
+
+        assertEquals(listOf(0L, 250, 750, 1750, 3000, 3250, 3750), bridging.hub.attempts)
+    }
+
+    @Test
+    fun `after a drop the first attempt is at once, and the waits start again from 250 ms`() = runTest {
+        val bridging = bridging()
+        // Registered at the fifth attempt, at 3750 ms, after waits that grew.
+        bridging.hub.reachable = false
+        runUntil(3000)
+        bridging.hub.reachable = true
+        runUntil(10_000)
+        assertEquals(HubState.Connected, bridging.bridge.state.value.hub)
+
+        runUntil(11_000)
+        bridging.hub.reachable = false
+        bridging.hub.registration(LOBBY)!!.hubCloses()
+        runUntil(13_000)
+
+        assertEquals(listOf(11_000L, 11_250, 11_750, 12_750), bridging.hub.attempts.filter { it >= 10_000 })
+    }
+
+    @Test
+    fun `a new network while the lobby is held registers it again at once, as a drop does`() = runTest {
+        val bridging = bridging()
+        val viewer = viewer(bridging)
+        viewer.heartbeatAt(2500, this)
+        val lobby = bridging.hub.registration(LOBBY)!!
+
+        // The old connections may be dead with nothing to tell, and the hub
+        // still holding them.
+        runUntil(3000)
+        bridging.networks.emit(Unit)
+        runUntil(4000)
+
+        assertEquals(listOf(LOBBY, VIEWER, LOBBY), bridging.hub.registrations())
+        assertEquals(3000L, bridging.hub.registration(LOBBY)!!.openedAt)
+        assertTrue(lobby.closed)
+        assertTrue(viewer.closed)
+        assertEquals(BridgeState(HubState.Connected, viewers = 0), bridging.bridge.state.value)
+    }
+
+    @Test
+    fun `a new network while the lobby is being registered is the one it is registered on`() = runTest {
+        val bridging = bridging()
+
+        runUntil(50)
+        bridging.networks.emit(Unit)
+        runUntil(5000)
+
+        assertEquals(listOf(LOBBY), bridging.hub.registrations())
+    }
+
+    @Test
+    fun `waiting to try again, the bridge says when it will`() = runTest {
+        val bridging = bridging()
+        bridging.hub.reachable = false
+
+        runUntil(100)
+        assertEquals(BridgeState(HubState.Reconnecting(at = 250), viewers = 0), bridging.bridge.state.value)
+        runUntil(300)
+        assertEquals(HubState.Reconnecting(at = 750), bridging.bridge.state.value.hub)
+    }
+
+    @Test
+    fun `after the hub connection drops only the lobby is registered again`() = runTest {
+        val bridging = bridging()
+        val viewer = viewer(bridging)
+        viewer.heartbeatAt(2500, this)
+        val lobby = bridging.hub.registration(LOBBY)!!
+
+        runUntil(3000)
+        lobby.hubCloses()
+        runUntil(4000)
+
+        assertEquals(listOf(LOBBY, VIEWER, LOBBY), bridging.hub.registrations())
+        assertEquals(HubState.Connected, bridging.bridge.state.value.hub)
+        // The bridge's old sockets are its own to close, as the hub may leave
+        // them open.
+        assertTrue(viewer.closed)
+        assertEquals(0, bridging.bridge.state.value.viewers)
+        assertNull(bridging.hub.registration(VIEWER))
+
+        // The viewer comes back through the new lobby, and may use its token
+        // again.
+        bridging.hub.registration(LOBBY)!!.send(LobbyRequest(TOKEN))
+        runUntil(5000)
+        assertEquals(listOf(LOBBY, VIEWER, LOBBY, VIEWER), bridging.hub.registrations())
     }
 
     // The board's replies as they come, each a frame's payload.

@@ -47,13 +47,15 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) follow(intent)
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
         val settings = SavedSettings(this)
-        // Made here on first launch, and the same ever after.
-        val teamCode = settings.teamCode
+        // Made here on first launch, and the same until New code.
+        val firstTeamCode = settings.teamCode
         val logs = LogFolder(this)
         setContent {
             RedLinkTheme {
                 var screen by rememberSaveable { mutableStateOf(Screen.MAIN) }
                 var board by remember { mutableStateOf(settings.board) }
+                var hub by remember { mutableStateOf(settings.hub) }
+                var teamCode by remember { mutableStateOf(firstTeamCode) }
                 var stopDialog by rememberSaveable { mutableStateOf(false) }
                 val run by RunService.run.collectAsState()
                 val logsClosed by RunService.logsClosed.collectAsState()
@@ -72,6 +74,7 @@ class MainActivity : ComponentActivity() {
                         run = run,
                         missingGrants = (grantsNeeded(board) - granted).size,
                         boardPicked = board != null,
+                        hub = hub,
                         onStart = { RunService.start(this) },
                         onStop = { stopDialog = true },
                         onLogs = { screen = Screen.LOGS },
@@ -82,6 +85,7 @@ class MainActivity : ComponentActivity() {
                         granted = granted,
                         board = board,
                         running = run != null,
+                        hub = hub,
                         teamCode = teamCode,
                         version = version,
                         onGrant = grantRequests::request,
@@ -89,6 +93,11 @@ class MainActivity : ComponentActivity() {
                             settings.board = it
                             board = it
                         },
+                        onHub = {
+                            settings.hub = it
+                            hub = it
+                        },
+                        onNewCode = { teamCode = settings.newTeamCode() },
                         onBack = { screen = Screen.MAIN },
                     )
                 }

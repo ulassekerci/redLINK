@@ -26,7 +26,11 @@ class FakeHub(private val now: () -> Long) : HubSockets {
     // when another party's slow connection holds it up.
     var loseLogins = 0
 
+    // When each connection was asked for, made or not.
+    val attempts = mutableListOf<Long>()
+
     override suspend fun open(): HubSocket? {
+        attempts += now()
         if (!reachable) return null
         return FakeSocket().also { sockets += it }
     }

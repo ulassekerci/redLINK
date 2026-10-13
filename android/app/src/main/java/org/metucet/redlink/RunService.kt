@@ -14,6 +14,7 @@ import android.os.SystemClock
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import kotlin.random.Random
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -33,8 +34,7 @@ import org.metucet.redlink.board.BoardState
 import org.metucet.redlink.board.simulation
 import org.metucet.redlink.hub.Bridge
 import org.metucet.redlink.hub.BridgeState
-import org.metucet.redlink.hub.PUBLIC_HUB_HOST
-import org.metucet.redlink.hub.PUBLIC_HUB_PORT
+import org.metucet.redlink.hub.DefaultNetwork
 import org.metucet.redlink.hub.TcpHubSockets
 import org.metucet.redlink.location.Fix
 import org.metucet.redlink.location.LocationUpdates
@@ -49,6 +49,7 @@ import org.metucet.redlink.ui.viewersRow
 // A run in progress, as the screens see it. `startedAt` is on the phone's
 // monotonic clock, SystemClock.elapsedRealtime, in milliseconds. `logName` is
 // the log's file name. `fix` is the latest, or null before the first.
+// `networkAvailable` is false while Android reports no network at all.
 data class Run(
     val startedAt: Long,
     val simulated: Boolean,
@@ -57,6 +58,7 @@ data class Run(
     val fix: Fix? = null,
     val log: LogState = LogState.Writing(0),
     val bridge: BridgeState = BridgeState(),
+    val networkAvailable: Boolean = true,
 )
 
 private const val CHANNEL = "run"
@@ -66,8 +68,9 @@ private const val NOT_LOGGING_NOTIFICATION = 2
 
 // A run is one lifetime of this service: it begins when the service is made
 // and ends when it is destroyed. The service owns the board link, the hub
-// connections, location updates, the log and the wake lock, so outside a run
-// the app holds none of them. The activity only watches `run`: closing it, or
+// connections, the network watch, location updates, the log and the wake lock,
+// so outside a run the app holds none of them. The activity only watches
+// `run`: closing it, or
 // swiping the app out of recents, changes nothing here.
 class RunService : Service() {
     companion object {
@@ -99,6 +102,7 @@ class RunService : Service() {
 
     private var link: BoardLink? = null
     private var location: LocationUpdates? = null
+    private var network: DefaultNetwork? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
     // When the run started on the wall clock, for the notification's count.
@@ -144,19 +148,31 @@ class RunService : Service() {
         val file = MediaStoreLogFile(this, logName)
         val log = LogWriter(file, startedAt, SystemClock::elapsedRealtime, System::currentTimeMillis)
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        val network = DefaultNetwork(this)
+        this.network = network
+        // The hub connections are the bridge's alone: one that drops never
+        // touches the log or the board link.
         val bridge = Bridge(
             settings.teamCode,
             majorVersion(version),
             poller.state,
             poller.replies,
             location.fixes,
-            TcpHubSockets(PUBLIC_HUB_HOST, PUBLIC_HUB_PORT),
+            network.arrivals,
+            TcpHubSockets(settings.hub),
+            Random.Default,
             SystemClock::elapsedRealtime,
         )
-        _run.value = Run(startedAt, simulated, logName, poller.state.value)
+        _run.value = Run(startedAt, simulated, logName, poller.state.value, networkAvailable = network.available.value)
         scope.launch {
-            combine(poller.state, location.latest, log.state, bridge.state) { board, fix, logState, bridging ->
-                Run(startedAt, simulated, logName, board, fix, logState, bridging)
+            combine(
+                poller.state,
+                location.latest,
+                log.state,
+                bridge.state,
+                network.available,
+            ) { board, fix, logState, bridging, networkAvailable ->
+                Run(startedAt, simulated, logName, board, fix, logState, bridging, networkAvailable)
             }.collect { _run.value = it }
         }
         scope.launch {
@@ -212,6 +228,7 @@ class RunService : Service() {
         getSystemService(NotificationManager::class.java).cancel(NOT_LOGGING_NOTIFICATION)
         link?.close()
         location?.close()
+        network?.close()
         wakeLock?.release()
         super.onDestroy()
     }
