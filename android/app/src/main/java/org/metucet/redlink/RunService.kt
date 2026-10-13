@@ -11,10 +11,17 @@ import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
 import android.os.PowerManager
 import android.os.SystemClock
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -24,20 +31,32 @@ import org.metucet.redlink.board.BoardState
 import org.metucet.redlink.board.simulation
 import org.metucet.redlink.location.Fix
 import org.metucet.redlink.location.LocationUpdates
+import org.metucet.redlink.log.LogState
+import org.metucet.redlink.log.LogWriter
+import org.metucet.redlink.log.MediaStoreLogFile
+import org.metucet.redlink.log.logFileName
 
 // A run in progress, as the screens see it. `startedAt` is on the phone's
 // monotonic clock, SystemClock.elapsedRealtime, in milliseconds. `fix` is the
 // latest, or null before the first.
-data class Run(val startedAt: Long, val simulated: Boolean, val board: BoardState, val fix: Fix? = null)
+data class Run(
+    val startedAt: Long,
+    val simulated: Boolean,
+    val board: BoardState,
+    val fix: Fix? = null,
+    val log: LogState = LogState.Writing(0),
+)
 
 private const val CHANNEL = "run"
 private const val NOTIFICATION = 1
+private const val LOG_CHANNEL = "log"
+private const val NOT_LOGGING_NOTIFICATION = 2
 
 // A run is one lifetime of this service: it begins when the service is made
 // and ends when it is destroyed. The service owns the board link, location
-// updates and the wake lock, so outside a run the app holds none of them. The
-// activity only watches `run`: closing it, or swiping the app out of recents,
-// changes nothing here.
+// updates, the log and the wake lock, so outside a run the app holds none of
+// them. The activity only watches `run`: closing it, or swiping the app out of
+// recents, changes nothing here.
 class RunService : Service() {
     companion object {
         private val _run = MutableStateFlow<Run?>(null)
@@ -71,6 +90,14 @@ class RunService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        val notifications = getSystemService(NotificationManager::class.java)
+        notifications.createNotificationChannel(
+            NotificationChannel(CHANNEL, "Run", NotificationManager.IMPORTANCE_LOW),
+        )
+        // Loud enough to be noticed: the run goes on with nothing recorded.
+        notifications.createNotificationChannel(
+            NotificationChannel(LOG_CHANNEL, "Log problems", NotificationManager.IMPORTANCE_DEFAULT),
+        )
         // Start is disabled until a board is picked.
         val board = SavedSettings(this).board ?: return
         val startedAt = SystemClock.elapsedRealtime()
@@ -90,21 +117,37 @@ class RunService : Service() {
         // GPS comes from the phone whichever board is picked.
         val location = LocationUpdates(this)
         this.location = location
+        val startedAtLocal = LocalDateTime.ofInstant(Instant.ofEpochMilli(startedAtWallClock), ZoneId.systemDefault())
+        val file = MediaStoreLogFile(this, logFileName(startedAtLocal, simulated))
+        val log = LogWriter(file, startedAt, SystemClock::elapsedRealtime, System::currentTimeMillis)
         _run.value = Run(startedAt, simulated, poller.state.value)
         scope.launch {
-            combine(poller.state, location.latest) { board, fix -> Run(startedAt, simulated, board, fix) }
-                .collect { _run.value = it }
+            combine(poller.state, location.latest, log.state) { board, fix, logState ->
+                Run(startedAt, simulated, board, fix, logState)
+            }.collect { _run.value = it }
         }
+        scope.launch {
+            log.state.map { it == LogState.NotWriting }.distinctUntilChanged().collect { failing ->
+                if (failing) notifications.notify(NOT_LOGGING_NOTIFICATION, notLogging()) else notifications.cancel(NOT_LOGGING_NOTIFICATION)
+            }
+        }
+        // Writing blocks, so it has its own thread. The file is closed after
+        // the writer's last write, which comes once the run has ended. Polling
+        // waits for the writer to listen, so the first cycle has its row.
+        val logListening = CompletableDeferred<Unit>()
+        val cycles = poller.cycles.onSubscription { logListening.complete(Unit) }
+        scope.launch(Dispatchers.IO) { file.use { log.run(cycles, location.fixes, poller.state) } }
         // One thread, so the poller's parts take turns.
-        scope.launch(Dispatchers.Default.limitedParallelism(1)) { poller.run() }
+        scope.launch(Dispatchers.Default.limitedParallelism(1)) {
+            logListening.await()
+            poller.run()
+        }
     }
 
     // Android gives a service started as a foreground one a few seconds to
     // become one, on every start, so this does not depend on a run having
     // begun.
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        getSystemService(NotificationManager::class.java)
-            .createNotificationChannel(NotificationChannel(CHANNEL, "Run", NotificationManager.IMPORTANCE_LOW))
         // Android refuses the connectedDevice type to an app without the
         // Bluetooth grant, which a run on the simulated board does not need.
         val connectedDevice =
@@ -118,6 +161,7 @@ class RunService : Service() {
     override fun onDestroy() {
         scope.cancel()
         _run.value = null
+        getSystemService(NotificationManager::class.java).cancel(NOT_LOGGING_NOTIFICATION)
         link?.close()
         location?.close()
         wakeLock?.release()
@@ -137,6 +181,13 @@ class RunService : Service() {
         .setContentIntent(mainScreen(MainActivity.ACTION_SHOW_MAIN))
         // Stop asks first, on the main screen. It never stops the run by itself.
         .addAction(Notification.Action.Builder(null, "Stop", mainScreen(MainActivity.ACTION_ASK_STOP)).build())
+        .build()
+
+    private fun notLogging(): Notification = Notification.Builder(this, LOG_CHANNEL)
+        .setSmallIcon(R.drawable.notification)
+        .setContentTitle("redLINK is not logging")
+        .setContentText("The log file cannot be written. Viewers are not affected.")
+        .setContentIntent(mainScreen(MainActivity.ACTION_SHOW_MAIN))
         .build()
 
     private fun mainScreen(action: String) = PendingIntent.getActivity(

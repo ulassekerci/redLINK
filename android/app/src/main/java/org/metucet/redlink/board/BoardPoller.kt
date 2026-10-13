@@ -3,7 +3,9 @@ package org.metucet.redlink.board
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -23,6 +25,9 @@ private const val CYCLE_MS = 50L
 private const val REPLY_TIMEOUT_MS = 250L
 private const val UNREACHABLE_MS = 2000L
 
+// Five seconds of cycles.
+private const val CYCLE_BUFFER = 100
+
 // What the bridge knows of the board during a run.
 sealed interface BoardState {
     // No reply yet, or none for a while.
@@ -31,6 +36,10 @@ sealed interface BoardState {
     // The fault code is the latest setup reply's, 0 for none.
     data class Answering(val faultCode: Int) : BoardState
 }
+
+// One poll cycle in which at least one reply arrived. A reply that did not
+// arrive is null. `at` is when the cycle ended, on the poller's clock.
+data class Cycle(val values: ValuesSetup?, val adc: DecodedAdc?, val at: Long)
 
 // Polls the board through its link for as long as run() runs. The clock is a
 // monotonic one, in milliseconds.
@@ -41,6 +50,13 @@ class BoardPoller(private val link: BoardLink, private val now: () -> Long) {
     private val _state = MutableStateFlow<BoardState>(BoardState.Unreachable)
     val state: StateFlow<BoardState> = _state
 
+    private val _cycles = MutableSharedFlow<Cycle>(extraBufferCapacity = CYCLE_BUFFER)
+
+    // Every cycle with a reply, in order, for the parts that must not miss
+    // one, such as the log. A collector may fall five seconds behind before
+    // cycles are lost.
+    val cycles: SharedFlow<Cycle> = _cycles
+
     suspend fun run(): Unit = coroutineScope {
         launch { receive() }
         launch { watchForSilence() }
@@ -48,8 +64,9 @@ class BoardPoller(private val link: BoardLink, private val now: () -> Long) {
         launch { link.connected.collect { up -> if (!up) _state.value = BoardState.Unreachable } }
         var cycleStart = now()
         while (true) {
-            ask<ValuesSetup>(ValuesSetupRequest)
-            ask<DecodedAdc>(DecodedAdcRequest)
+            val values = ask<ValuesSetup>(ValuesSetupRequest)
+            val adc = ask<DecodedAdc>(DecodedAdcRequest)
+            if (values != null || adc != null) _cycles.tryEmit(Cycle(values, adc, now()))
             // A cycle that overran is followed at once by the next.
             cycleStart = maxOf(cycleStart + CYCLE_MS, now())
             delay(cycleStart - now())

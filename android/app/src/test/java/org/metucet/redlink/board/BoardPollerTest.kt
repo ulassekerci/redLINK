@@ -210,6 +210,32 @@ class BoardPollerTest {
     }
 
     @Test
+    fun `each cycle with a reply is published with its replies and the time it ended`() = runTest {
+        val polling = polling()
+        // Setup answered in the first cycle, ADC alone in the second, nothing
+        // after.
+        polling.board.answer = { command ->
+            when (polling.board.requests.size) {
+                1 -> polling.board.reply(valuesSetupReply(faultCode = 5))
+                4 -> polling.board.reply(decodedAdcReply)
+            }
+        }
+        val cycles = mutableListOf<Cycle>()
+        backgroundScope.launch { polling.poller.cycles.collect { cycles += it } }
+
+        runUntil(1000)
+
+        assertEquals(2, cycles.size)
+        assertEquals(5, cycles[0].values?.faultCode)
+        assertEquals(null, cycles[0].adc)
+        // Each unanswered request was given up on after 250 ms.
+        assertEquals(250L, cycles[0].at)
+        assertEquals(null, cycles[1].values)
+        assertEquals(0.0, cycles[1].adc!!.adcLevel1, 0.0)
+        assertEquals(500L, cycles[1].at)
+    }
+
+    @Test
     fun `a board that always answers late is still answering`() = runTest {
         val polling = polling()
         polling.board.answer = { command ->

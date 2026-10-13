@@ -17,3 +17,7 @@ Spec: [Android app spec](../spec-android.md) 2.11 (Logs), 2.8 ("After a reinstal
 - [ ] Share opens the share sheet with the selected files as CSV
 - [ ] Delete asks first with the dialog of 3.5, in its singular and plural forms, and removes the files from the folder
 - [ ] Files the app does not own (from before a reinstall) do not appear and are left alone
+
+## Comments
+
+2026-10-13, from [The log of record](37-the-log-of-record.md): MediaStore's size for the log in progress is stale until the run's file is closed, and so is the size other apps see over `/sdcard`. The size of the current log should come from the run (`LogState.Writing`), not from MediaStore.

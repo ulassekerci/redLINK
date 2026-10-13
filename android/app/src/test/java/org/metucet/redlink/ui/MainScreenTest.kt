@@ -5,6 +5,7 @@ import org.junit.Test
 import org.metucet.redlink.Run
 import org.metucet.redlink.board.BoardState
 import org.metucet.redlink.location.Fix
+import org.metucet.redlink.log.LogState
 
 class MainScreenTest {
     private fun run(board: BoardState, simulated: Boolean = false) = Run(startedAt = 0, simulated = simulated, board = board)
@@ -51,6 +52,15 @@ class MainScreenTest {
         assertEquals(RowState("No fix", Dot.AMBER), gpsRow(null, now = 10_000))
         assertEquals(RowState("No fix", Dot.AMBER), gpsRow(fixAt(10_000, 4.0), now = 13_000))
         assertEquals(RowState("No fix", Dot.AMBER), gpsRow(fixAt(10_000, 4.0), now = 600_000))
+    }
+
+    @Test
+    fun `the Log row says whether the run's log is being written, and how big it is`() {
+        assertEquals(RowState("Idle", Dot.GREY), logRow(null))
+        assertEquals(RowState("Recording, 1.25 MB", Dot.GREEN), logRow(LogState.Writing(1_250_000)))
+        assertEquals(RowState("Recording, 0.00 MB", Dot.GREEN), logRow(LogState.Writing(0)))
+        assertEquals(RowState("Recording, 15.10 MB", Dot.GREEN), logRow(LogState.Writing(15_096_000)))
+        assertEquals(RowState("Not writing", Dot.RED), logRow(LogState.NotWriting))
     }
 
     @Test

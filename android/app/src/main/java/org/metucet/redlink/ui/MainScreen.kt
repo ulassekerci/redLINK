@@ -39,6 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.Locale
 import kotlin.math.ceil
 import kotlinx.coroutines.delay
 import org.metucet.redlink.R
@@ -46,6 +47,7 @@ import org.metucet.redlink.Run
 import org.metucet.redlink.board.BoardState
 import org.metucet.redlink.board.faultName
 import org.metucet.redlink.location.Fix
+import org.metucet.redlink.log.LogState
 
 // Why Start is disabled, or null when setup is complete.
 internal fun setupNotice(missingGrants: Int, boardPicked: Boolean): String? {
@@ -85,6 +87,14 @@ internal fun gpsRow(fix: Fix?, now: Long): RowState {
     // Rounded up, so the row never claims better than the fix.
     val accuracy = fix.accuracyM?.let { ", ±${ceil(it).toInt()} m" }.orEmpty()
     return RowState("Fix$accuracy", Dot.GREEN)
+}
+
+// The Log row, from the run's log, or null outside a run. Megabytes are
+// millions of bytes, as the Files app counts them.
+internal fun logRow(log: LogState?): RowState = when (log) {
+    null -> RowState("Idle", Dot.GREY)
+    is LogState.Writing -> RowState("Recording, ${"%.2f".format(Locale.ROOT, log.bytes / 1e6)} MB", Dot.GREEN)
+    LogState.NotWriting -> RowState("Not writing", Dot.RED)
 }
 
 // A run's duration as it is shown: 12:44, and 1:02:44 from one hour.
@@ -145,11 +155,11 @@ fun MainScreen(
             notice?.let { Notice(it, onSetup) }
             Group {
                 StateRow("Vehicle", vehicleRow(boardPicked, run))
-                // Nothing joins the hub or writes a log during a run yet.
+                // Nothing joins the hub during a run yet.
                 StateRow("Hub", RowState("Not connected", Dot.GREY))
                 StateRow("Viewers", RowState("–", Dot.GREY))
                 run?.let { GpsRow(it.fix) }
-                StateRow("Log", RowState("Idle", Dot.GREY))
+                StateRow("Log", logRow(run?.log))
             }
             Group {
                 NavRow("Logs", onLogs)
