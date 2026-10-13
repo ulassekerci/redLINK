@@ -35,18 +35,32 @@ fun Group(content: @Composable ColumnScope.() -> Unit) = Surface(
     Column(content = content)
 }
 
+// A row with a label, and a line under it when `supporting` is given. A dot
+// leads it, or `leading` when there is no dot.
 @Composable
 fun ListRow(
     label: String,
     modifier: Modifier = Modifier,
     dot: Dot? = null,
+    supporting: String? = null,
+    leading: @Composable (() -> Unit)? = null,
     trailing: @Composable (() -> Unit)? = null,
 ) = ListItem(
     headlineContent = { Text(label) },
     modifier = modifier,
-    leadingContent = dot?.let { { Box(Modifier.size(10.dp).background(it.color, CircleShape)) } },
+    supportingContent = supporting?.let { { Text(it) } },
+    leadingContent = dot?.let { { Box(Modifier.size(10.dp).background(it.color, CircleShape)) } } ?: leading,
     trailingContent = trailing,
     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+)
+
+// The quiet line over a group of rows.
+@Composable
+fun Heading(text: String) = Text(
+    text,
+    modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 16.dp, bottom = 6.dp),
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+    style = MaterialTheme.typography.labelLarge,
 )
 
 // The bar of a screen reached from the main screen.

@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.metucet.redlink.board.BoardLink
 import org.metucet.redlink.board.BoardPoller
@@ -37,11 +38,12 @@ import org.metucet.redlink.log.MediaStoreLogFile
 import org.metucet.redlink.log.logFileName
 
 // A run in progress, as the screens see it. `startedAt` is on the phone's
-// monotonic clock, SystemClock.elapsedRealtime, in milliseconds. `fix` is the
-// latest, or null before the first.
+// monotonic clock, SystemClock.elapsedRealtime, in milliseconds. `logName` is
+// the log's file name. `fix` is the latest, or null before the first.
 data class Run(
     val startedAt: Long,
     val simulated: Boolean,
+    val logName: String,
     val board: BoardState,
     val fix: Fix? = null,
     val log: LogState = LogState.Writing(0),
@@ -63,6 +65,12 @@ class RunService : Service() {
 
         // The run in progress, or null outside one.
         val run: StateFlow<Run?> = _run
+
+        private val _logsClosed = MutableStateFlow(0)
+
+        // Counts the runs whose log has had its last rows written and been
+        // closed, which comes a moment after `run` turns null.
+        val logsClosed: StateFlow<Int> = _logsClosed
 
         // Android lets a foreground service of these types start only from an
         // app the person can see, so this is called from the activity.
@@ -118,12 +126,13 @@ class RunService : Service() {
         val location = LocationUpdates(this)
         this.location = location
         val startedAtLocal = LocalDateTime.ofInstant(Instant.ofEpochMilli(startedAtWallClock), ZoneId.systemDefault())
-        val file = MediaStoreLogFile(this, logFileName(startedAtLocal, simulated))
+        val logName = logFileName(startedAtLocal, simulated)
+        val file = MediaStoreLogFile(this, logName)
         val log = LogWriter(file, startedAt, SystemClock::elapsedRealtime, System::currentTimeMillis)
-        _run.value = Run(startedAt, simulated, poller.state.value)
+        _run.value = Run(startedAt, simulated, logName, poller.state.value)
         scope.launch {
             combine(poller.state, location.latest, log.state) { board, fix, logState ->
-                Run(startedAt, simulated, board, fix, logState)
+                Run(startedAt, simulated, logName, board, fix, logState)
             }.collect { _run.value = it }
         }
         scope.launch {
@@ -136,7 +145,13 @@ class RunService : Service() {
         // waits for the writer to listen, so the first cycle has its row.
         val logListening = CompletableDeferred<Unit>()
         val cycles = poller.cycles.onSubscription { logListening.complete(Unit) }
-        scope.launch(Dispatchers.IO) { file.use { log.run(cycles, location.fixes, poller.state) } }
+        scope.launch(Dispatchers.IO) {
+            try {
+                file.use { log.run(cycles, location.fixes, poller.state) }
+            } finally {
+                _logsClosed.update { it + 1 }
+            }
+        }
         // One thread, so the poller's parts take turns.
         scope.launch(Dispatchers.Default.limitedParallelism(1)) {
             logListening.await()

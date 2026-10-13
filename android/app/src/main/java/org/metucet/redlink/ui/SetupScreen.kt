@@ -109,12 +109,4 @@ fun SetupScreen(
 }
 
 @Composable
-private fun Heading(text: String) = Text(
-    text,
-    modifier = Modifier.padding(start = 16.dp, top = 14.dp, end = 16.dp, bottom = 6.dp),
-    color = MaterialTheme.colorScheme.onSurfaceVariant,
-    style = MaterialTheme.typography.labelLarge,
-)
-
-@Composable
 private fun State(text: String) = Text(text, style = MaterialTheme.typography.bodyMedium)

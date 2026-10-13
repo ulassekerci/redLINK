@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import org.metucet.redlink.log.LogFolder
 import org.metucet.redlink.ui.LogsScreen
 import org.metucet.redlink.ui.MainScreen
 import org.metucet.redlink.ui.RedLinkTheme
@@ -46,12 +47,14 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) follow(intent)
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
         val settings = SavedSettings(this)
+        val logs = LogFolder(this)
         setContent {
             RedLinkTheme {
                 var screen by rememberSaveable { mutableStateOf(Screen.MAIN) }
                 var board by remember { mutableStateOf(settings.board) }
                 var stopDialog by rememberSaveable { mutableStateOf(false) }
                 val run by RunService.run.collectAsState()
+                val logsClosed by RunService.logsClosed.collectAsState()
                 LaunchedEffect(screen) { granted = grantsInPlace() }
                 LaunchedEffect(tapped) {
                     val action = tapped ?: return@LaunchedEffect
@@ -72,7 +75,7 @@ class MainActivity : ComponentActivity() {
                         onLogs = { screen = Screen.LOGS },
                         onSetup = { screen = Screen.SETUP },
                     )
-                    Screen.LOGS -> LogsScreen(onBack = { screen = Screen.MAIN })
+                    Screen.LOGS -> LogsScreen(run = run, logsClosed = logsClosed, folder = logs, onBack = { screen = Screen.MAIN })
                     Screen.SETUP -> SetupScreen(
                         granted = granted,
                         board = board,

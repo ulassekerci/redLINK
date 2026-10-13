@@ -8,7 +8,8 @@ import org.metucet.redlink.location.Fix
 import org.metucet.redlink.log.LogState
 
 class MainScreenTest {
-    private fun run(board: BoardState, simulated: Boolean = false) = Run(startedAt = 0, simulated = simulated, board = board)
+    private fun run(board: BoardState, simulated: Boolean = false) =
+        Run(startedAt = 0, simulated = simulated, logName = "redLINK_2026-09-26_14-22-09.csv", board = board)
 
     @Test
     fun `the Vehicle row outside a run says whether a board is picked`() {

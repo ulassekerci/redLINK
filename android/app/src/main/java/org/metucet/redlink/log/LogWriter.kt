@@ -17,15 +17,20 @@ import org.metucet.redlink.location.Fix
 
 private const val FLUSH_MS = 1000L
 
-// The log of record's first line.
-private val COLUMNS = listOf(
+private val COLUMN_NAMES = listOf(
     "time_utc", "elapsed_s", "speed_m_s", "distance_m", "distance_abs_m", "erpm", "duty_cycle",
     "battery_voltage_v", "battery_current_a", "motor_current_a", "power_w", "battery_level",
     "energy_used_wh", "energy_charged_wh", "charge_used_ah", "charge_charged_ah", "mosfet_temp_c",
     "motor_temp_c", "fault_code", "adc_level1", "adc_level2", "odometer_m", "board_uptime_ms",
     "gps_fix_time_utc", "gps_lat_deg", "gps_lon_deg", "gps_alt_m", "gps_speed_m_s", "gps_heading_deg",
     "gps_accuracy_m",
-).joinToString(",")
+)
+
+// The number of cells on every line of a log.
+internal val COLUMN_COUNT = COLUMN_NAMES.size
+
+// The log of record's first line.
+private val COLUMNS = COLUMN_NAMES.joinToString(",")
 
 // Whether the log is being written, as the Log row shows it.
 sealed interface LogState {

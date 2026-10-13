@@ -170,9 +170,9 @@ fun MainScreen(
     }
 }
 
-// Counts along with the run, once a second.
+// The run's duration in whole seconds, counting along once a second.
 @Composable
-private fun RunClock(run: Run) {
+internal fun runSeconds(run: Run): Long {
     fun seconds() = (SystemClock.elapsedRealtime() - run.startedAt) / 1000
     var shown by remember(run.startedAt) { mutableLongStateOf(seconds()) }
     LaunchedEffect(run.startedAt) {
@@ -182,8 +182,13 @@ private fun RunClock(run: Run) {
             delay(1000 - (SystemClock.elapsedRealtime() - run.startedAt) % 1000)
         }
     }
+    return shown
+}
+
+@Composable
+private fun RunClock(run: Run) {
     Text(
-        runDuration(shown),
+        runDuration(runSeconds(run)),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         // Digits of one width, so the count does not shift as it changes.
         style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),

@@ -3,21 +3,10 @@ package org.metucet.redlink.log
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
-import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import java.io.FileOutputStream
 import java.io.IOException
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-
-private val nameFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
-
-// A run's log file name, from the phone's local time when the run started.
-fun logFileName(startedAt: LocalDateTime, simulated: Boolean): String {
-    val name = "redLINK_${nameFormat.format(startedAt)}.csv"
-    return if (simulated) "SIM_$name" else name
-}
 
 // A log in the phone's shared Documents/redLINK/ folder, made through
 // MediaStore, which needs no storage permission. The files stay reachable
@@ -62,7 +51,7 @@ class MediaStoreLogFile(context: Context, private val name: String) : LogFile, A
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_DOCUMENTS}/redLINK")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, LOG_FOLDER)
         }
         return resolver.insert(MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values)
             ?: throw IOException("Cannot make $name")
