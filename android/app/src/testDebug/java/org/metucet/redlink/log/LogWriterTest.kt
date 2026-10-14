@@ -113,6 +113,7 @@ class LogWriterTest {
     fun `while the board is unreachable there is one row per fix with the board cells empty`() = runTest {
         val file = FakeLogFile()
         val board = ScriptedBoard { currentTime }
+        board.firmware = null
         board.answer = {}
         val logging = logging(board, file)
 

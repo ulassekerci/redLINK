@@ -16,6 +16,8 @@ import org.metucet.redlink.protocol.DecodedAdcRequest
 import org.metucet.redlink.protocol.DecodedMessage
 import org.metucet.redlink.protocol.EncodableMessage
 import org.metucet.redlink.protocol.FrameDecoder
+import org.metucet.redlink.protocol.FwVersion
+import org.metucet.redlink.protocol.FwVersionRequest
 import org.metucet.redlink.protocol.ValuesSetup
 import org.metucet.redlink.protocol.ValuesSetupRequest
 import org.metucet.redlink.protocol.decodeMessage
@@ -53,6 +55,11 @@ class BoardPoller(private val link: BoardLink, private val now: () -> Long) {
     private val _state = MutableStateFlow<BoardState>(BoardState.Unreachable)
     val state: StateFlow<BoardState> = _state
 
+    private val _firmware = MutableStateFlow<FwVersion?>(null)
+
+    // The board's firmware version, once a reply has given it.
+    val firmware: StateFlow<FwVersion?> = _firmware
+
     private val _cycles = MutableSharedFlow<Cycle>(extraBufferCapacity = CYCLE_BUFFER)
 
     // Every cycle with a reply, in order, for the parts that must not miss
@@ -71,11 +78,32 @@ class BoardPoller(private val link: BoardLink, private val now: () -> Long) {
     suspend fun run(): Unit = coroutineScope {
         launch { receive() }
         launch { watchForSilence() }
+        // Whether the firmware version has been asked for on this connect.
+        var versionAsked = false
         // A dropped link is known at once, with no wait for the silence.
-        launch { link.connected.collect { up -> if (!up) _state.value = BoardState.Unreachable } }
+        launch {
+            link.connected.collect { up ->
+                if (!up) {
+                    _state.value = BoardState.Unreachable
+                    versionAsked = false
+                }
+            }
+        }
+        // Once after each connect, before the next poll, which may be in the
+        // middle of a cycle. With no reply the version stays as it was and
+        // polling goes on anyway. Returns whether it asked.
+        suspend fun askVersionOnConnect(): Boolean {
+            if (!link.connected.value || versionAsked) return false
+            versionAsked = true
+            ask<FwVersion>(FwVersionRequest)?.let { _firmware.value = it }
+            return true
+        }
         var cycleStart = now()
         while (true) {
+            // The wait is not the cycle's: polling starts in full after it.
+            if (askVersionOnConnect()) cycleStart = now()
             val values = ask<ValuesSetup>(ValuesSetupRequest)
+            askVersionOnConnect()
             val adc = ask<DecodedAdc>(DecodedAdcRequest)
             if (values != null || adc != null) _cycles.tryEmit(Cycle(values, adc, now()))
             // A cycle that overran is followed at once by the next.

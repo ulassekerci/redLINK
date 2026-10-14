@@ -6,8 +6,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import org.metucet.redlink.protocol.FrameDecoder
 import org.metucet.redlink.protocol.encodeFrame
 
+const val FW_VERSION = 0
 const val VALUES_SETUP = 47
 const val DECODED_ADC = 32
+
+// Firmware 6.06, with nothing after the minor.
+val fwVersionReply = byteArrayOf(FW_VERSION.toByte(), 6, 6)
 
 // A full setup reply with every value zero but the fault code.
 fun valuesSetupReply(faultCode: Int = 0) = ByteArray(70).also {
@@ -32,8 +36,12 @@ class ScriptedBoard(private val now: () -> Long) : BoardLink {
     private val decoder = FrameDecoder()
     val requests = mutableListOf<Request>()
 
-    // What the board does with a request. It answers both commands at once
-    // until a test says otherwise.
+    // The board's reply to the firmware version request, given at once, or
+    // null for none.
+    var firmware: ByteArray? = fwVersionReply
+
+    // What the board does with a poll. It answers both commands at once until
+    // a test says otherwise.
     var answer: (command: Int) -> Unit = { command ->
         when (command) {
             VALUES_SETUP -> reply(valuesSetupReply())
@@ -45,7 +53,7 @@ class ScriptedBoard(private val now: () -> Long) : BoardLink {
         for (payload in decoder.push(request)) {
             val command = payload[0].toInt()
             requests += Request(now(), command)
-            answer(command)
+            if (command == FW_VERSION) firmware?.let(::reply) else answer(command)
         }
     }
 

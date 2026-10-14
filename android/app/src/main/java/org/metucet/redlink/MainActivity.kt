@@ -84,6 +84,9 @@ class MainActivity : ComponentActivity() {
                     Screen.SETUP -> SetupScreen(
                         granted = granted,
                         board = board,
+                        // The run's own once it has read one, and otherwise
+                        // the last one read, which the run saves.
+                        firmware = run?.firmware ?: remember(board, run == null) { settings.firmware },
                         running = run != null,
                         hub = hub,
                         teamCode = teamCode,

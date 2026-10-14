@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import org.metucet.redlink.protocol.FwVersion
 import org.metucet.redlink.protocol.encodeFrame
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -30,7 +31,90 @@ class BoardPollerTest {
         runCurrent()
     }
 
-    private fun ScriptedBoard.asked() = requests.map { it.at to it.command }
+    // Every request the board was sent.
+    private fun ScriptedBoard.sent() = requests.map { it.at to it.command }
+
+    // The polls the board was sent.
+    private fun ScriptedBoard.asked() = sent().filter { it.second != FW_VERSION }
+
+    @Test
+    fun `asks for the firmware version once, before the first poll`() = runTest {
+        val polling = polling()
+
+        runUntil(100)
+
+        assertEquals(listOf(0L to FW_VERSION, 0L to VALUES_SETUP, 0L to DECODED_ADC), polling.board.sent().take(3))
+        assertEquals(1, polling.board.sent().count { it.second == FW_VERSION })
+    }
+
+    @Test
+    fun `the firmware version is the reply's major and minor`() = runTest {
+        val polling = polling()
+        polling.board.firmware = byteArrayOf(FW_VERSION.toByte(), 5, 3, 'H'.code.toByte())
+
+        runUntil(0)
+
+        assertEquals(FwVersion(fwMajor = 5, fwMinor = 3), polling.poller.firmware.value)
+    }
+
+    @Test
+    fun `with no firmware reply polling starts after 250 ms and the version is unknown`() = runTest {
+        val polling = polling()
+        polling.board.firmware = null
+
+        runUntil(300)
+
+        assertEquals(
+            listOf(250L to VALUES_SETUP, 250L to DECODED_ADC, 300L to VALUES_SETUP, 300L to DECODED_ADC),
+            polling.board.asked(),
+        )
+        assertEquals(null, polling.poller.firmware.value)
+    }
+
+    @Test
+    fun `asks for the firmware version again after each connect, before the next poll`() = runTest {
+        val polling = polling()
+        runUntil(100)
+        polling.board.connected.value = false
+        runUntil(200)
+        polling.board.requests.clear()
+
+        polling.board.connected.value = true
+        runUntil(250)
+
+        assertEquals(
+            listOf(250L to FW_VERSION, 250L to VALUES_SETUP, 250L to DECODED_ADC),
+            polling.board.sent(),
+        )
+    }
+
+    @Test
+    fun `a run that starts with the link down asks for the firmware version once it is up`() = runTest {
+        val polling = polling()
+        polling.board.connected.value = false
+        runUntil(200)
+        assertEquals(0, polling.board.sent().count { it.second == FW_VERSION })
+
+        polling.board.connected.value = true
+        runUntil(250)
+
+        assertEquals(listOf(250L to FW_VERSION), polling.board.sent().filter { it.second == FW_VERSION })
+        assertEquals(FwVersion(fwMajor = 6, fwMinor = 6), polling.poller.firmware.value)
+    }
+
+    @Test
+    fun `a link that comes up in the middle of a cycle is asked for the firmware version before the next poll`() = runTest {
+        val polling = polling()
+        polling.board.connected.value = false
+        polling.board.answer = {}
+        // The setup request of the cycle at 0 ms waits until 250 ms.
+        runUntil(100)
+
+        polling.board.connected.value = true
+        runUntil(250)
+
+        assertEquals(listOf(250L to FW_VERSION, 250L to DECODED_ADC), polling.board.sent().drop(1))
+    }
 
     @Test
     fun `asks for setup values then decoded ADC every 50 ms`() = runTest {
@@ -86,6 +170,7 @@ class BoardPollerTest {
     @Test
     fun `the board is unreachable until it answers`() = runTest {
         val polling = polling()
+        polling.board.firmware = null
         polling.board.answer = {}
 
         runUntil(100)
@@ -215,7 +300,7 @@ class BoardPollerTest {
         // Setup answered in the first cycle, ADC alone in the second, nothing
         // after.
         polling.board.answer = { command ->
-            when (polling.board.requests.size) {
+            when (polling.board.asked().size) {
                 1 -> polling.board.reply(valuesSetupReply(faultCode = 5))
                 4 -> polling.board.reply(decodedAdcReply)
             }
@@ -273,7 +358,7 @@ class BoardPollerTest {
         runCurrent()
 
         assertEquals(
-            listOf(valuesSetupReply(faultCode = 5), late, unknown).map { it.toList() },
+            listOf(fwVersionReply, valuesSetupReply(faultCode = 5), late, unknown).map { it.toList() },
             replies,
         )
     }

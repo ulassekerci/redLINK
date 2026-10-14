@@ -8,18 +8,30 @@ Spec: [Android app spec](../spec-android.md) 2.5, 2.14 (stack: Nordic Android-BL
 
 **Blocked by:** 35 (A run on the simulated board).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] `Pick vehicle` on Setup scans for devices offering the Nordic UART service, with no name filter, and stores the picked board by address
-- [ ] Setup shows the board's Bluetooth name with its address under it and `Change vehicle`
-- [ ] Start connects to the stored address without scanning, requests MTU 517, writes to the RX characteristic and listens for notifications on the TX characteristic
-- [ ] Bytes go through the protocol module's buffering decoder, so a frame spanning several notifications is decoded once
-- [ ] After each connect, before polling, the firmware version is requested once with a wait of up to 250 ms; the major and minor are shown on Setup as `Firmware 6.06`; no reply leaves it unknown and polling starts anyway
-- [ ] The firmware version reply is not logged and not copied to any registration; no version is refused or warned about
-- [ ] A run can start with the board off or out of range
-- [ ] When the link drops the bridge retries until Stop: a direct connect at once, and after a few failures Android's `autoConnect`; Bluetooth switched off on the phone is treated the same
-- [ ] While the link is down the log stays open and GPS keeps being logged and streamed
-- [ ] The Vehicle row reads `Connected` in green, `Connected · fault <NAME>` in red on a non-zero fault code, and `Reconnecting` in red when unreachable
-- [ ] Fault names are the firmware 6.06 names without the `FAULT_CODE_` prefix; an unknown code is shown as its number
-- [ ] `Change vehicle` is disabled during a run
-- [ ] With a real board picked the Bluetooth grant blocks Start as the other five do
+- [x] `Pick vehicle` on Setup scans for devices offering the Nordic UART service, with no name filter, and stores the picked board by address
+- [x] Setup shows the board's Bluetooth name with its address under it and `Change vehicle`
+- [x] Start connects to the stored address without scanning, requests MTU 517, writes to the RX characteristic and listens for notifications on the TX characteristic
+- [x] Bytes go through the protocol module's buffering decoder, so a frame spanning several notifications is decoded once
+- [x] After each connect, before polling, the firmware version is requested once with a wait of up to 250 ms; the major and minor are shown on Setup as `Firmware 6.06`; no reply leaves it unknown and polling starts anyway
+- [x] The firmware version reply is not logged and not copied to any registration; no version is refused or warned about
+- [x] A run can start with the board off or out of range
+- [x] When the link drops the bridge retries until Stop: a direct connect at once, and after a few failures Android's `autoConnect`; Bluetooth switched off on the phone is treated the same
+- [x] While the link is down the log stays open and GPS keeps being logged and streamed
+- [x] The Vehicle row reads `Connected` in green, `Connected · fault <NAME>` in red on a non-zero fault code, and `Reconnecting` in red when unreachable
+- [x] Fault names are the firmware 6.06 names without the `FAULT_CODE_` prefix; an unknown code is shown as its number
+- [x] `Change vehicle` is disabled during a run
+- [x] With a real board picked the Bluetooth grant blocks Start as the other five do
+
+## Comments
+
+Implemented as `BluetoothBoard`, the board link's second implementation, on Nordic Android-BLE-Library 2.11.0, with the device list's scan in `DeviceScan.kt`. Not run against a board: the desk checklist's "board on a stand" item is where it is proven. On the Android 16 emulator image the device list opens and scans, and a run on the simulated board shows `Firmware 6.06` on Setup, during the run and after Stop.
+
+- **Automated tests:** `BoardPollerTest` gains cases for the firmware version asked once per connect before the next poll, including a link that comes up in the middle of a cycle, with a 250 ms wait and polling going on without a reply. `SetupScreenTest` covers the `Firmware 6.06` line, and `GrantsTest` a picked Bluetooth board needing all six grants.
+- **Retries:** after a drop, three direct connects of up to 5 s each, then `autoConnect` with no timeout. Attempts start at least 1 s apart, so with Bluetooth off they do not spin. Each attempt closes what is left of the last one, so the library's own reconnecting never runs beside the loop.
+- **Bluetooth off:** the library says nothing to an `autoConnect` attempt that is waiting when Bluetooth goes off, so the link watches the adapter itself, ends such an attempt, and starts again with direct connects once Bluetooth is back on.
+- **Up** means the board's notifications are on: the library's `onDeviceReady`, not the connect request's success, which `autoConnect` reports at once. A link whose notifications could not be turned on is dropped and tried again.
+- **Not in the spec:** the link asks for the high connection priority, for two requests and replies every 50 ms, and writes without response where the RX characteristic allows it.
+- **The firmware version** is kept in the app's settings with the picked board, and forgotten when another board is picked.
+- **A device that gives no name** is listed and shown on Setup by its address alone; the spec gives no string for it.

@@ -99,6 +99,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.nordic.ble)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

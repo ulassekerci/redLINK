@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.metucet.redlink.board.BluetoothBoard
 import org.metucet.redlink.board.BoardLink
 import org.metucet.redlink.board.BoardPoller
 import org.metucet.redlink.board.BoardState
@@ -42,19 +43,22 @@ import org.metucet.redlink.log.LogState
 import org.metucet.redlink.log.LogWriter
 import org.metucet.redlink.log.MediaStoreLogFile
 import org.metucet.redlink.log.logFileName
+import org.metucet.redlink.protocol.FwVersion
 import org.metucet.redlink.ui.notificationText
 import org.metucet.redlink.ui.vehicleRow
 import org.metucet.redlink.ui.viewersRow
 
 // A run in progress, as the screens see it. `startedAt` is on the phone's
 // monotonic clock, SystemClock.elapsedRealtime, in milliseconds. `logName` is
-// the log's file name. `fix` is the latest, or null before the first.
+// the log's file name. `firmware` is the board's version once a reply has given
+// it on this run. `fix` is the latest, or null before the first.
 // `networkAvailable` is false while Android reports no network at all.
 data class Run(
     val startedAt: Long,
     val simulated: Boolean,
     val logName: String,
     val board: BoardState,
+    val firmware: FwVersion? = null,
     val fix: Fix? = null,
     val log: LogState = LogState.Writing(0),
     val bridge: BridgeState = BridgeState(),
@@ -136,6 +140,9 @@ class RunService : Service() {
 
         val link = when (board) {
             PickedBoard.Simulated -> checkNotNull(simulation).board { SystemClock.elapsedRealtime() - startedAt }
+            // A run can start with the board off or out of range: the link
+            // keeps trying until Stop.
+            is PickedBoard.Bluetooth -> BluetoothBoard(this, board.address)
         }
         this.link = link
         val simulated = board == PickedBoard.Simulated
@@ -165,16 +172,19 @@ class RunService : Service() {
         )
         _run.value = Run(startedAt, simulated, logName, poller.state.value, networkAvailable = network.available.value)
         scope.launch {
+            // combine takes five flows at most, so the board's two are paired.
             combine(
-                poller.state,
+                combine(poller.state, poller.firmware, ::Pair),
                 location.latest,
                 log.state,
                 bridge.state,
                 network.available,
-            ) { board, fix, logState, bridging, networkAvailable ->
-                Run(startedAt, simulated, logName, board, fix, logState, bridging, networkAvailable)
+            ) { (board, firmware), fix, logState, bridging, networkAvailable ->
+                Run(startedAt, simulated, logName, board, firmware, fix, logState, bridging, networkAvailable)
             }.collect { _run.value = it }
         }
+        // Remembered for Setup, which shows it outside a run too.
+        scope.launch { poller.firmware.filterNotNull().collect { settings.firmware = it } }
         scope.launch {
             run.filterNotNull().map { notificationText(vehicleRow(true, it), viewersRow(it)) }.distinctUntilChanged().collect {
                 notificationText = it

@@ -10,6 +10,11 @@ class GrantsTest {
     }
 
     @Test
+    fun `a run on a Bluetooth board needs all six grants`() {
+        assertEquals(Grant.entries.toSet(), grantsNeeded(PickedBoard.Bluetooth("C4:4F:33:0A:1B:2C", "VESC BLE UART")))
+    }
+
+    @Test
     fun `a run on the simulated board needs every grant but Bluetooth`() {
         assertEquals(Grant.entries.toSet() - Grant.BLUETOOTH, grantsNeeded(PickedBoard.Simulated))
     }

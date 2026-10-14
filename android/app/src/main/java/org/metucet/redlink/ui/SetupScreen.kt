@@ -21,32 +21,47 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import java.util.Locale
 import org.metucet.redlink.Grant
 import org.metucet.redlink.PickedBoard
+import org.metucet.redlink.board.Device
+import org.metucet.redlink.board.scanForDevices
 import org.metucet.redlink.board.simulation
 import org.metucet.redlink.hub.HubAddress
 import org.metucet.redlink.hub.typedHubAddress
 import org.metucet.redlink.grantsNeeded
+import org.metucet.redlink.protocol.FwVersion
 import org.metucet.redlink.protocol.formatTeamCode
 
-// The boards the picker offers. A debug build offers the simulated board.
-private val pickable = listOfNotNull<PickedBoard>(PickedBoard.Simulated.takeIf { simulation != null })
-
+// A board by its Bluetooth name, or by its address where it gave no name.
 private val PickedBoard.label
     get() = when (this) {
         PickedBoard.Simulated -> "Simulated board"
+        is PickedBoard.Bluetooth -> name ?: address
     }
 
-// `running` locks what cannot change during a run.
+// The line under a board's label: its address, where the label is not the
+// address already.
+private val PickedBoard.addressLine
+    get() = (this as? PickedBoard.Bluetooth)?.takeIf { it.name != null }?.address
+
+// The board's firmware version as Setup shows it: Firmware 6.06.
+internal fun firmwareLine(version: FwVersion) = "Firmware %d.%02d".format(Locale.ROOT, version.fwMajor, version.fwMinor)
+
+// `running` locks what cannot change during a run. `firmware` is the picked
+// board's version, once one has been read.
 @Composable
 fun SetupScreen(
     granted: Set<Grant>,
     board: PickedBoard?,
+    firmware: FwVersion?,
     running: Boolean,
     hub: HubAddress,
     teamCode: String,
@@ -78,7 +93,8 @@ fun SetupScreen(
             }
             Heading("Vehicle")
             Group {
-                ListRow(board?.label ?: "No vehicle picked") {
+                val supporting = listOfNotNull(board?.addressLine, firmware?.let(::firmwareLine)).joinToString("\n")
+                ListRow(board?.label ?: "No vehicle picked", supporting = supporting.ifEmpty { null }) {
                     FilledTonalButton(onClick = { picking = true }, enabled = !running) {
                         Text(if (board == null) "Pick vehicle" else "Change vehicle")
                     }
@@ -107,32 +123,17 @@ fun SetupScreen(
             }
         }
     }
-    if (picking) {
-        AlertDialog(
-            onDismissRequest = { picking = false },
-            title = { Text("Pick vehicle") },
-            text = {
-                Column {
-                    for (option in pickable) {
-                        ListRow(
-                            option.label,
-                            Modifier.clickable {
-                                onPick(option)
-                                picking = false
-                            },
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { picking = false },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-                ) { Text("Cancel") }
+    // A run that starts while a dialog is open takes the dialog with it.
+    if (picking && !running) {
+        PickerDialog(
+            scanning = Grant.BLUETOOTH in granted,
+            onCancel = { picking = false },
+            onPick = {
+                onPick(it)
+                picking = false
             },
         )
     }
-    // A run that starts while a dialog is open takes the dialog with it.
     if (editingHub && !running) {
         HubDialog(
             hub,
@@ -152,6 +153,41 @@ fun SetupScreen(
             },
         )
     }
+}
+
+// The device list: the devices a scan finds for as long as it is open, and
+// the simulated board in a debug build. Without the Bluetooth grant there is
+// no scan.
+@Composable
+private fun PickerDialog(scanning: Boolean, onCancel: () -> Unit, onPick: (PickedBoard) -> Unit) {
+    val context = LocalContext.current
+    // Each device once, by address, under the latest name it gave.
+    val devices by produceState(emptyMap<String, Device>(), scanning) {
+        if (!scanning) return@produceState
+        context.scanForDevices().collect { found ->
+            value = value + (found.address to found.copy(name = found.name ?: value[found.address]?.name))
+        }
+    }
+    // Each as the board it would be once picked.
+    val options = devices.values.map { PickedBoard.Bluetooth(it.address, it.name) } +
+        listOfNotNull(PickedBoard.Simulated.takeIf { simulation != null })
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text("Pick vehicle") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                for (option in options) {
+                    ListRow(option.label, Modifier.clickable { onPick(option) }, supporting = option.addressLine)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onCancel,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+            ) { Text("Cancel") }
+        },
+    )
 }
 
 // Edits the hub's host and port. An empty host, or a port that is not one, is
