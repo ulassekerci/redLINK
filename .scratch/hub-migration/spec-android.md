@@ -174,7 +174,7 @@ Tickets: [Self-run hub fallback](issues/17-self-run-hub-fallback.md), [How hub c
 
 Three screens: main, Logs and Setup. Their rows and strings are in section 3. The chosen prototype is variant D of [assets/09-phone-screen/prototype.html](assets/09-phone-screen/prototype.html); open it with `?variant=D`.
 
-- **Main:** the redLINK wordmark with the run's duration beside it; any notices; one row each for Vehicle, Hub, Viewers, GPS and Log, each a coloured dot, the label and a short state; then two plain rows, Logs and Setup, with no subtitles; one wide Start/Stop button pinned to the bottom. The GPS row appears only during a run.
+- **Main:** the redLINK wordmark; any notices; one row each for Vehicle, Hub, Viewers, GPS and Log, each a coloured dot, the label and a short state; then two plain rows, Logs and Setup, with no subtitles; one wide Start/Stop button pinned to the bottom. The GPS row appears only during a run.
 - **No live values:** no speed, voltage or other telemetry anywhere in the app. Nobody reads the phone while driving.
 - **Logs:** the number of logs and their total size; during a run, the log in progress, which cannot be selected, shared or deleted; then past logs, newest first, each with its start time, duration and size. One or several can be selected, then shared through the share sheet as CSV files, or deleted after a confirmation. A log's duration is the `elapsed_s` of its last row. A simulated run's entry is marked "SIM".
 - **Setup:** the grants; the picked board with its firmware version; the hub's host and port; the team code; the app's version and the update line. In debug builds, the simulated board's two entries (2.12). The board, the hub and the team code are locked during a run.
@@ -262,7 +262,7 @@ All strings are English and are given verbatim. Dot colours: green is working, a
 
 | Condition | Text | Dot |
 |---|---|---|
-| a fix in the last 3 s | `Fix, ±4 m` (the fix's accuracy) | green |
+| a fix in the last 3 s | `±4 m` (the fix's accuracy) | green |
 | otherwise | `No fix` | amber |
 
 The accuracy is rounded up to whole metres, so the row never claims better than the fix. A fix that carries no accuracy reads `Fix`.
@@ -272,7 +272,7 @@ The accuracy is rounded up to whole metres, so the row never claims better than 
 | Condition | Text | Dot |
 |---|---|---|
 | no run | `Idle` | grey |
-| run, writing | `Recording, 1.25 MB` (the file's size) | green |
+| run, writing | `Recording` | green |
 | run, the file cannot be written | `Not writing` | red |
 
 **Notices,** above the rows:
@@ -282,13 +282,12 @@ The accuracy is rounded up to whole metres, so the row never claims better than 
 
 **Button:** `Start` (red, disabled while setup is incomplete) or `Stop` (dark).
 
-**Duration** beside the wordmark, during a run: `12:44`, and `1:02:44` from one hour.
-
 ### 3.2 Logs screen
 
 - Title `Logs`. Under it: `5 logs · 49.7 MB in Documents/redLINK`.
-- The log in progress: `Current log`, with `12:44 · in progress, cannot be shared yet`.
-- A past log: its start time, `2026-09-26 14:22`, with `41:00 · 10.2 MB`. A simulated run: `SIM 2026-09-26 14:22`.
+- The log in progress: `Current log`, with `12 min 44 sec · in progress, cannot be shared yet`.
+- A past log: its start time, `2026-09-26 14:22`, with `41 min · 10.2 MB`. A simulated run: `SIM 2026-09-26 14:22`.
+- A duration names each unit it has, largest first, and leaves out a unit that is zero: `45 sec`, `11 min 54 sec`, `1 hr 2 min 44 sec`, `1 hr 5 sec`; an empty log is `0 sec`. `11:54` beside a start time read as a time of day. The main screen shows no duration: the current log's line has it.
 - No logs: `No logs yet`.
 - Actions: `Share 2`, `Delete 2` (disabled with nothing selected, the number is the selection's size), and `Select all` or `Select none`.
 

@@ -4,7 +4,6 @@ import android.os.SystemClock
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -40,7 +39,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.util.Locale
 import kotlin.math.ceil
 import kotlinx.coroutines.delay
 import org.metucet.redlink.R
@@ -125,24 +123,16 @@ private const val FIX_FRESH_MS = 3000L
 internal fun gpsRow(fix: Fix?, now: Long): RowState {
     if (fix == null || now - fix.at >= FIX_FRESH_MS) return RowState("No fix", Dot.AMBER)
     // Rounded up, so the row never claims better than the fix.
-    val accuracy = fix.accuracyM?.let { ", ±${ceil(it).toInt()} m" }.orEmpty()
-    return RowState("Fix$accuracy", Dot.GREEN)
+    val text = fix.accuracyM?.let { "±${ceil(it).toInt()} m" } ?: "Fix"
+    return RowState(text, Dot.GREEN)
 }
 
-// The Log row, from the run's log, or null outside a run. Megabytes are
-// millions of bytes, as the Files app counts them.
+// The Log row, from the run's log, or null outside a run. The file's size is on
+// the Logs screen.
 internal fun logRow(log: LogState?): RowState = when (log) {
     null -> RowState("Idle", Dot.GREY)
-    is LogState.Writing -> RowState("Recording, ${"%.2f".format(Locale.ROOT, log.bytes / 1e6)} MB", Dot.GREEN)
+    is LogState.Writing -> RowState("Recording", Dot.GREEN)
     LogState.NotWriting -> RowState("Not writing", Dot.RED)
-}
-
-// A run's duration as it is shown: 12:44, and 1:02:44 from one hour.
-internal fun runDuration(seconds: Long): String {
-    val hours = seconds / 3600
-    val minutes = seconds % 3600 / 60
-    val rest = "%02d".format(seconds % 60)
-    return if (hours > 0) "$hours:${"%02d".format(minutes)}:$rest" else "$minutes:$rest"
 }
 
 // The main screen. It shows whether each link is up and never a telemetry
@@ -183,19 +173,13 @@ fun MainScreen(
         },
     ) { padding ->
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState())) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    "redLINK",
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                run?.let { RunClock(it) }
-            }
+            Text(
+                "redLINK",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+            )
             if (endedByPhoneRestart) PhoneRestartNotice(onDismissPhoneRestart)
             notice?.let { Notice(it, onSetup) }
             Group {
@@ -212,31 +196,6 @@ fun MainScreen(
             }
         }
     }
-}
-
-// The run's duration in whole seconds, counting along once a second.
-@Composable
-internal fun runSeconds(run: Run): Long {
-    fun seconds() = (SystemClock.elapsedRealtime() - run.startedAt) / 1000
-    var shown by remember(run.startedAt) { mutableLongStateOf(seconds()) }
-    LaunchedEffect(run.startedAt) {
-        while (true) {
-            shown = seconds()
-            // Until the next whole second of the run.
-            delay(1000 - (SystemClock.elapsedRealtime() - run.startedAt) % 1000)
-        }
-    }
-    return shown
-}
-
-@Composable
-private fun RunClock(run: Run) {
-    Text(
-        runDuration(runSeconds(run)),
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        // Digits of one width, so the count does not shift as it changes.
-        style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"),
-    )
 }
 
 // The GPS row, which turns amber when the latest fix grows old with no new

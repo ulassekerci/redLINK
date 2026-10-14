@@ -1,5 +1,6 @@
 package org.metucet.redlink.ui
 
+import android.os.SystemClock
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.metucet.redlink.Run
@@ -57,6 +60,30 @@ internal fun pastLogTitle(log: SavedLog): String {
     val parsed = log.parsed ?: return log.name
     val start = startFormat.format(parsed.start)
     return if (parsed.simulated) "SIM $start" else start
+}
+
+// A run's duration with its units named, such as 11 min 54 sec: 11:54 beside
+// a start time reads as a time of day. A unit that is zero is left out.
+internal fun runDuration(seconds: Long): String {
+    val parts = listOf(seconds / 3600 to "hr", seconds % 3600 / 60 to "min", seconds % 60 to "sec")
+        .filter { (value, _) -> value > 0 }
+        .map { (value, unit) -> "$value $unit" }
+    return parts.joinToString(" ").ifEmpty { "0 sec" }
+}
+
+// The run's duration in whole seconds, counting along once a second.
+@Composable
+internal fun runSeconds(run: Run): Long {
+    fun seconds() = (SystemClock.elapsedRealtime() - run.startedAt) / 1000
+    var shown by remember(run.startedAt) { mutableLongStateOf(seconds()) }
+    LaunchedEffect(run.startedAt) {
+        while (true) {
+            shown = seconds()
+            // Until the next whole second of the run.
+            delay(1000 - (SystemClock.elapsedRealtime() - run.startedAt) % 1000)
+        }
+    }
+    return shown
 }
 
 internal fun pastLogLine(log: SavedLog) = "${runDuration(log.durationS)} · ${megabytes(log.bytes)}"

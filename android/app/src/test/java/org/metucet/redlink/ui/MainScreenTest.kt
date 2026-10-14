@@ -105,12 +105,12 @@ class MainScreenTest {
 
     @Test
     fun `the GPS row gives the accuracy of a fix in the last 3 s`() {
-        assertEquals(RowState("Fix, ±4 m", Dot.GREEN), gpsRow(fixAt(10_000, 4.0), now = 10_000))
-        assertEquals(RowState("Fix, ±4 m", Dot.GREEN), gpsRow(fixAt(10_000, 4.0), now = 12_999))
+        assertEquals(RowState("±4 m", Dot.GREEN), gpsRow(fixAt(10_000, 4.0), now = 10_000))
+        assertEquals(RowState("±4 m", Dot.GREEN), gpsRow(fixAt(10_000, 4.0), now = 12_999))
         // Rounded up, so the row never claims better than the fix.
-        assertEquals(RowState("Fix, ±4 m", Dot.GREEN), gpsRow(fixAt(10_000, 3.2), now = 10_500))
-        assertEquals(RowState("Fix, ±1 m", Dot.GREEN), gpsRow(fixAt(10_000, 0.3), now = 10_500))
-        assertEquals(RowState("Fix, ±6554 m", Dot.GREEN), gpsRow(fixAt(10_000, 6553.5), now = 10_500))
+        assertEquals(RowState("±4 m", Dot.GREEN), gpsRow(fixAt(10_000, 3.2), now = 10_500))
+        assertEquals(RowState("±1 m", Dot.GREEN), gpsRow(fixAt(10_000, 0.3), now = 10_500))
+        assertEquals(RowState("±6554 m", Dot.GREEN), gpsRow(fixAt(10_000, 6553.5), now = 10_500))
         assertEquals(RowState("Fix", Dot.GREEN), gpsRow(fixAt(10_000, null), now = 10_500))
     }
 
@@ -122,23 +122,11 @@ class MainScreenTest {
     }
 
     @Test
-    fun `the Log row says whether the run's log is being written, and how big it is`() {
+    fun `the Log row says whether the run's log is being written`() {
         assertEquals(RowState("Idle", Dot.GREY), logRow(null))
-        assertEquals(RowState("Recording, 1.25 MB", Dot.GREEN), logRow(LogState.Writing(1_250_000)))
-        assertEquals(RowState("Recording, 0.00 MB", Dot.GREEN), logRow(LogState.Writing(0)))
-        assertEquals(RowState("Recording, 15.10 MB", Dot.GREEN), logRow(LogState.Writing(15_096_000)))
+        assertEquals(RowState("Recording", Dot.GREEN), logRow(LogState.Writing(1_250_000)))
+        assertEquals(RowState("Recording", Dot.GREEN), logRow(LogState.Writing(0)))
         assertEquals(RowState("Not writing", Dot.RED), logRow(LogState.NotWriting))
-    }
-
-    @Test
-    fun `a run's duration is minutes and seconds, with hours from one hour`() {
-        assertEquals("0:00", runDuration(0))
-        assertEquals("0:59", runDuration(59))
-        assertEquals("12:44", runDuration(12 * 60 + 44))
-        assertEquals("59:59", runDuration(3599))
-        assertEquals("1:00:00", runDuration(3600))
-        assertEquals("1:02:44", runDuration(3600 + 2 * 60 + 44))
-        assertEquals("26:00:07", runDuration(26 * 3600 + 7))
     }
 
     @Test
