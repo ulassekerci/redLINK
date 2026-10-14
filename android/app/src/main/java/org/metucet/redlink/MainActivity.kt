@@ -50,6 +50,10 @@ class MainActivity : ComponentActivity() {
         // Made here on first launch, and the same until New code.
         val firstTeamCode = settings.teamCode
         val logs = LogFolder(this)
+        // A run Android has not brought back yet resumes now. One the phone
+        // restarted under has ended, and the main screen says so.
+        val memory = runMemory(this)
+        if (memory.appOpened(serviceRunning = RunService.run.value != null)) RunService.resume(this)
         setContent {
             RedLinkTheme {
                 var screen by rememberSaveable { mutableStateOf(Screen.MAIN) }
@@ -57,6 +61,7 @@ class MainActivity : ComponentActivity() {
                 var hub by remember { mutableStateOf(settings.hub) }
                 var teamCode by remember { mutableStateOf(firstTeamCode) }
                 var stopDialog by rememberSaveable { mutableStateOf(false) }
+                var endedByPhoneRestart by remember { mutableStateOf(memory.endedByPhoneRestart) }
                 val run by RunService.run.collectAsState()
                 val logsClosed by RunService.logsClosed.collectAsState()
                 LaunchedEffect(screen) { granted = grantsInPlace() }
@@ -75,7 +80,15 @@ class MainActivity : ComponentActivity() {
                         missingGrants = (grantsNeeded(board) - granted).size,
                         boardPicked = board != null,
                         hub = hub,
-                        onStart = { RunService.start(this) },
+                        endedByPhoneRestart = endedByPhoneRestart,
+                        onDismissPhoneRestart = {
+                            memory.dismissPhoneRestart()
+                            endedByPhoneRestart = false
+                        },
+                        onStart = {
+                            RunService.start(this)
+                            endedByPhoneRestart = false
+                        },
                         onStop = { stopDialog = true },
                         onLogs = { screen = Screen.LOGS },
                         onSetup = { screen = Screen.SETUP },

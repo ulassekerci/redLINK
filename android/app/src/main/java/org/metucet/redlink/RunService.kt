@@ -69,6 +69,8 @@ private const val CHANNEL = "run"
 private const val NOTIFICATION = 1
 private const val LOG_CHANNEL = "log"
 private const val NOT_LOGGING_NOTIFICATION = 2
+private const val STOPPED_CHANNEL = "stopped"
+private const val STOPPED_NOTIFICATION = 3
 
 // A run is one lifetime of this service: it begins when the service is made
 // and ends when it is destroyed. The service owns the board link, the hub
@@ -76,6 +78,11 @@ private const val NOT_LOGGING_NOTIFICATION = 2
 // so outside a run the app holds none of them. The activity only watches
 // `run`: closing it, or
 // swiping the app out of recents, changes nothing here.
+//
+// A run is stored while it is active (RunMemory). When Android kills the
+// service or the app crashes, Android makes the service again and it resumes
+// the stored run: the same log file, the same lobby, the same start. Nothing
+// starts it at boot.
 class RunService : Service() {
     companion object {
         private val _run = MutableStateFlow<Run?>(null)
@@ -90,12 +97,23 @@ class RunService : Service() {
         val logsClosed: StateFlow<Int> = _logsClosed
 
         // Android lets a foreground service of these types start only from an
-        // app the person can see, so this is called from the activity.
+        // app the person can see, so this is called from the activity. The
+        // run is stored first, and the service runs what is stored.
         fun start(context: Context) {
+            val wallClock = System.currentTimeMillis()
+            val startedAtLocal = LocalDateTime.ofInstant(Instant.ofEpochMilli(wallClock), ZoneId.systemDefault())
+            val simulated = SavedSettings(context).board == PickedBoard.Simulated
+            runMemory(context).start(wallClock, logFileName(startedAtLocal, simulated))
+            resume(context)
+        }
+
+        // Makes the service for the stored run, which resumes it.
+        fun resume(context: Context) {
             context.startForegroundService(Intent(context, RunService::class.java))
         }
 
         fun stop(context: Context) {
+            runMemory(context).stop()
             context.stopService(Intent(context, RunService::class.java))
         }
     }
@@ -127,11 +145,23 @@ class RunService : Service() {
         notifications.createNotificationChannel(
             NotificationChannel(LOG_CHANNEL, "Log problems", NotificationManager.IMPORTANCE_DEFAULT),
         )
+        notifications.createNotificationChannel(
+            NotificationChannel(STOPPED_CHANNEL, "Run stopped", NotificationManager.IMPORTANCE_DEFAULT),
+        )
         // Start is disabled until a board is picked.
         val settings = SavedSettings(this)
         val board = settings.board ?: return
-        val startedAt = SystemClock.elapsedRealtime()
-        startedAtWallClock = System.currentTimeMillis()
+        val made = when (val made = runMemory(this).serviceMade()) {
+            is ServiceStart.Run -> made
+            ServiceStart.RestartLimit -> {
+                notifications.notify(STOPPED_NOTIFICATION, stopped())
+                return
+            }
+            ServiceStart.NoRun -> return
+        }
+        val stored = made.run
+        val startedAt = stored.startedAt
+        startedAtWallClock = stored.startedAtWallClock
 
         // No timeout: a run lasts hours and ends only at Stop.
         wakeLock = getSystemService(PowerManager::class.java)
@@ -150,9 +180,8 @@ class RunService : Service() {
         // GPS comes from the phone whichever board is picked.
         val location = LocationUpdates(this)
         this.location = location
-        val startedAtLocal = LocalDateTime.ofInstant(Instant.ofEpochMilli(startedAtWallClock), ZoneId.systemDefault())
-        val logName = logFileName(startedAtLocal, simulated)
-        val file = MediaStoreLogFile(this, logName)
+        val logName = stored.logName
+        val file = MediaStoreLogFile(this, logName, resumed = made.resumed)
         val log = LogWriter(file, startedAt, SystemClock::elapsedRealtime, System::currentTimeMillis)
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
         val network = DefaultNetwork(this)
@@ -228,8 +257,9 @@ class RunService : Service() {
             if (Grant.BLUETOOTH in grantsInPlace()) FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE else 0
         startForeground(NOTIFICATION, notification(), FOREGROUND_SERVICE_TYPE_LOCATION or connectedDevice)
         if (link == null) stopSelf()
-        // A service Android killed stays gone: nothing resumes a run yet.
-        return START_NOT_STICKY
+        // Android makes a service it killed again, and onCreate resumes the
+        // run. One stopped stays stopped.
+        return START_STICKY
     }
 
     override fun onDestroy() {
@@ -265,6 +295,18 @@ class RunService : Service() {
         .setContentText("The log file cannot be written. Viewers are not affected.")
         .setContentIntent(mainScreen(MainActivity.ACTION_SHOW_MAIN))
         .build()
+
+    private fun stopped(): Notification {
+        val text = "The app restarted 3 times in a minute. The run has ended and the log is saved."
+        return Notification.Builder(this, STOPPED_CHANNEL)
+            .setSmallIcon(R.drawable.notification)
+            .setContentTitle("redLINK stopped")
+            .setContentText(text)
+            .setStyle(Notification.BigTextStyle().bigText(text))
+            .setContentIntent(mainScreen(MainActivity.ACTION_SHOW_MAIN))
+            .setAutoCancel(true)
+            .build()
+    }
 
     private fun mainScreen(action: String) = PendingIntent.getActivity(
         this,

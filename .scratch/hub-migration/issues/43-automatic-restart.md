@@ -8,12 +8,12 @@ Spec: [Android app spec](../spec-android.md) 2.3, 2.14 ("Not established"), 3.1 
 
 **Blocked by:** 37 (The log of record), 39 (Viewers join the bridge).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] On Start the app stores that a run is active with its start time, its log file and the phone's boot count; Stop clears it
-- [ ] After a kill or a crash the service comes back and resumes the same run: same log file with no second line of column names, same lobby ID, `elapsed_s` still counted from the original Start
-- [ ] If the app is opened and finds a run stored as active on the same boot with no service running, it resumes the run the same way
-- [ ] After 3 automatic restarts within one minute the app stops resuming, ends the run, clears the stored state and posts `redLINK stopped` with the text of 3.4
-- [ ] The app does not start at boot
-- [ ] Opened after a phone restart, the app clears the stored run and shows `The last run ended when the phone restarted.` with `Dismiss`, once; Start then begins a new run with a new file
-- [ ] Killing the app's process with `adb` during a simulated run on an emulator shows the run resuming into the same file
+- [x] On Start the app stores that a run is active with its start time, its log file and the phone's boot count; Stop clears it
+- [x] After a kill or a crash the service comes back and resumes the same run: same log file with no second line of column names, same lobby ID, `elapsed_s` still counted from the original Start
+- [x] If the app is opened and finds a run stored as active on the same boot with no service running, it resumes the run the same way
+- [x] After 3 automatic restarts within one minute the app stops resuming, ends the run, clears the stored state and posts `redLINK stopped` with the text of 3.4
+- [x] The app does not start at boot
+- [x] Opened after a phone restart, the app clears the stored run and shows `The last run ended when the phone restarted.` with `Dismiss`, once; Start then begins a new run with a new file
+- [x] Killing the app's process with `adb` during a simulated run on an emulator shows the run resuming into the same file

@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -147,12 +148,15 @@ internal fun runDuration(seconds: Long): String {
 // The main screen. It shows whether each link is up and never a telemetry
 // value: nobody reads the phone while driving. Stop only asks; StopDialog is
 // what ends a run. `hub` is the one Setup holds, which a run uses.
+// `endedByPhoneRestart` shows the notice that the last run ended that way.
 @Composable
 fun MainScreen(
     run: Run?,
     missingGrants: Int,
     boardPicked: Boolean,
     hub: HubAddress,
+    endedByPhoneRestart: Boolean,
+    onDismissPhoneRestart: () -> Unit,
     onStart: () -> Unit,
     onStop: () -> Unit,
     onLogs: () -> Unit,
@@ -192,6 +196,7 @@ fun MainScreen(
                 )
                 run?.let { RunClock(it) }
             }
+            if (endedByPhoneRestart) PhoneRestartNotice(onDismissPhoneRestart)
             notice?.let { Notice(it, onSetup) }
             Group {
                 StateRow("Vehicle", vehicleRow(boardPicked, run))
@@ -281,15 +286,33 @@ private fun Notice(text: String, onClick: () -> Unit) = Surface(
     shape = RoundedCornerShape(12.dp),
     color = MaterialTheme.colorScheme.surfaceContainerHigh,
 ) {
-    Row(Modifier.height(IntrinsicSize.Min)) {
+    NoticeText(text)
+}
+
+// Shown once a phone restart has ended a run, until it is dismissed.
+@Composable
+private fun PhoneRestartNotice(onDismiss: () -> Unit) = Surface(
+    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 12.dp),
+    shape = RoundedCornerShape(12.dp),
+    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+) {
+    NoticeText("The last run ended when the phone restarted.") {
+        TextButton(onClick = onDismiss, modifier = Modifier.padding(end = 4.dp)) { Text("Dismiss") }
+    }
+}
+
+// A notice's text beside its amber bar, with what follows it on the right.
+@Composable
+private fun NoticeText(text: String, end: @Composable () -> Unit = {}) =
+    Row(Modifier.height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.width(4.dp).fillMaxHeight().background(Dot.AMBER.color))
         Text(
             text,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 10.dp),
             style = MaterialTheme.typography.bodyMedium,
         )
+        end()
     }
-}
 
 @Composable
 private fun StateRow(label: String, state: RowState, supporting: String? = null) =
