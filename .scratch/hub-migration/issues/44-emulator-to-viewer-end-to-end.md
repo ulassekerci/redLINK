@@ -6,15 +6,15 @@ Spec: [Android app spec](../spec-android.md) 2.12 ("Emulator requirement"); [fro
 
 **Blocked by:** 30 (Viewer joins the hub and goes live), 40 (The stream to viewers).
 
-**Status:** ready-for-human
+**Status:** resolved
 
-- [ ] The debug build installs on a stock Android Studio emulator image and all grants except Bluetooth are given
-- [ ] A run on the simulated board starts, and the Hub row reads `Connected`
-- [ ] The desktop app, given the debug build's team code, goes from phone not found to joining to live with no click
-- [ ] Gauges, ADC and the bottom section show the simulated lap; the fault warning appears during the lap's fault
-- [ ] With a route playing on the emulator, the map shows the marker moving
-- [ ] The phone's Viewers row reads `1 viewer`, and counts a second window when one is opened
-- [ ] `Stop answering` makes the viewer show board unreachable, dimmed, and switching it off brings it back to live
-- [ ] Stop on the phone sends the viewer to phone not found; Start brings it back to live by itself
-- [ ] The emulator's log file has rows for the whole run with GPS cells filled
-- [ ] Every defect found is fixed or filed as a ticket in this directory
+- [x] The debug build installs on a stock Android Studio emulator image and all grants except Bluetooth are given
+- [x] A run on the simulated board starts, and the Hub row reads `Connected`
+- [x] The desktop app, given the debug build's team code, goes from phone not found to joining to live with no click
+- [x] Gauges, ADC and the bottom section show the simulated lap; the fault warning appears during the lap's fault
+- [x] With a route playing on the emulator, the map shows the marker moving
+- [x] The phone's Viewers row reads `1 viewer`, and counts a second window when one is opened
+- [x] `Stop answering` makes the viewer show board unreachable, dimmed, and switching it off brings it back to live
+- [x] Stop on the phone sends the viewer to phone not found; Start brings it back to live by itself
+- [x] The emulator's log file has rows for the whole run with GPS cells filled
+- [x] Every defect found is fixed or filed as a ticket in this directory
