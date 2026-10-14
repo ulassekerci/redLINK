@@ -1,0 +1,5 @@
+<resources>
+    <!-- Behind the inset icon image: a dark red near its edges, so no white
+         rim shows when the launcher moves the layers. -->
+    <color name="ic_launcher_background">#7A1236</color>
+</resources>

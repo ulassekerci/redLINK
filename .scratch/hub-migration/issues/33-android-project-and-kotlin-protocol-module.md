@@ -37,3 +37,5 @@ Handed on, not decided here:
 
 - **Backup.** The manifest leaves Android's Auto Backup at its default, on. Once the team code is stored, a reinstall could bring the old code back, against 2.9's "Reinstalling the app makes a new code". Whichever ticket stores the code should set `android:allowBackup="false"`.
 - **Launcher icon.** The app has none yet and shows Android's default.
+
+Launcher icon added 2026-10-14, outside a ticket: the React Native app's Android icon from the `legacy-stack` tag (`mobile/assets/adaptive-icon.png`), as an adaptive icon. Expo filled the whole 108dp foreground layer with the image, so the launcher's mask cut most of the signal symbol off; here it is inset to the 72dp the launcher shows, so the whole image is seen and only the mask's edges are trimmed. The background is a dark red near the image's edges instead of the old app's `#FFFFFF`, so no white rim shows when the launcher moves the layers. The desktop icons were already the old app's: `desktop/build/icon.png` is the same file, and `desktop/build/icon.icon` is the iOS icon.
