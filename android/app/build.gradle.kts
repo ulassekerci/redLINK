@@ -68,10 +68,26 @@ android {
         versionName = redlinkVersion
     }
 
+    // The release keystore lives only in the release workflow's secrets, which
+    // hand it on as these properties. Without them a local release build is
+    // left unsigned.
+    val releaseKeystore = providers.gradleProperty("redlinkKeystore").orNull
+    val releaseSigning = releaseKeystore?.let {
+        signingConfigs.create("release") {
+            storeFile = file(it)
+            storePassword = providers.gradleProperty("redlinkKeystorePassword").get()
+            keyAlias = providers.gradleProperty("redlinkKeyAlias").get()
+            keyPassword = providers.gradleProperty("redlinkKeyPassword").get()
+        }
+    }
+
     buildTypes {
         // Installs beside the release app, with its own settings and team code.
         debug {
             applicationIdSuffix = ".debug"
+        }
+        release {
+            signingConfig = releaseSigning
         }
     }
 

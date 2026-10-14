@@ -59,6 +59,31 @@ Run the tests, which need no phone or emulator
 ./gradlew testDebugUnitTest
 ```
 
+## Making a release
+
+Pushing a version tag runs [the release workflow](.github/workflows/release.yml): it runs both apps' tests, builds the APK, the macOS `dmg` and the Windows zip with the tag's version, and attaches all three to a GitHub Release. A tag with a suffix makes a pre-release, which is how a build is tried without using up a version number.
+```bash
+git tag v1.2.0-rc1
+git push origin v1.2.0-rc1
+```
+
+The APK is signed with the release keystore, which the workflow reads from these Actions secrets (Settings → Secrets and variables → Actions):
+
+| Secret | What it holds |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | The keystore file, base64 encoded |
+| `ANDROID_KEYSTORE_PASSWORD` | The keystore's password |
+| `ANDROID_KEY_ALIAS` | The alias of the key inside it |
+| `ANDROID_KEY_PASSWORD` | The key's password |
+
+The keystore is made once, and a copy of it and its passwords is kept offline: if it is lost, a newer APK can no longer install over the app on the phone. To make it with the JDK's `keytool`, with `JAVA_HOME` set as above, and copy it encoded for the first secret, on a Mac
+```bash
+"$JAVA_HOME/bin/keytool" -genkeypair -keystore redlink-release.jks -alias redlink -keyalg RSA -keysize 4096 -validity 36500
+```
+```bash
+base64 -i redlink-release.jks | pbcopy
+```
+
 ## Opening the desktop app for the first time
 
 The packages are not signed with a paid certificate, so each system has to be told once that the app may run.

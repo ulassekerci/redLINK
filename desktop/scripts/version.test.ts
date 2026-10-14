@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { localVersion } from './version'
+import { buildVersion, localVersion } from './version'
 
 describe('localVersion', () => {
   test('is the latest version tag with -dev added', () => {
@@ -16,5 +16,11 @@ describe('localVersion', () => {
 
   test('is 0.0.0-dev when the tag is not a version', () => {
     expect(localVersion('legacy-stack')).toBe('0.0.0-dev')
+  })
+})
+
+describe('buildVersion', () => {
+  test('is the release workflow version when one is given', () => {
+    expect(buildVersion(import.meta.dirname, '1.2.0-rc1')).toBe('1.2.0-rc1')
   })
 })

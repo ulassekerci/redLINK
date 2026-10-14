@@ -22,5 +22,8 @@ export const latestVersionTag = (cwd: string) => {
 }
 
 // The version stamped into a build made from this checkout: into the app by
-// electron.vite.config.ts and into its package by electron-builder.ts.
-export const buildVersion = (cwd: string) => localVersion(latestVersionTag(cwd))
+// electron.vite.config.ts and into its package by electron-builder.ts. The
+// release workflow sets REDLINK_VERSION to the tag's version without its v,
+// such as 1.2.0-rc1; any other build is a local one.
+export const buildVersion = (cwd: string, releaseVersion = process.env.REDLINK_VERSION) =>
+  releaseVersion || localVersion(latestVersionTag(cwd))

@@ -1,0 +1,148 @@
+# Pushing a version tag makes a release: both apps' tests, then the release
+# APK, the macOS dmg and the Windows zip, all attached to one GitHub Release for
+# the tag. There is no manual trigger, and a push to main runs nothing. The
+# secrets it expects are listed in README.md.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  # The version is the tag's, without its v: v1.2.0-rc1 gives 1.2.0-rc1. A tag
+  # with a suffix is a pre-release, which the apps' update lines never offer.
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+      prerelease: ${{ steps.tag.outputs.prerelease }}
+    steps:
+      - id: tag
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::$GITHUB_REF_NAME is not a version tag such as v1.2.0 or v1.2.0-rc1"
+            exit 1
+          fi
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$([[ -n "${BASH_REMATCH[2]}" ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  # Both suites, before anything is built. A failing test makes no release.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: desktop/package.json
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: desktop/pnpm-lock.yaml
+      - name: Android tests
+        working-directory: android
+        run: ./gradlew testDebugUnitTest
+      # Runs even when the Android tests fail, so one run reports both suites.
+      - name: Desktop tests
+        if: ${{ !cancelled() }}
+        working-directory: desktop
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+
+  android:
+    needs: [version, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+      - name: Release APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          for secret in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [[ -z "${!secret}" ]]; then
+              echo "::error::The $secret secret is not set, so the APK cannot be signed"
+              exit 1
+            fi
+          done
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          # Passwords go to Gradle as ORG_GRADLE_PROJECT_ variables, so they
+          # are never on a command line.
+          export ORG_GRADLE_PROJECT_redlinkKeystorePassword="$ANDROID_KEYSTORE_PASSWORD"
+          export ORG_GRADLE_PROJECT_redlinkKeyAlias="$ANDROID_KEY_ALIAS"
+          export ORG_GRADLE_PROJECT_redlinkKeyPassword="$ANDROID_KEY_PASSWORD"
+          ./gradlew assembleRelease -PredlinkVersion="$VERSION" -PredlinkKeystore="$RUNNER_TEMP/release.jks"
+          mv app/build/outputs/apk/release/app-release.apk "redLINK-$VERSION.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: android/redLINK-*.apk
+          if-no-files-found: error
+
+  # The Mac builds the Windows zip too. The macOS icon is an Icon Composer
+  # file, which needs Xcode 26 or newer.
+  desktop:
+    needs: [version, test]
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: desktop/package.json
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: desktop/pnpm-lock.yaml
+      - name: macOS and Windows packages
+        working-directory: desktop
+        env:
+          REDLINK_VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm package --mac --win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop
+          path: |
+            desktop/dist/redLINK-*-mac-arm64.dmg
+            desktop/dist/redLINK-*-win-x64.zip
+          if-no-files-found: error
+
+  release:
+    needs: [version, android, desktop]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PRERELEASE: ${{ needs.version.outputs.prerelease }}
+        run: |
+          flags=()
+          if [[ "$PRERELEASE" == true ]]; then flags+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" redLINK-* \
+            --verify-tag --title "$GITHUB_REF_NAME" --generate-notes "${flags[@]}"
