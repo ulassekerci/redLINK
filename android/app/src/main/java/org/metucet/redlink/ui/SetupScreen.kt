@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import java.util.Locale
@@ -37,6 +38,7 @@ import org.metucet.redlink.board.simulation
 import org.metucet.redlink.hub.HubAddress
 import org.metucet.redlink.hub.typedHubAddress
 import org.metucet.redlink.grantsNeeded
+import org.metucet.redlink.releasePage
 import org.metucet.redlink.protocol.FwVersion
 import org.metucet.redlink.protocol.formatTeamCode
 
@@ -56,7 +58,8 @@ private val PickedBoard.addressLine
 internal fun firmwareLine(version: FwVersion) = "Firmware %d.%02d".format(Locale.ROOT, version.fwMajor, version.fwMinor)
 
 // `running` locks what cannot change during a run. `firmware` is the picked
-// board's version, once one has been read.
+// board's version, once one has been read. `update` is a newer release's
+// version, when one exists.
 @Composable
 fun SetupScreen(
     granted: Set<Grant>,
@@ -66,6 +69,7 @@ fun SetupScreen(
     hub: HubAddress,
     teamCode: String,
     version: String,
+    update: String?,
     onGrant: (Grant) -> Unit,
     onPick: (PickedBoard) -> Unit,
     onHub: (HubAddress) -> Unit,
@@ -112,7 +116,13 @@ fun SetupScreen(
                     FilledTonalButton(onClick = { askingNewCode = true }, enabled = !running) { Text("New code") }
                 }
             }
-            Group { ListRow("Version $version") }
+            val uriHandler = LocalUriHandler.current
+            Group {
+                ListRow("Version $version")
+                update?.let {
+                    ListRow("Update available: $it", Modifier.clickable { uriHandler.openUri(releasePage(it)) })
+                }
+            }
             simulation?.let {
                 val stopAnswering by it.stopAnswering.collectAsState()
                 Group {

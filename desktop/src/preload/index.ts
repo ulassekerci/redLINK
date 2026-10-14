@@ -13,6 +13,8 @@ const subscribe =
 
 const api: RedlinkApi = {
   version: () => ipcRenderer.invoke('app:version'),
+  update: () => ipcRenderer.invoke('app:update'),
+  openUpdate: () => ipcRenderer.send('app:open-update'),
   onSample: subscribe('hub:sample'),
   onConnectionState: subscribe('hub:state'),
   readConnectionState: () => ipcRenderer.invoke('hub:state'),

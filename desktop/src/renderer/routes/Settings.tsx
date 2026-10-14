@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { twMerge } from 'tailwind-merge'
 import type { Settings, TypedSettings } from '../../preload/api'
 import { formatTeamCode } from '../../protocol'
+import { UpdateLine } from '../components/UpdateLine'
 import { onDirectLink, useDirectLinkStore } from '../store/directLink'
 import { saveSettings } from '../store/hub'
 
@@ -126,6 +127,7 @@ export const SettingsScreen = () => {
         </span>
       )}
       {version && <span className='font-light text-rose-100/60'>Sürüm {version}</span>}
+      <UpdateLine className='self-start' />
     </div>
   )
 }

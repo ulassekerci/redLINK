@@ -51,9 +51,12 @@ class MainActivity : ComponentActivity() {
         val firstTeamCode = settings.teamCode
         val logs = LogFolder(this)
         // A run Android has not brought back yet resumes now. One the phone
-        // restarted under has ended, and the main screen says so.
+        // restarted under has ended, and the main screen says so. With no run
+        // active, the app asks whether a newer release exists.
         val memory = runMemory(this)
-        if (memory.appOpened(serviceRunning = RunService.run.value != null)) RunService.resume(this)
+        val serviceRunning = RunService.run.value != null
+        if (memory.appOpened(serviceRunning)) RunService.resume(this)
+        else if (!serviceRunning) UpdateCheck.checkOnce(version)
         setContent {
             RedLinkTheme {
                 var screen by rememberSaveable { mutableStateOf(Screen.MAIN) }
@@ -64,6 +67,7 @@ class MainActivity : ComponentActivity() {
                 var endedByPhoneRestart by remember { mutableStateOf(memory.endedByPhoneRestart) }
                 val run by RunService.run.collectAsState()
                 val logsClosed by RunService.logsClosed.collectAsState()
+                val update by UpdateCheck.newer.collectAsState()
                 LaunchedEffect(screen) { granted = grantsInPlace() }
                 LaunchedEffect(tapped) {
                     val action = tapped ?: return@LaunchedEffect
@@ -86,6 +90,7 @@ class MainActivity : ComponentActivity() {
                             endedByPhoneRestart = false
                         },
                         onStart = {
+                            UpdateCheck.stop()
                             RunService.start(this)
                             endedByPhoneRestart = false
                         },
@@ -104,6 +109,7 @@ class MainActivity : ComponentActivity() {
                         hub = hub,
                         teamCode = teamCode,
                         version = version,
+                        update = update,
                         onGrant = grantRequests::request,
                         onPick = {
                             settings.board = it

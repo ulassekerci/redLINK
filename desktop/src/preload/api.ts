@@ -5,6 +5,11 @@ import type { AdcSample, BoardSample, GpsFix } from '../protocol'
 // in the desktop spec, 2.3.
 export interface RedlinkApi {
   version: () => Promise<string>
+  // The newer release's version once the launch's check has found one, or
+  // null when there is none or the check failed.
+  update: () => Promise<string | null>
+  // Opens that release's page in the browser.
+  openUpdate: () => void
   // Each sample of the stream as main parses it. Returns a function that
   // unsubscribes.
   onSample: (listener: (sample: StreamSample) => void) => () => void

@@ -1,10 +1,11 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { join } from 'node:path'
 import { handleBluetoothChooser } from './bluetooth'
 import { handleCsvSave } from './csv'
 import { startHubClient } from './hub-client'
 import { connectToHub } from './hub-socket'
 import { readSettings, saveSettings } from './settings'
+import { checkForUpdate } from './update'
 import { appMajorVersion, appVersion } from './version'
 import type { Settings, TypedSettings } from '../preload/api'
 
@@ -21,6 +22,18 @@ const handleSettings = (file: string, launched: Settings, onSaved: (settings: Se
       onSaved(stored)
     }
     return stored
+  })
+}
+
+// The update line's check is made once per launch. The renderer reads its
+// version, and asks for the release's page to be opened: only the page of
+// the release main found is ever opened.
+const handleUpdate = () => {
+  const update = checkForUpdate(appVersion)
+  ipcMain.handle('app:update', async () => (await update)?.version ?? null)
+  ipcMain.on('app:open-update', async () => {
+    const found = await update
+    if (found) shell.openExternal(found.releasePage)
   })
 }
 
@@ -83,6 +96,7 @@ const createWindow = (route: string) => {
 // No single-instance lock: a second start is a second, independent viewer.
 app.whenReady().then(async () => {
   ipcMain.handle('app:version', () => appVersion)
+  handleUpdate()
   handleCsvSave()
   const file = join(app.getPath('userData'), 'settings.json')
   const settings = await readSettings(file)
